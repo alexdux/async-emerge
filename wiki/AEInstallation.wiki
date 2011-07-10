@@ -1,4 +1,4 @@
-#summary Installation.
+#summary How to install AE.
 
 * draft *
 
