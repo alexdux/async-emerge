@@ -1,0 +1,173 @@
+#!/bin/bash
+
+# ae_root_mount - AUFS mounter for 'aync emerge'
+# GPL ver. 2
+#	*some code was tacken from 'auroot' by Junjiro R. Okajima from 'aufs2' distribution
+# version: 1.0
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+# 	- mount AUFS merged tree from / nad /var of the box
+# 	- symlinks recreated with AUFS logic
+#	- separated disk partition supported via pre-rbinded root master dirs
+#	- config-excluded dirs not mounts and recreates empty
+
+# get config
+. /etc/async.emerge.conf
+
+einfo "Mounting AUFS root to ${AE_DIR[ROOT]}:"
+
+# check if aufs-root is already mounted
+if [ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" != "" ]; then
+	ewarn "  AUFS-root is already mounted! Skipping mounting /+/var."
+	eend 0
+	exit 0
+fi
+
+# (re)create AE gw dir, logs dirs should exist
+mkdir -p "${AE_DIR[GATEWAY]}" 2>/dev/null
+
+# clean mtab
+if [ -e "${AE_DIR[DELTA]}/etc/mtab" ]; then
+	rm "${AE_DIR[DELTA]}/etc/mtab" 2>/dev/null >&2
+	einfo "  ${AE_DIR[DELTA]}/etc/mtab unlinked."
+	eend 0
+fi
+
+# bind+mount a set of dirs
+mnt_list() { # list of dirs, exclusion list, type-fs mark
+	local mnts=$(mount | grep '^/dev/' | cut -f3 -d' ' | tr '\n' ' ')
+	# also bind ?
+	#echo "mounts: $mnts"
+	for i in $1; do 
+		bind="${AE_DIR[BIND]}$i"; delta="${AE_DIR[DELTA]}$i"; chroot="${AE_DIR[CHROOT]}$i"
+		# skip non-dirs, config-excluded dirs, symlinks
+		if [[ -d "$i" && ! -L "$i" && "$2" != *$i* ]]; then 
+			# bind the dir (separate disk partition support + excluding)
+			(mkdir -vp "$bind" "$delta" "$chroot" && \
+			mount -vB "$i" "$bind" && \
+			  # mount -vR "$i" "$bind" && \
+				# ff
+				# mount --make-rslave "$bind" && \
+			mount -vo remount,ro "$bind" && \
+			# mount with AUFS
+			mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) 2>/dev/null >&2
+			# a bug
+			if !(($?)); then
+				#echo "check '$i'"
+				if [[ "$mnts" == *$i* ]]; then
+					for k in $mnts; do
+						if [[ "$k" == $i\/* ]]; then
+							#echo "  found '$k'"
+							bind="${AE_DIR[BIND]}$k"; delta="${AE_DIR[DELTA]}$k"; chroot="${AE_DIR[CHROOT]}$k"
+							#echo "mount -vt aufs -o br=\"$delta\"=rw::\"$bind\"=ro $3 \"$chroot\" 2>/dev/null >&2"
+							(mkdir -vp "$bind" "$delta" "$chroot" && \
+							mount -vB "$k" "$bind" && \
+							mount -vo remount,ro "$bind" && \
+							mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) 2>/dev/null >&2
+						fi
+					done
+				fi
+			fi
+			#
+			if (($?)); then
+				eerror "  Error binding or mounting $i!" 
+				eend 1
+				ewarn "Cleanup:"
+				ae_root_umount
+				exit 1
+			fi
+			((mounted++))
+		fi 
+	done
+}
+
+# redo symlinks in dir
+redo_sln() { # src dir, dest dir level
+	for i in $1; do 
+		# skip non-symlinks and existed fs objects
+		if [[ -L "$i" && ! -e "${AE_DIR[CHROOT]}$i" ]]; then 
+			# recreate symlinks relative to ${AE_DIR[CHROOT]}
+			ln -vsn "$2`readlink $i`" "${AE_DIR[CHROOT]}$i" 2>/dev/null >&2
+			if (($?)); then
+				ewarn "  Can't create symlink for $i." 
+				eend 1
+			else
+				((symlinked++))
+			fi
+		fi 
+	done
+}
+
+# redo not-copied dirs
+redo_dirs() { # a set of dirs
+	for i in $1; do 
+		mkdir -v "${AE_DIR[CHROOT]}$i" 2>/dev/null >&2 
+		(($?)) || ((redirs++))
+	done
+}
+
+# bind transparent (non-merged)
+bnd_trans() {
+	for i in $1; do
+		# check if it exists at this box
+		if [ -d "$i" ]; then
+			mkdir -vp "${AE_DIR[CHROOT]}$i"
+			mount -vR "$i" "${AE_DIR[CHROOT]}$i" 2>/dev/null >&2
+			if (($?)); then
+				eerror "  Can't bind transparent (non-merged) $i!" 
+				eend 1
+				ewarn "Cleanup:"
+				ae_root_umount
+				exit 3
+			fi
+			((nonmerged++))
+		else
+			ewarn "  $i doesn't exists!"
+			eend 1
+		fi
+	done
+}
+
+# list the root+var of the box
+mounted=0
+if true; then
+	mnt_list '/*' "${AE_DIR[ROOT_EXCLUDE]} /proc /sys /var" 'VCS'
+	mnt_list '/var/*' "${AE_DIR[VAR_EXCLUDE]} ${AE_DIR[ROOT]}" 'VCS'
+else
+	# test
+	
+	# scan mountpoints
+	for i in $(mount | grep '^/dev' | cut -f3 -d' ') "/var"; do
+		#echo "$i"
+		einfo "  Mounting $i ..."
+		eend 0
+	done
+
+	exit 1
+fi
+
+# recreating symlinks
+symlinked=0
+redo_sln '/*' './'
+redo_sln '/var/*' '../'
+
+# creating not copied dirs
+redirs=0
+redo_dirs "${AE_DIR[ROOT_EXCLUDE]} /proc /sys /var ${AE_DIR[VAR_EXCLUDE]} ${AE_DIR[ROOT]} ${AE_DIR[GATEWAY]}"
+
+# bind transparent (non-merged) dirs
+nonmerged=0
+bnd_trans "${AE_DIR[TRANSPARENT]}"
+
+# rebind '/dev/*' from system 'mount' (aufs feature)
+#bnd_trans "`mount | grep '^/dev/' | cut -d' ' -f3 | grep -v '^/$'`"
+
+# out Readme.txt ?
+
+# out stat
+einfo "  Binded and mounted $mounted dirs, +$redirs created, +$nonmerged binded as transparent (non-merged) \
+and created $symlinked symlinks."
+eend 0
+
+exit 0

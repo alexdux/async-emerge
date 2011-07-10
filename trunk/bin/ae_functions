@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# ae_functions - common functions for 'async emerge' toolset
+# GPL ver. 2
+# version: 1.0
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features: see below
+
+# lock or exit: lock_file exit_code exit_msg ->
+do_lock() { 
+	# check locking with $1
+#-	[[ -e "$1" && "`(ps -p \`cat \"$1\" \` -o comm= ) 2>/dev/null`" == "$PNAME" ]] && {
+	[ "`(ps -p \`cat \"$1\" \` -o comm= ) 2>/dev/null`" == "$PNAME" ] && {
+		[ "$3" == "" ] || eerror "$3"
+		exit $2
+	}
+	# make lock
+	echo $$ > "$1"
+	# do trap
+	trap "ewarn 'Terminated!'; eend 1; rm -f \"$1\"; exit $?" INT TERM
+	trap "rm -f \"$1\"; exit $?" EXIT
+}
+
+# check if VCS runnning, to-do: add MVCS support
+
+# date time
+dt_mark() { echo "*** `date` ***"; }
+
+# get state: -> $st
+collect_signes() { # to-do: correct build lock
+	for i in "${AE_PID[AE_COOK]}" "${AE_SIGN[SYNCED]}" "${AE_SIGN[COOKED]}" "${AE_SIGN[REVDEPED]}"; do 
+		[ -e $i ] && st=$st'Y' || st=$st'N'
+	done
+}
+

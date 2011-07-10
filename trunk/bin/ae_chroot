@@ -1,0 +1,139 @@
+#!/bin/bash
+
+# ae_chroot - Chrooter for 'async emerge'
+# GPL ver. 2
+# version: 1.0
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+#	- mount AUFS if not mounted
+# 	- mount /proc, /sys if configured
+#	- start chrooted DBUS if configured
+#	- wipe out chrooted /var/run
+#	- Allow only one instance of $0 for one VCS
+
+# get config
+. /etc/async.emerge.conf
+
+einfo "Chrooting to ${AE_DIR[CHROOT]}:"
+
+# to-do: add autounmount at trap???.......
+
+## check if $0 alredy running - to-do: change to .lock
+#[[ `pgrep $PNAME` = "$$" ]] || {
+#	eerror "  $PNAME is already running, but only one instance is allowed! Exit."
+#	exit 1
+#}
+
+# mount/unmount a special device
+mnt_special() { # 'y'/'n', fs dir, fs type
+	if [ "$1" == "y" ]; then
+		if [[ "`mount | grep ${AE_DIR[ROOT]} | grep $2`" == "" ]]; then
+			mount -vt $3 $3 "${AE_DIR[CHROOT]}/$2" 2>/dev/null >&2
+			if (($?)); then
+				error "  Error mounting $2 fs to ${AE_DIR[CHROOT]}/$2!"
+				eend 1
+				exit 2
+			fi
+			einfo "  $2 fs is mounted to ${AE_DIR[CHROOT]}/$2."
+		else
+			ewarn "  $2 fs was already mounted."
+		fi
+	else
+		einfo "  Mounting $2 fs is not configured."
+	fi
+	eend 0
+}
+unmnt_special() { # 'y'/'n', fs dir
+	if [ "$1" == "y" ]; then
+		umount -v "${AE_DIR[CHROOT]}/$2" 2>/dev/null >&2
+		if (($?)); then
+			ewarn "  Can't unmount $2 fs." 
+			eend 2
+		else
+			einfo "  $2 fs is unmounted from ${AE_DIR[CHROOT]}/$2."
+			eend 0
+		fi
+	fi
+}
+
+# mount AUFS if not mounted
+# to-do: /usr/bin/aubrsync:279
+if [[ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" == "" ]]; then
+	einfo "  Automounting AUFS,"
+	ae_root_mount
+	if (($?)); then # check for errors
+		eerror "  Can't mount AUFS! '$PNAME' is not operational!!!"
+		# clennup
+		ae_root_umount
+		exit 1
+	fi
+
+	einfo "Chrooting to ${AE_DIR[CHROOT]} (continued):"
+
+	# proc/sysfs staff
+	# wipe out chrooted /var/run ????????? (move to ae_root_mount?)
+	if [ "${AE_VCS[VAR_RUN_EXLUDE]}" == "y" ]; then
+		einfo "  Cleaning ${AE_DIR[CHROOT]}/var/run from host's *.pid."
+		rm -rfv "${AE_DIR[CHROOT]}/var/run" 2>/dev/null >&2
+		mkdir -pv "${AE_DIR[CHROOT]}/var/run/dbus" 2>/dev/null >&2
+		eend 0
+	fi
+
+	# D-BUS start in chroot
+	if [ "${AE_VCS[CHROOT_START_DBUS]}" == "y" ]; then
+		einfo "  Starting chrooted D-BUS messagebus ..."
+		#chroot "$ROOT_CHROOT" /usr/bin/dbus-uuidgen --ensure
+		chroot "${AE_DIR[CHROOT]}" start-stop-daemon -S -p /var/run/dbus.pid -x /usr/bin/dbus-daemon -- --system
+		eend 0
+	fi
+
+	# to-do: add separate check for proc, sys
+	# mounting /proc, /sys, if configured to do
+	mnt_special ${AE_VCS[CHROOT_MOUNT_PROCFS]} 'proc' 'proc'
+	mnt_special ${AE_VCS[CHROOT_MOUNT_SYSFS]} 'sys' 'sysfs'
+fi
+
+# do chroot
+chr_cmd="AE_STATE_SKIP=1 AE_CHROOT_PS1=\"\[\033[01;33m\]$PNAME\" \
+  chroot \"${AE_DIR[CHROOT]}\" /bin/bash --rcfile /etc/async.emerge.chroot.bashrc"
+#chr_cmd="PS1=\"\[\033[01;33m\]$PNAME $PS1\" \
+#  chroot \"${AE_DIR[CHROOT]}\" /bin/bash --norc"
+[ "$1" ] && { einfo "Virtually chrooted with: '$*'"; chr_cmd=$chr_cmd" -c \"$*\""; } || \
+	einfo "Welcome to Virtually Chrooted System !"
+eend 0
+
+eval $chr_cmd
+
+# todo: remove --rcfile ?
+#if [ "$1" ]; then
+##AE_CHROOT_PS1="\[\033[01;33m\]"`basename $0` \
+##  chroot "${AE_DIR[CHROOT]}" /bin/bash --rcfile /etc/async.emerge.chroot.bashrc -c "$*"
+#AE_CHROOT_PS1="\[\033[01;33m\]"`basename $0` \
+#  chroot "${AE_DIR[CHROOT]}" /bin/bash --rcfile (~/.bashrc) $*
+#PS1="\[\033[01;33m\]"`basename $0`" \[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] "\
+#	chroot "${AE_DIR[CHROOT]}" /bin/bash --norc $*
+
+einfo "Unchrooting from ${AE_DIR[CHROOT]}:"
+
+# unmount AUFS
+# check for last task of $PNAME
+if ((`pgrep $PNAME | wc -l` < 3)); then # 3 because of pipe; might be unreliable
+	# D-BUS stop in chroot
+	if [ "${AE_VCS[CHROOT_START_DBUS]}" == "y" ]; then
+		einfo "  Stopping chrooted D-BUS messagebus ..."
+		chroot "${AE_DIR[CHROOT]}" start-stop-daemon -K -p /var/run/dbus.pid
+		eend 0
+	fi
+
+	# unmointig special fs
+	unmnt_special ${AE_VCS[CHROOT_MOUNT_PROCFS]} 'proc'
+	unmnt_special ${AE_VCS[CHROOT_MOUNT_SYSFS]} 'sys'
+
+	einfo "  Autounmounting AUFS,"
+	ae_root_umount
+	einfo "Unchrooting from ${AE_DIR[CHROOT]} (continued)"
+fi
+
+eend 0
+exit 0
