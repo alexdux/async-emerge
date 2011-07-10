@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# ae_delta_cleanup - AUFS cache cleaner for 'async emerge'
+# GPL ver. 2
+# version: 1.0
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+#	- check if not AUFSed
+# 	- clean up ${AE_DIR[DELTA]}
+
+# get config
+. /etc/async.emerge.conf
+
+[[ "${AE_DIR[DELTA]}" == "" || "${AE_DIR[DELTA]}" == "/" ]] && {
+	eerror "'$PNAME' misconfigured: GRS corruption is possible! Stop."	
+	eend 1; exit 1
+}
+
+ebegin "Clearnig ${AE_DIR[DELTA]}"
+
+# check if aufs is mounted
+if [ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" != "" ]; then
+	eerror "  AUFS is mounted! Stop."
+	eend 1
+	exit 1
+fi
+
+#rm -fv "$AE_SYNCED_SIGN" 2>/dev/null >&2
+rm -rfv "${AE_DIR[DELTA]}" 2>/dev/null >&2
+
+eend $?
+exit $?
+
