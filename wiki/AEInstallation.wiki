@@ -2,39 +2,96 @@
 
 * draft *
 
-There are 5 simple steps to install AE.
+There are 3 simple steps to install async-emerge (AE). Fourth step is just the test if it is working. Fifth step is lead to be a top-level configuration task. Finer configuration will be described in "Configuration" section...
 
 = 1. Dependencies =
 
 Install some staff are needed to run AE.
 <code># emerge -av aufs2 gentoolkit</code>
 Then rebuild kernel (better - twice) and do reboot. 
-
+ 
 
 = 2. Portage =
 
-Make local user "overlay".
+Make local user "overlay":
+  * With layman (recommended way). Install layman if not installed yet:
+<code># emerge -av layman</code>
   * By hands:
 <code>
 # echo "PORTDIR_OVERLAY=\"/usr/local/portage/my $PORTDIR_OVERLAY\" # local overlay" >> /etc/make.conf 
 # mkdir -p /usr/local/portage/my</code>
-  * With layman (?)
 
 
 
 = 3. AE ebuild =
 
-Install to local "overlay" AE ebuild(s).
-  * By hands:
+You can install to local "overlay" AE ebuild(s) in 2 ways:
+  * Using layman (recommended way). Edit laymans list of overlays. Add AE repo beetwen {{{<repositories>}}} & {{{</repositories>}}} tags:
+<code># nano /usr/local/portage/layman/overlays.xml</code>
+Example:
+<pre>
+*<?xml version="1.0" encoding="UTF-8"?>* 
+*<repositories version="1.0">* 
+  <repo priority="50" quality="experimental" status="official"> 
+    <name>perl-experimental</name> 
+    <description>Experimental ebuilds for Perl packages in Gentoo. Comments and bugreports are welcome!</description> 
+    <homepage>http://overlays.gentoo.org/proj/perl/</homepage> 
+    <owner> 
+      <email>perl@gentoo.org</email> 
+    </owner> 
+    <source type="git">git://git.overlays.gentoo.org/proj/perl-overlay.git</source> 
+  </repo> 
+*  <repo priority="50" quality="experimental" status="unofficial">* 
+*    <name>async-emerge</name>* 
+*    <description>Asynchronous multiple binaries cooker for Gentoo. Comments and bugreports are welcome!</description>* 
+*    <homepage>http://code.google.com/p/async-emerge/</homepage>* 
+*    <owner>* 
+*      <email>alexdu.com.a2e@g33mail.com</email>* 
+*    </owner>* 
+*    <source type="svn">http://async-emerge.googlecode.com/svn/trunk/</source>* 
+*  </repo>* 
+*</repositories>* 
+</pre>
+* Bold lines are mandatory!!! * 
+
+(Also, if you need valid email - remove all digits from it.)
+
+Edit laymans make.conf:
+<code># nano /usr/local/portage/layman/make.conf</code>
+Example:
+<pre>
+*PORTDIR_OVERLAY="* 
+/usr/local/portage/layman/perl-experimental 
+*/usr/local/portage/layman/async-emerge* 
+*$PORTDIR_OVERLAY* 
+*"*
+</pre>
+* Bold lines are mandatory!!! *
+
+Checkout from SVN:
+<code>
+# /usr/local/portage/layman 
+# svn checkout http://async-emerge.googlecode.com/svn/overlay/ async-emerge</code>
+
+Sync with layman:
+<code># layman -S</code>
+
+example of correct syncing:
+<pre>`*` Running... # /usr/bin/svn up /usr/local/portage/layman/async-emerge
+At revision 10.</pre>
+
+Configuration of layman local user overlay is done.
+
+_Alternatively_ you can install AE ebuilds...
+  * ...by hands:
 <code>
 # mkdir -p /usr/local/portage/my/app-portage/async-emerge
 # cd /usr/local/portage/my/app-portage/async-emerge
-# wget "http://async-emerge.googlecode.com/files/async-emerge-1.1_alpha1.ebuild"
-# wget "http://async-emerge.googlecode.com/files/Manifest"
-# ls -l
-total 12
--rw-r--r-- 1 root root 4191 Jul 10 15:35 async-emerge-1.1_alpha1.ebuild
--rw-r--r-- 1 root root  418 Jul 10 15:35 Manifest
+# wget "http://async-emerge.googlecode.com/svn/overlay/app-portage/async-emerge/"
+</code>
+
+Now starts common part for both ways - do a check (example):
+<pre>
 # emerge -s async-emerge
 Searching...    
 `[ Results for search key : async-emerge ]` 
@@ -47,8 +104,11 @@ Searching...
       Homepage:      `http://code.google.com/p/async-emerge/` 
       Description:   Asynchronous multiple binaries cooker for Gentoo. 
       License:       GPL-2 
-# echo "app-portage/async-emerge" > /etc/portage/package.keywords/async-emerge
-# emerge -s async-emerge
+</pre>
+Unmask AE:
+<code># echo "app-portage/async-emerge" > /etc/portage/package.keywords/async-emerge</code>
+Now try a check again:
+<pre># emerge -s async-emerge
 Searching...    
 `[ Results for search key : async-emerge ]` 
 `[ Applications found : 1 ]` 
@@ -60,15 +120,14 @@ Searching...
       Homepage:      `http://code.google.com/p/async-emerge/` 
       Description:   Asynchronous multiple binaries cooker for Gentoo. 
       License:       GPL-2 
-
-# emerge -av -j1 app-portage/async-emerge</code>
-  * Using layman:
-<code># emerge -av layman</code>
+</pre>
+*Finally, install AE.*
+<code># emerge -av -j1 app-portage/async-emerge</code>
 
 
 = 4. Testing =
 
-Try to start VCS:
+Try to start VCS with "df -h" command:
 <code># ae_vcs df -h </code>
 example "screenshot":
 <pre>
@@ -130,13 +189,13 @@ df: `/var/async.emerge/chroot/var/www': No such file or directory
 
 In order to build (cook) binaries of packages updates in background you have to schedule `ae_cron` task:
   * Edit cron table:
-example:
+one example:
 <code># crontab -e
 `30 22 * * *	/usr/bin/ae_cron`</code>
-example:
+another example:
 <code># async emerge
-`30 01 * * *    /usr/bin/ae_cron; /usr/local/bin/ae_state -dwc | /bin/mail -s "Async Emerge" root`</code>
+`30 01 * * *    /usr/bin/ae_cron; /usr/bin/ae_state -dwc | /bin/mail -s "Async Emerge" root`</code>
 
-  * or anacron table:
-<code>`nano /etc/anacrontab`</code>
-(Recommended period is from 1 to 7 days.)
+  * ...or edit anacron table:
+<code># nano /etc/anacrontab</code>
+Recommended frequency of running is from 1 to 7 days. Anacron is suggested for rare used Gentoo boxes.
