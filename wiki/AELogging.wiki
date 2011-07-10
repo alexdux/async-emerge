@@ -19,7 +19,7 @@ It is recomended to install `xtail`:
 
 = 3. Middle-level logging of AE tools activity. = 
 
-<code># xtail /var/log/async.emerge/last.`*` /var/async.emerge/delta/var/log/async.emerge/last.`*`</code> 
+<code># xtail /var/log/async.emerge/last.`*`</code> 
 (Ctrl+\ to stop.)
 
 
