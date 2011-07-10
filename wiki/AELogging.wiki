@@ -1,0 +1,29 @@
+#summary How to watch AE logs.
+
+* draft *
+
+All paths are given for default configuration!
+
+= 1. Useful tools. =
+
+It is recomended to install `xtail`:
+<code># emerge -av xtail</code>
+
+
+= 2. Top-level logging of cronned activity of AE. =
+
+<code># tailf /var/log/async.emerge/last.cron.log</code>
+
+(Ctrl+C to stop.)
+
+
+= 3. Middle-level logging of AE tools activity. = 
+
+<code># xtail /var/log/async.emerge/last.`*` /var/async.emerge/delta/var/log/async.emerge/last.`*`</code> 
+(Ctrl+\ to stop.)
+
+
+= 4. Low-level logging of portage activity. = 
+
+<code># xtail /var/log/portage/ /var/async.emerge/delta/var/log/portage/</code> 
+(Ctrl+\ to stop.)
