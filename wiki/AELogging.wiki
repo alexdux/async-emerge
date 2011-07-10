@@ -26,4 +26,6 @@ It is recomended to install `xtail`:
 = 4. Low-level logging of portage activity. = 
 
 <code># xtail /var/log/portage/ /var/async.emerge/delta/var/log/portage/</code> 
-(Ctrl+\ to stop.)
+(Ctrl+\ to stop.) 
+
+First path is for GRS, second - for VCS.
