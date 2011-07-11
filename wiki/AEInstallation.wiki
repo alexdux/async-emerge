@@ -13,20 +13,11 @@ Then rebuild kernel (better - twice) and do reboot.
 
 = 2. Portage =
 
-Make local user "overlay":
+Make local overlay:
   * With layman (recommended way). Install layman if not installed yet:
 <code># emerge -av layman</code>
-  * By hands:
-<code>
-# echo "PORTDIR_OVERLAY=\"/usr/local/portage/my $PORTDIR_OVERLAY\" # local overlay" >> /etc/make.conf 
-# mkdir -p /usr/local/portage/my</code>
 
-
-
-= 3. AE ebuild =
-
-You can install to local "overlay" AE ebuild(s) in 2 ways:
-  * Using layman (recommended way). Edit laymans list of overlays. Add AE repo beetwen {{{<repositories>}}} & {{{</repositories>}}} tags:
+Edit laymans list of overlays. Add AE repo beetwen {{{<repositories>}}} & {{{</repositories>}}} tags:
 <code># nano /usr/local/portage/layman/overlays.xml</code>
 Example:
 <pre>
@@ -68,7 +59,20 @@ Example:
 </pre>
 * Bold lines are mandatory!!! *
 
-Checkout from SVN:
+...
+
+_Alternatively_ you can make local overlay...
+  * ...by hands:
+<code>
+# echo "PORTDIR_OVERLAY=\"/usr/local/portage/my $PORTDIR_OVERLAY\" # local overlay" >> /etc/make.conf 
+# mkdir -p /usr/local/portage/my</code>
+
+
+
+= 3. AE ebuild =
+
+You can install to local overlay AE ebuild(s) in 2 ways:
+  * Using layman (recommended way). Checkout from SVN:
 <code>
 # /usr/local/portage/layman 
 # svn checkout http://async-emerge.googlecode.com/svn/overlay/ async-emerge</code>
@@ -80,7 +84,7 @@ example of correct syncing:
 <pre>`*` Running... # /usr/bin/svn up /usr/local/portage/layman/async-emerge
 At revision 10.</pre>
 
-Configuration of layman local user overlay is done.
+...
 
 _Alternatively_ you can install AE ebuilds...
   * ...by hands:
@@ -89,6 +93,8 @@ _Alternatively_ you can install AE ebuilds...
 # cd /usr/local/portage/my/app-portage/async-emerge
 # wget "http://async-emerge.googlecode.com/svn/overlay/app-portage/async-emerge/"
 </code>
+
+...
 
 Now starts common part for both ways - do a check (example):
 <pre>
