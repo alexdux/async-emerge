@@ -64,7 +64,7 @@ Example:
 _Alternatively_ you can make local overlay...
   * ...by hands:
 <code>
-# echo "PORTDIR_OVERLAY=\"/usr/local/portage/my $PORTDIR_OVERLAY\" # local overlay" >> /etc/make.conf 
+# echo 'PORTDIR_OVERLAY="/usr/local/portage/my $PORTDIR_OVERLAY" # local overlay' >> /etc/make.conf 
 # mkdir -p /usr/local/portage/my</code>
 
 
@@ -74,7 +74,7 @@ _Alternatively_ you can make local overlay...
 You can install to local overlay AE ebuild(s) in 2 ways:
   * Using layman (recommended way). Checkout from SVN:
 <code>
-# /usr/local/portage/layman 
+# cd /usr/local/portage/layman 
 # svn checkout http://async-emerge.googlecode.com/svn/overlay/ async-emerge</code>
 
 Sync with layman:
