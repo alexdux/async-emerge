@@ -8,14 +8,14 @@ inherit eutils
 DESCRIPTION="Asynchronous multiple binaries cooker for Gentoo"
 HOMEPAGE="http://code.google.com/p/async-emerge/"
 
-if [ "$PV" != "9999" ]; then
-	SRC_URI="http://async-emerge.googlecode.com/svn/distfiles/${P}.tar.bz2"
-    KEYWORDS="~amd64 ~x86"
-else
+if [ "$PV" == "9999" ]; then
 	inherit subversion
     SRC_URI=""
     ESVN_REPO_URI="http://async-emerge.googlecode.com/svn/trunk/"
     KEYWORDS=""
+else
+	SRC_URI="http://async-emerge.googlecode.com/svn/distfiles/${P}.tar.bz2"
+    KEYWORDS="~amd64 ~x86"
 fi
 
 
