@@ -2,6 +2,11 @@
 
 * draft *
 
+= Synopsis =
+
+<code>
+</code>
+
 There are 3 simple steps to install async-emerge (AE). Fourth step is just the test if it is working. Fifth step is lead to be a top-level configuration task. Finer configuration will be described in "Configuration" section...
 
 = 1. Dependencies =

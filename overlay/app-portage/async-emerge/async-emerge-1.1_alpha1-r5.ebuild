@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=4
+EAPI=3
 inherit eutils
 
 DESCRIPTION="Asynchronous multiple binaries cooker for Gentoo"

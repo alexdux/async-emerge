@@ -461,6 +461,8 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 					# collect hints for libs comsumers rebuild
 					scan_for_rdlibs "$log"
 					scan_for_rdlibs "$log_last"
+				else
+				  dcPend=1
 				fi
 			else
 				[ "$undetected" ] && undetected+=', '
