@@ -17,7 +17,7 @@
 	eend 1; exit 1
 }
 
-ebegin "Clearnig ${AE_DIR[CHROOT]}"
+ebegin "Clearing ${AE_DIR[CHROOT]}"
 
 # check if aufs is mounted
 if [ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" != "" ]; then

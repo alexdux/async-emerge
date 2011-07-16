@@ -118,6 +118,7 @@ einfo "Unchrooting from ${AE_DIR[CHROOT]}:"
 
 # unmount AUFS
 # check for last task of $PNAME
+# FIX THIS - A BUG!
 if ((`pgrep $PNAME | wc -l` < 3)); then # 3 because of pipe; might be unreliable
 	# D-BUS stop in chroot
 	if [ "${AE_VCS[CHROOT_START_DBUS]}" == "y" ]; then

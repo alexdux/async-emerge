@@ -22,7 +22,7 @@ do_lock() {
 	trap "rm -f \"$1\"; exit $?" EXIT
 }
 
-# check if VCS runnning, to-do: add MVCS support
+# check if VCS running, to-do: add MultiVCS support
 
 # date time
 dt_mark() { echo "*** `date` ***"; }

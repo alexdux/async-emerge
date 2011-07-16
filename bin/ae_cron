@@ -8,7 +8,7 @@
 # Using:
 # - install to (ana)cron (example) -
 # # crontab -e
-# 30 22 * * *	/usr/local/bin/ae_cron
+# 30 22 * * *	/usr/bin/ae_cron
 # ^D
 # - 'manual' use -
 # # ae_cron
