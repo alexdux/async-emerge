@@ -53,7 +53,7 @@ if [ "${AE_INSTALL[DO_SYNC]}" == "y" ]; then
 			eend 1
 		fi
 
-		einfo "  Deleting obsoleted portage files ..."
+		einfo "    Deleting obsoleted portage files ..."
 		# prepare sources list
 		for d in ${AE_DIR[INSTALL_MERGE]}; do whd_list="$whd_list ${AE_DIR[DELTA]}"${d/\\\*/\*}; done
 		for i in `find $whd_list -depth -name \.wh\.\* -a ! -name \.wh\.\.wh\.* 2>/dev/null`; do
@@ -64,8 +64,17 @@ if [ "${AE_INSTALL[DO_SYNC]}" == "y" ]; then
 			rm -rfv $r >> "$sync_log_last" 2>&1 && \
 			rm -rfv $i >> "$sync_log_last" 2>&1
 		done
+
 		cat "$sync_log_last" >> "$sync_log" 2>&1
 		echo >> "$sync_log" 2>&1
+
+		# Emaint packages
+		# to-do: check if this maintence is needed at ae_build and save as flag?
+		if [ "${AE_INSTALL[DO_EMAINT_MOVEINST]}" == "y" ]; then
+			einfo "    Performing Global Updates:"
+			emaint -f moveinst
+			# to-do? is it all?
+		fi
 		eend 0
 	else
 		ewarn "  Rsyncing is skipped - VCS not found."
@@ -74,15 +83,6 @@ if [ "${AE_INSTALL[DO_SYNC]}" == "y" ]; then
 else
 	ewarn "  Rsyncing is skipped due to configuration."
 	eend 0
-fi
-
-
-# Emaint packages
-# to-do: check if this maintence is needed at ae_build and save as flag?
-if [ "${AE_INSTALL[DO_EMAINT_MOVEINST]}" == "y" ]; then
-	einfo "  Performing Global Updates:"
-	emaint -f moveinst
-	# to-do? is it all?
 fi
 
 

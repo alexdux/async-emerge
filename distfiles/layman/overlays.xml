@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<repositories version="1.0">
+  <repo priority="50" quality="experimental" status="unofficial">
+    <name>async-emerge</name>
+    <description>Asynchronous multiple binaries cooker for Gentoo. Comments and bugreports are welcome!</description>
+    <homepage>http://code.google.com/p/async-emerge/</homepage>
+    <owner>
+      <email>alexdu.com.ae@gmail.com</email>
+    </owner>
+    <source type="svn">http://async-emerge.googlecode.com/svn/trunk/</source>
+  </repo>
+</repositories>
