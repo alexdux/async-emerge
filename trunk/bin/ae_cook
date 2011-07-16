@@ -57,8 +57,8 @@ if [ "${AE_COOK[DO_SYNC]}" == "y" ]; then
 		# set sync mark
 		touch "${AE_SIGN[SYNCED]}" 2>&1
 	else
-		ewarn "    last sync was less than 23 hours and 50 minutes ago:"\
-				"sync is skipped due to respect Gentoo etiquette."
+		ewarn "    last sync was less than 1 day ago:"\
+				"sync is skipped due to follow gentoo-netiquette."
 	fi
 	eend 0
 else
