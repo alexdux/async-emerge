@@ -2,3 +2,4 @@
 - check other flags: 
 FEATURES="parallel-fetch ccache protect-owned" # preserve-libs"
 EMERGE_DEFAULT_OPTS="-j2 --color y --keep-going --binpkg-respect-use --fail-clean"
+- add autoconfig with USE flags
