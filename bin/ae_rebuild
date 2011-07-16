@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ae_rebuild - 'async emerge' Gentoo system rebuilder
+# ae_rebuild - 'async emerge' Gentoo system re-builder
 # GPL ver. 2
 # version: 1.0
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
@@ -71,7 +71,12 @@ call_emerge() {
 	[[ $1 ]] && einfo "  $1 ..."
 	# pre-logging emerging
 	dt_mark | tee "$log_last" > "$warn_last" 2>&1
-	eval "$2" >>"$log_last" 2>>"$warn_last"
+	if [[ "$2" == *'1>&3'* ]]; then 
+		echo '=== *1>&3* ==='
+		eval "$2"
+	else
+		eval "$2 >> $log_last 2>> $warn_last"
+	fi
 	cmdRet=$? # 102 = killed (Ctrl+C)
 	eend $cmdRet
 	# if an error occurred - add log to warn (some errors do not out to stderr)
@@ -125,8 +130,8 @@ emerge_solver() {
 	
 	# get emerge cmd
 	# to-do: change to internal var?
-	eCmd=$((grep " \+${AE_CMD[PM_SEARCH]} \+-" "$log_last" | grep -v -e '--sync' -e '--info' | \
-				tail -n1 | cut -f2- -d'-') 2>> "$log_last")
+	eCmd=$((grep " \+${AE_CMD[PM_SEARCH]} \+-" "$log_last" | grep -m1 -v -e '--sync' -e '--info' | \
+				cut -f2- -d'-') 2>> "$log_last")
 
 	# loop
 	loop=${AE_REBUILD[EMERGE_SOLVER_MT]} # to-do: add const
@@ -136,7 +141,8 @@ emerge_solver() {
 			"of ${AE_REBUILD[EMERGE_SOLVER_MT]} ..."
 		
 		# check masked
-		aMasked=$((grep 'masked by:.*keyword' "$log_last" | tail -n1) 2>> "$log_last")
+		#aMasked=$((grep 'masked by:.*keyword' "$log_last" | tail -n1) 2>> "$log_last")
+		aMasked=$((grep -m1 'masked by:.*keyword' "$log_last") 2>> "$log_last")
 		if [[ $aMasked ]]; then
 			# get packet category/name
 			aMasked=${aMasked%%-[0-9]*}; aMasked=${aMasked/* /}
@@ -145,10 +151,10 @@ emerge_solver() {
 			for i in $s; do [[ $i != *$aMasked* ]] && eCmd=$eCmd' '$i; done
 			eCmd=${eCmd:1}
 		fi
-
 	
 		# check 'there are no ebuilds'
-		aMissed=$((grep 'there are no ebuilds to satisfy' "$log_last" | tail -n1 | cut -f2 -d'"') 2>> "$log_last")
+		#aMissed=$((grep 'there are no ebuilds to satisfy' "$log_last" | tail -n1 | cut -f2 -d'"') 2>> "$log_last")
+		aMissed=$((grep -m1 'there are no ebuilds to satisfy' "$log_last" | cut -f2 -d'"') 2>> "$log_last")
 		#echo "$aMissed"
 		if [[ $aMissed ]]; then
 			# get packet category/name
@@ -158,6 +164,21 @@ emerge_solver() {
 			for i in $s; do [[ $i != *$aMissed* ]] && eCmd=$eCmd' '$i; done
 			eCmd=${eCmd:1}
 		fi
+		
+		# check 'pulled in by'
+		# (x11-libs/gdk-pixbuf-2.22.1-r2::gentoo, ebuild scheduled for merge) pulled in by
+		for aBlocker in $(grep -m1 'pulled in by' "$log_last" | sed 's/.*(\(.*\)::.*/\1/'); do
+			#echo "$aBlocker"
+			if [[ $aBlocker ]]; then
+				# get packet category/name
+				aBlocker=${aBlocker%%-[0-9]*}; aMasked=${aBlocker/* /}
+				# too slow: shopt -s extglob; eCmd=${eCmd/$aMissed*([! ])/}; shopt -u extglob
+				s=$eCmd; eCmd=''
+				for i in $s; do [[ $i != *$aBlocker* ]] && eCmd=$eCmd' '$i; done
+				eCmd=${eCmd:1}
+			fi
+		done
+
 
 		# run PM
 		eval "${AE_CMD[PM]} -$eCmd" >> "$log_last" 2>&1
@@ -203,7 +224,7 @@ scan_for_rdlibs() {
 	local f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
 	# in order of appearance
 	for i in $(grep -E 'revdep-rebuild +\-\-library' "$1" | sed "s/.*library[ =]*\([^ ,]*\).*/\1/;s/['\"]//g" ); {
-		# aviod duplicates - it's safe
+		# avoid duplicates - it's safe
 		[ `grep "^$i$" "$f" 2>/dev/null` ] || echo "$i" >> "$f"
 	}
 	# sorted: no...
@@ -225,10 +246,15 @@ scan_for_sysvers() {
 		case "-${AE_SUPD[${s}_DETECTOR]}-" in
 			-ei-) ;;
 			-eixc-) for sens in ${AE_SUPD[${s}_SENSOR]}; do
-						sysvers=`echo "$sysvers"; \
-							eix '-I*' --only-names $sens | tr -d '\n' ; \
-							echo -en ':\t'; eix '-I*' --format '<installedversions:VERSION>' $sens |\
-							 tr -d '\n'; echo`
+						ver=`eix '-I*' -e --only-names $sens | tr -d '\n'`
+						if [ "$ver" ]; then
+							sysvers=`echo "$sysvers"; echo -n "$ver" ; \
+								echo -en ':\t'; eix '-I*' -e --format '<installedversions:VERSION>' $sens |\
+								 tr -d '\n'; echo`
+						else
+							sysvers=`echo "$sysvers"; echo -e "$sens:\t-- not installed --"`
+							AE_SUPD[${s}_NOTINSTALLED]=1
+						fi
 					done
 					;;
 			*) echo "Invalid version detectors method: '${AE_SUPD[${s}_DETECTOR]}'!"
@@ -245,6 +271,8 @@ compare_sysvers() {
 	# check versions
 	for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
 		for sens in ${AE_SUPD[${s}_SENSOR]}; do # multisensor
+			# not installed
+			[ "${AE_SUPD[${s}_NOTINSTALLED]}" ] && continue
 			# old version
 			ov=`grep "$sens:" "$1"`
 			ov=`echo ${ov/*:}`
@@ -293,26 +321,35 @@ dt_mark > "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 subsetf=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_SUBSET_SAVED]}
 if [ -e "$subsetf" ]; then
 	einfo "  Critical system packages versions already saved - use it ..."
-	echo " * Existed data (world rebuild was interrupt previously):" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+	echo " * Existed data (world rebuild was interrupted previously):" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 	eend 0
 else
 	einfo "  Saving critical system packages versions ..."
 	scan_for_sysvers
 	echo "$sysvers" > "$subsetf"
-	echo " * Critical package versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+	echo " * Critical packages versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 	eend 0
 fi
 cat "$subsetf" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 echo >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 
-# cook world with emerge
+
+# REBUILD world with emerge
 if [ "${AE_REBUILD[DO_EMERGE_WORLD]}" == "y" ]; then
-	call_emerge "Rebuilding world" "${AECMD[EMERGE]}" \
-		"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
-	if (($AE_VCS)) && !(($cmdRet)); then touch "${AE_SIGN[COOKED]}" 2>&1; fi
+	if (($AE_VCS)); then
+		call_emerge "Rebuilding world" "${AECMD[EMERGE]}" \
+			"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
+		if !(($cmdRet)); then touch "${AE_SIGN[COOKED]}" 2>&1; fi
+	else
+		# ((/path/to/oraMon.pl 2>&1 1>&3 | tee /tmp/errors.log) 3>&1 1>&2 | tee /tmp/output.log) > /tmp/final.log 2>&1
+		call_emerge "Rebuilding world" \
+			"((${AECMD[EMERGE]} 2>&1 1>&3 | tee \$warn_last) 3>&1 1>&2 | tee \$log_last) 2>&1" \
+			"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
+	fi		
 else
 	ewarn "  Rebuilding world is not configured."; eend 1
 fi
+
 
 # check sysvers
 einfo "  Checking critical system packages versions ..."
@@ -320,10 +357,10 @@ scan_for_sysvers
 compare_sysvers "$subsetf" "${AESIGN[SUBSET_UPDATES]}"
 rm -v "$subsetf" 2>&1 >/dev/null
 if [ -e "${AESIGN[SUBSET_UPDATES]}" ]; then
-	echo " * New critical package versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+	echo " * New critical packages versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 	cat "${AESIGN[SUBSET_UPDATES]}" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 else
-	echo " * No new critical package versions found." >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+	echo " * No new critical packages versions found." >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 fi
 cat "${AELOG[SUBSET_UPDATE_LAST]}" >> "${AELOG[SUBSET_UPDATE]}" 2>&1
 echo >> "${AELOG[SUBSET_UPDATE]}" 2>&1
@@ -348,7 +385,8 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 	# Subset updates
 	if [ "${AE_REBUILD[DO_SUBSET_UPDATES]}" == "y" ]; then
 		einfo "    Check for various subsets updates:"
-		undetected=''
+		undetected=''		
+		notinstalled=''
 		for (( i=0; i<${AE_SUPD[TOTAL]}; i++ )); do
 			if [ "${AE_SUPD[${i}_UPDATED]}" ]; then
 				einfo "      ${AE_SUPD[${i}_TITLE]} update detected, update method is '${AE_SUPD[${i}_METHOD]}':"
@@ -461,15 +499,19 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 					# collect hints for libs comsumers rebuild
 					scan_for_rdlibs "$log"
 					scan_for_rdlibs "$log_last"
-				else
-				  dcPend=1
+				else # pend depclean if collision occurred
+					dcPend=1
 				fi
+			elif [ "${AE_SUPD[${i}_NOTINSTALLED]}" ]; then
+				[ "$notinstalled" ] && notinstalled+=', '
+				notinstalled+=${AE_SUPD[${i}_TITLE]}
 			else
 				[ "$undetected" ] && undetected+=', '
 				undetected+=${AE_SUPD[${i}_TITLE]}
 			fi
 		done
-		einfo "      $undetected updates is not detected."; eend 0
+		[ "$undetected" ] && einfo "      $undetected updates were not detected."; eend 0
+		[ "$notinstalled" ] && einfo "      $notinstalled updates were skipped: not installed."; eend 0
 	else 
 		ewarn "    Checking for various subsets updates is not configured."; eend 0
 	fi
@@ -477,7 +519,8 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 	# Cleanup all unneded (depclean), emerge -ca
 	if [ "${AE_REBUILD[DO_DEPCLEAN]}" == "y" ]; then
 		if [ $dcPend ]; then
-			ewarn "    Cleaning system is pending till the next cooking. (2-pass subset update behaviour.)"; eend 0
+			ewarn "    Cleaning system is pending till the next cooking. "\
+				"(2-pass subset update behavior or subset update fail)"; eend 0
 		else
 			if [[ "${AECMD[DEPCLEAN]}" == *a* ]]; then # interactively (GRS)
 				#call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
@@ -485,7 +528,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 				einfo "    Cleaning system from unused dependencies (interactively):"
 				# idiot. dt_mark > "${AELOG[DEPCLEAN_LAST]}" 2>&1
 				# to-do: add tee to log
-				${AECMD[DEPCLEAN]} # >> "${AELOG[DEPCLEAN_LAST]}" 2>&1
+				eval "${AECMD[DEPCLEAN]}" # >> "${AELOG[DEPCLEAN_LAST]}" 2>&1
 				cmdRet=$?
 				eend $?
 				# cat "${AELOG[DEPCLEAN_LAST]}" >> "${AELOG[DEPCLEAN]}" 2>&1
@@ -579,8 +622,12 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 					rm -f "$f"
 				fi
 			done
-			einfo "      Adding extra pass to the system-care loop."; eend 0
-			((max_loop++))
+			if (($max_loop < ${AE_REBUILD[REVDEPCO_MT]})); then
+				einfo "      Adding extra pass to the system-care loop."; eend 0
+				((max_loop++))
+			else
+				ewarn "      Skip adding extra pass to the system-care loop: the maximum is reached."; eend 0
+			fi
 			cmdRet=1
 			scan_for_rdlibs "${AELOG[TASKS_LAST]}"
 		else
