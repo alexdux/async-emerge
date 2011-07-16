@@ -72,7 +72,7 @@ call_emerge() {
 	# pre-logging emerging
 	dt_mark | tee "$log_last" > "$warn_last" 2>&1
 	if [[ "$2" == *'1>&3'* ]]; then 
-		echo '=== *1>&3* ==='
+		#echo '=== *1>&3* ==='
 		eval "$2"
 	else
 		eval "$2 >> $log_last 2>> $warn_last"
@@ -453,11 +453,13 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 										# choose caller
 										if [[ "$cmd" == \#* ]]; then # shell cmd
 											cmd=${cmd:1}
-											einfo "        Running shell command: '$cmd' ..."
+											einfo "        Running shell command:"
+											einfo "          - '$cmd' ..."
 											eval "$cmd >> \"$log_last\" 2>&1"
 										else # PM
+											einfo "        Running PM:"
 											call_cmd1_with_emerge_solver \
-												"    Running PM: '${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $cmd'" \
+												"      - '${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $cmd'" \
 												"${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $cmd" \
 												"$log_last" "$log"
 										fi
@@ -496,6 +498,10 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 							echo "$sens: 2-pass, $sul" >> "${AESIGN[SUBSET_UPDATES]}"
 						fi
 					done
+					# if update is done - remove sign of update
+					if (($updated-1)); then
+						unset ${AE_SUPD[${i}_UPDATED]}
+					fi
 					# collect hints for libs comsumers rebuild
 					scan_for_rdlibs "$log"
 					scan_for_rdlibs "$log_last"
