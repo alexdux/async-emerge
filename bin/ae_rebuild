@@ -500,7 +500,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 					done
 					# if update is done - remove sign of update
 					if (($updated-1)); then
-						unset ${AE_SUPD[${i}_UPDATED]}
+						unset AE_SUPD[${i}_UPDATED]
 					fi
 					# collect hints for libs comsumers rebuild
 					scan_for_rdlibs "$log"
