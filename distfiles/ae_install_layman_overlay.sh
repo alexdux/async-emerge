@@ -3,6 +3,10 @@
 
 echo "- Emerge dependancies"
 emerge -uv aufs2 gentoolkit layman
+
+echo "- Mkdir /usr/local/portage/layman/"
+mkdir -p /usr/local/portage/layman/
+
 echo "- Update '/usr/local/portage/layman/overlays.xml'"
 (
 cat <<EOF
@@ -20,6 +24,7 @@ cat <<EOF
  </repositories> 
 EOF
 ) >> /usr/local/portage/layman/overlays.xml
+
 echo "- Update '/usr/local/portage/layman/make.conf'"
 (
 cat <<EOF
@@ -29,20 +34,26 @@ PORTDIR_OVERLAY="
 "
 EOF
 ) >>  /usr/local/portage/layman/make.conf
+
 echo "- checkout AE SVN"
 cd /usr/local/portage/layman 
 svn checkout http://async-emerge.googlecode.com/svn/overlay/ async-emerge 
+
 echo "- Sync layman"
 layman -S
+
 echo "- Unmask AE"
 if [ -d "/etc/portage/package.keywords/" ]; then
     echo "app-portage/async-emerge" > /etc/portage/package.keywords/async-emerge
 else
     echo "app-portage/async-emerge" >> /etc/portage/package.keywords
 fi
+
 echo "- Emerge AE"
 emerge -av -j1 app-portage/async-emerge
+
 echo "- Check AE"
 ae_vcs df -h
+
 echo "- Edit crontab with mcedit"
 VISUAL=mcedit crontab -e
