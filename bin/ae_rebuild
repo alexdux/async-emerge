@@ -2,7 +2,7 @@
 
 # ae_rebuild - 'async emerge' Gentoo system re-builder
 # GPL ver. 2
-# version: 1.0
+# version: 1.1
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
@@ -389,6 +389,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 		notinstalled=''
 		for (( i=0; i<${AE_SUPD[TOTAL]}; i++ )); do
 			if [ "${AE_SUPD[${i}_UPDATED]}" ]; then
+				cmdRet=0
 				einfo "      ${AE_SUPD[${i}_TITLE]} update detected, update method is '${AE_SUPD[${i}_METHOD]}':"
 				einfo "        (${AE_SUPD[${i}_UPDATED]})"
 				updated=0
@@ -401,8 +402,8 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 					-task-) # adding cmds to task file
 							if (($AE_VCS)); then
 								# array cmds
-								declare -a Cmds
-								readarray -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
+								#declare -a Cmds
+								mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
 								einfo "        Adding ${#Cmds[*]} tasks to update the subset:"
 								for ((k=0; k < ${#Cmds[*]}; k++)); do
 									einfo "          - '${Cmds[$k]}'"
@@ -410,6 +411,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 								ae_add_task "${AE_SUPD[${i}_CMD]}" 2>>"$log_last" >&2 && \
 									true && updated=2
 								eend 0
+								#unset Cmds
 							else
 								echo "Using tasks from VCS." >> "$log_last"
 								einfo "        Using tasks from VCS."
@@ -441,10 +443,9 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 							fi
 							# update (1-pass/second pass) logic
 							if !(($updated)); then
-								#cmdRet=0
 								# array cmds
-								declare -a Cmds
-								readarray -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
+								#declare -a Cmds
+								mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
 								# play cmds
 								for ((k=0; k < ${#Cmds[*]}; k++)); do
 									(($cmdRet)) && break
@@ -453,24 +454,31 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 										# choose caller
 										if [[ "$cmd" == \#* ]]; then # shell cmd
 											cmd=${cmd:1}
-											einfo "        Running shell command:"
+											# --usepkg logic
+											!(($AE_VCS)) && cmd=${cmd/--usepkg n/--usepkg y}
+											#einfo "        Running shell command:"
 											einfo "          - '$cmd' ..."
 											eval "$cmd >> \"$log_last\" 2>&1"
+											echo "Retcode $cmdRet" >> "$log_last" 2>&1
 										else # PM
-											einfo "        Running PM:"
+											#einfo "        Running PM:"
 											call_cmd1_with_emerge_solver \
-												"      - '${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $cmd'" \
+												"      - ${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} '$cmd'" \
 												"${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $cmd" \
 												"$log_last" "$log"
 										fi
 										cmdRet=$?
-										eend $?
-										(($cmdRet)) && updated=0 || updated=2
+										#eend $?
+										if (($?)); then 
+											eend 0;	updated=0
+										else 
+											eend 1; updated=2
+										fi
 									else
 										echo "skip empty line in '${AE_SUPD[${i}_CMD]}'"
 									fi
 								done
-								unset Cmds
+								#unset Cmds
 							fi
 							;;
 					*) echo "Invalid update method: '${AE_SUPD[${s}_METHOD]}'!"
@@ -602,11 +610,17 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 					is="$i"
 					if [[ "$i" == \#* ]]; then # shell cmd
 						i=${i:1}
-						einfo "      Running shell command: '$i' ..."
+						# --usepkg logic
+						!(($AE_VCS)) && i=${i/--usepkg n/--usepkg y}
+						#einfo "      Running shell command: '$i' ..."
+						einfo "      - '$i' ..."
 						eval "$i >> \"${AELOG[TASKS_LAST]}\" 2>&1"
+						echo "Retcode $?" >> "${AELOG[TASKS_LAST]}" 2>&1
 					else # PM
-						einfo "      Running PM: '${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $i' ..."
-						eval "${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $i >> \"${AELOG[TASKS_LAST]}\" 2>&1"
+						#einfo "      Running PM: '${AE_CMD[PM]} ${AECMD[USER_TASKS]} $i' ..."
+						einfo "      - ${AE_CMD[PM]} ${AECMD[USER_TASKS]} '$i' ..."
+						eval "${AE_CMD[PM]} ${AECMD[USER_TASKS]} $i >> \"${AELOG[TASKS_LAST]}\" 2>&1"
+						echo "Retcode $?" >> "${AELOG[TASKS_LAST]}" 2>&1
 					fi
 					cmdRet=$?
 					eend $?
@@ -645,10 +659,11 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 done
 
 # Bye World
-if (($cmdRet)); then
-	eerror "  Can't recover system consistency! Will try again next time."; eend 1
-else
+collect_signes
+if [ "$st" == "NYYY" ]; then
 	einfo "  Now system is consistently."; eend 0
+else
+	eerror "  Can't recover system consistency! Will try again next time."; eend 1
 fi
 
 #times
