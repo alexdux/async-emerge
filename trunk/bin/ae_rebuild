@@ -561,7 +561,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 		# sign file
 		f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
 		if [ -e "$f" ]; then
-			cmd=${AECMD[OBSOLETED_LIBS]/\?/\(`cat "$f" | tr '\n' '|' | head -c-1`\)}
+			cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\(`cat "$f" | tr '\n' '|' | head -c-1`\\\)}
 			# call revdep
 			call_cmd1 "Rebuilding consumers for "`cat "$f" | wc -l`" advised libs" "$cmd" \
 					"${AELOG[OBSLLIBS_LAST]}" "${AELOG[OBSLLIBS]}"
