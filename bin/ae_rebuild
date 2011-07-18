@@ -470,9 +470,9 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 										cmdRet=$?
 										#eend $?
 										if (($?)); then 
-											eend 0;	updated=0
+											eend 1;	updated=0
 										else 
-											eend 1; updated=2
+											eend 0; updated=2
 										fi
 									else
 										echo "skip empty line in '${AE_SUPD[${i}_CMD]}'"
