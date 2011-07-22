@@ -133,62 +133,66 @@ emerge_solver() {
 	eCmd=$((grep " \+${AE_CMD[PM_SEARCH]} \+-" "$log_last" | grep -m1 -v -e '--sync' -e '--info' | \
 				cut -f2- -d'-') 2>> "$log_last")
 
-	# loop
-	loop=${AE_REBUILD[EMERGE_SOLVER_MT]} # to-do: add const
-	cmdRet=1
-	while (($loop)) && (($cmdRet)); do # emerge reports us only one error at once
-		einfo "      trying to solve emerge '$1', try "$((${AE_REBUILD[EMERGE_SOLVER_MT]}-$loop+1)) \
-			"of ${AE_REBUILD[EMERGE_SOLVER_MT]} ..."
+	if [ "$eCmd" ]; then
+		# loop
+		loop=${AE_REBUILD[EMERGE_SOLVER_MT]} # to-do: add const
+		cmdRet=1
+		while (($loop)) && (($cmdRet)); do # emerge reports us only one error at once
+			einfo "      trying to solve emerge '$1', try "$((${AE_REBUILD[EMERGE_SOLVER_MT]}-$loop+1)) \
+				"of ${AE_REBUILD[EMERGE_SOLVER_MT]} ..."
 		
-		# check masked
-		#aMasked=$((grep 'masked by:.*keyword' "$log_last" | tail -n1) 2>> "$log_last")
-		aMasked=$((grep -m1 'masked by:.*keyword' "$log_last") 2>> "$log_last")
-		if [[ $aMasked ]]; then
-			# get packet category/name
-			aMasked=${aMasked%%-[0-9]*}; aMasked=${aMasked/* /}
-			# too slow: shopt -s extglob; eCmd=${eCmd/$aMasked*([! ])/}; shopt -u extglob
-			s=$eCmd; eCmd=''
-			for i in $s; do [[ $i != *$aMasked* ]] && eCmd=$eCmd' '$i; done
-			eCmd=${eCmd:1}
-		fi
-	
-		# check 'there are no ebuilds'
-		#aMissed=$((grep 'there are no ebuilds to satisfy' "$log_last" | tail -n1 | cut -f2 -d'"') 2>> "$log_last")
-		aMissed=$((grep -m1 'there are no ebuilds to satisfy' "$log_last" | cut -f2 -d'"') 2>> "$log_last")
-		#echo "$aMissed"
-		if [[ $aMissed ]]; then
-			# get packet category/name
-			aMissed=${aMissed%%-[0-9]*}; aMasked=${aMissed/* /}
-			# too slow: shopt -s extglob; eCmd=${eCmd/$aMissed*([! ])/}; shopt -u extglob
-			s=$eCmd; eCmd=''
-			for i in $s; do [[ $i != *$aMissed* ]] && eCmd=$eCmd' '$i; done
-			eCmd=${eCmd:1}
-		fi
-		
-		# check 'pulled in by'
-		# (x11-libs/gdk-pixbuf-2.22.1-r2::gentoo, ebuild scheduled for merge) pulled in by
-		for aBlocker in $(grep -m1 'pulled in by' "$log_last" | sed 's/.*(\(.*\)::.*/\1/'); do
-			#echo "$aBlocker"
-			if [[ $aBlocker ]]; then
+			# check masked
+			#aMasked=$((grep 'masked by:.*keyword' "$log_last" | tail -n1) 2>> "$log_last")
+			aMasked=$((grep -m1 'masked by:.*keyword' "$log_last") 2>> "$log_last")
+			if [[ $aMasked ]]; then
 				# get packet category/name
-				aBlocker=${aBlocker%%-[0-9]*}; aMasked=${aBlocker/* /}
-				# too slow: shopt -s extglob; eCmd=${eCmd/$aMissed*([! ])/}; shopt -u extglob
+				aMasked=${aMasked%%-[0-9]*}; aMasked=${aMasked/* /}
+				# too slow: shopt -s extglob; eCmd=${eCmd/$aMasked*([! ])/}; shopt -u extglob
 				s=$eCmd; eCmd=''
-				for i in $s; do [[ $i != *$aBlocker* ]] && eCmd=$eCmd' '$i; done
+				for i in $s; do [[ $i != *$aMasked* ]] && eCmd=$eCmd' '$i; done
 				eCmd=${eCmd:1}
 			fi
-		done
-
-
-		# run PM
-		eval "${AE_CMD[PM]} -$eCmd" >> "$log_last" 2>&1
-		cmdRet=$?
-		eend $cmdRet
-		echo "Retcode $cmdRet" >> "$log_last" 2>&1
-		if (($cmdRet>102)); then return 102; fi
+	
+			# check 'there are no ebuilds'
+			#aMissed=$((grep 'there are no ebuilds to satisfy' "$log_last" | tail -n1 | cut -f2 -d'"') 2>> "$log_last")
+			aMissed=$((grep -m1 'there are no ebuilds to satisfy' "$log_last" | cut -f2 -d'"') 2>> "$log_last")
+			#echo "$aMissed"
+			if [[ $aMissed ]]; then
+				# get packet category/name
+				aMissed=${aMissed%%-[0-9]*}; aMasked=${aMissed/* /}
+				# too slow: shopt -s extglob; eCmd=${eCmd/$aMissed*([! ])/}; shopt -u extglob
+				s=$eCmd; eCmd=''
+				for i in $s; do [[ $i != *$aMissed* ]] && eCmd=$eCmd' '$i; done
+				eCmd=${eCmd:1}
+			fi
 		
-		((loop--))
-	done
+			# check 'pulled in by'
+			# (x11-libs/gdk-pixbuf-2.22.1-r2::gentoo, ebuild scheduled for merge) pulled in by
+			for aBlocker in $(grep -m1 'pulled in by' "$log_last" | sed 's/.*(\(.*\)::.*/\1/'); do
+				#echo "$aBlocker"
+				if [[ $aBlocker ]]; then
+					# get packet category/name
+					aBlocker=${aBlocker%%-[0-9]*}; aMasked=${aBlocker/* /}
+					# too slow: shopt -s extglob; eCmd=${eCmd/$aMissed*([! ])/}; shopt -u extglob
+					s=$eCmd; eCmd=''
+					for i in $s; do [[ $i != *$aBlocker* ]] && eCmd=$eCmd' '$i; done
+					eCmd=${eCmd:1}
+				fi
+			done
+
+
+			# run PM
+			eval "${AE_CMD[PM]} -$eCmd" >> "$log_last" 2>&1
+			cmdRet=$?
+			eend $cmdRet
+			echo "Retcode $cmdRet" >> "$log_last" 2>&1
+			if (($cmdRet>102)); then return 102; fi
+		
+			((loop--))
+		done
+	else
+		ewarn "      Nothing to solve. Check if '--keep-going' logic works."; eend 0
+	fi
 }
 
 # Features:
