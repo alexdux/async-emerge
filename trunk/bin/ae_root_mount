@@ -52,8 +52,15 @@ mnt_list() { # list of dirs, exclusion list, type-fs mark
 			mount -vo remount,ro "$bind" && \
 			# mount with AUFS
 			mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) 2>/dev/null >&2
-			# a bug
-			if !(($?)); then
+			if (($?)); then
+				eerror "  Error binding or mounting $i!" 
+				eend 1
+				ewarn "Cleanup:"
+				ae_root_umount
+				exit 1
+			else
+				# a bug. make transparent for second+ level rbind submounts
+#			if !(($?)); then
 				#echo "check '$i'"
 				if [[ "$mnts" == *$i* ]]; then
 					for k in $mnts; do
@@ -65,17 +72,19 @@ mnt_list() { # list of dirs, exclusion list, type-fs mark
 							mount -vB "$k" "$bind" && \
 							mount -vo remount,ro "$bind" && \
 							mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) 2>/dev/null >&2
+							#
+							if (($?)); then
+								eerror "  Error binding or mounting (rbind) $i!" 
+								eend 1
+								ewarn "Cleanup:"
+								ae_root_umount
+								exit 1
+							fi
+							((nonmerged++))
+							((mounted--))
 						fi
 					done
 				fi
-			fi
-			#
-			if (($?)); then
-				eerror "  Error binding or mounting $i!" 
-				eend 1
-				ewarn "Cleanup:"
-				ae_root_umount
-				exit 1
 			fi
 			((mounted++))
 		fi 
@@ -129,8 +138,13 @@ bnd_trans() {
 	done
 }
 
-# list the root+var of the box
+# stat
 mounted=0
+symlinked=0
+redirs=0
+nonmerged=0
+
+# list the root+var of the box
 if true; then
 	mnt_list '/*' "${AE_DIR[ROOT_EXCLUDE]} /proc /sys /var" 'VCS'
 	mnt_list '/var/*' "${AE_DIR[VAR_EXCLUDE]} ${AE_DIR[ROOT]}" 'VCS'
@@ -148,16 +162,13 @@ else
 fi
 
 # recreating symlinks
-symlinked=0
 redo_sln '/*' './'
 redo_sln '/var/*' '../'
 
 # creating not copied dirs
-redirs=0
 redo_dirs "${AE_DIR[ROOT_EXCLUDE]} /proc /sys /var ${AE_DIR[VAR_EXCLUDE]} ${AE_DIR[ROOT]} ${AE_DIR[GATEWAY]}"
 
 # bind transparent (non-merged) dirs
-nonmerged=0
 bnd_trans "${AE_DIR[TRANSPARENT]}"
 
 # rebind '/dev/*' from system 'mount' (aufs feature)
