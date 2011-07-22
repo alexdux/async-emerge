@@ -461,6 +461,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 											eval "$cmd >> \"$log_last\" 2>&1"
 											echo "Retcode $cmdRet" >> "$log_last" 2>&1
 										else # PM
+											#sed 's/^[ \t]*//'
 											# if [[ "$cmd" == \$* || "$cmd" == \`* ]]; then
 											# cmd=$($cmd)
 											# fi
@@ -564,7 +565,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 		# sign file
 		f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
 		if [ -e "$f" ]; then
-			cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\(`cat "$f" | tr '\n' '|' | head -c-1`\\\)}
+			cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\(`cat "$f" | sed -e :a -e '$!N; s/\n/\\\|/; ta'`\\\)}
 			echo "obslibs cmd: $cmd"
 			# call revdep
 			call_cmd1 "Rebuilding consumers for "`cat "$f" | wc -l`" advised libs" "$cmd" \
