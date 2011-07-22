@@ -457,7 +457,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 											# --usepkg logic
 											!(($AE_VCS)) && cmd=${cmd/--usepkg n/--usepkg y}
 											#einfo "        Running shell command:"
-											einfo "          - '$cmd' ..."
+											einfo "        - '$cmd' ..."
 											eval "$cmd >> \"$log_last\" 2>&1"
 											echo "Retcode $cmdRet" >> "$log_last" 2>&1
 											cmdRet=$?
@@ -468,7 +468,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 											if [ "$cmd" ]; then
 												#einfo "        Running PM:"
 												call_cmd1_with_emerge_solver \
-													"      - ${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} '$cmd'" \
+													"    - ${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} '$cmd'" \
 													"${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $cmd" \
 													"$log_last" "$log"
 												cmdRet=$?
