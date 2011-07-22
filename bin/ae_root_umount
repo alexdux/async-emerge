@@ -74,7 +74,7 @@ umnt_path_type "${AE_DIR[CHROOT]}" '(proc|sysfs|tmpfs)'
 lost=$?
 
 # unmount transparent
-umnt_path_type "${AE_DIR[CHROOT]}" 'bind'
+umnt_path_type "${AE_DIR[CHROOT]}" 'rw,bind'
 nonmerged=$?
 
 # unmount AUFS below ${AE_DIR[ROOT]}

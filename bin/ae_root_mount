@@ -60,7 +60,6 @@ mnt_list() { # list of dirs, exclusion list, type-fs mark
 				exit 1
 			else
 				# a bug. make transparent for second+ level rbind submounts
-#			if !(($?)); then
 				#echo "check '$i'"
 				if [[ "$mnts" == *$i* ]]; then
 					for k in $mnts; do
@@ -80,8 +79,7 @@ mnt_list() { # list of dirs, exclusion list, type-fs mark
 								ae_root_umount
 								exit 1
 							fi
-							((nonmerged++))
-							((mounted--))
+							((mounted++))
 						fi
 					done
 				fi
