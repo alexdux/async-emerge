@@ -3,7 +3,7 @@
 # ae_root_mount - AUFS mounter for 'aync emerge'
 # GPL ver. 2
 #	*some code was tacken from 'auroot' by Junjiro R. Okajima from 'aufs2' distribution
-# version: 1.0
+# version: 1.1
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
@@ -85,8 +85,8 @@ mnt_list() { # list of dirs, exclusion list, type-fs mark
 # redo symlinks in dir
 redo_sln() { # src dir, dest dir level
 	for i in $1; do 
-		# skip non-symlinks and existed fs objects
-		if [[ -L "$i" && ! -e "${AE_DIR[CHROOT]}$i" ]]; then 
+		# skip non-symlinks, existed fs objects and non-dirs
+		if [[ -L "$i" && ! -e "${AE_DIR[CHROOT]}$i" && -d "`readlink \"$i\"`" ]]; then 
 			# recreate symlinks relative to ${AE_DIR[CHROOT]}
 			ln -vsn "$2`readlink $i`" "${AE_DIR[CHROOT]}$i" 2>/dev/null >&2
 			if (($?)); then
