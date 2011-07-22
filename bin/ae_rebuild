@@ -473,6 +473,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 													"$log_last" "$log"
 												cmdRet=$?
 											else
+												einfo "        Not found any dependencies for this subset."
 												cmdRet=0
 											fi
 										fi
