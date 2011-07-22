@@ -304,7 +304,7 @@ compare_sysvers() {
 					if [ "$s1" ]; then
 						echo "$s1" > "$2"
 					else
-						rm -v "$2" #2>&1 >/dev/null
+						rm -v "$2" 2>&1 >/dev/null
 					fi
 				fi
 				# (re)add item
@@ -463,7 +463,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 											cmdRet=$?
 										else # PM
 											if [[ "$cmd" == \$* || "$cmd" == \`* ]]; then
-												cmd=$($cmd)
+												cmd=`$cmd`
 											fi
 											if [ "$cmd" ]; then
 												#einfo "        Running PM:"
