@@ -449,7 +449,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 								# play cmds
 								for ((k=0; k < ${#Cmds[*]}; k++)); do
 									(($cmdRet)) && break
-									cmd="${Cmds[$k]}"
+									cmd="${Cmds[$k]# ?}"
 									if [ "$cmd" ]; then
 										# choose caller
 										if [[ "$cmd" == \#* ]]; then # shell cmd
@@ -460,19 +460,23 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 											einfo "          - '$cmd' ..."
 											eval "$cmd >> \"$log_last\" 2>&1"
 											echo "Retcode $cmdRet" >> "$log_last" 2>&1
+											cmdRet=$?
 										else # PM
-											#sed 's/^[ \t]*//'
-											# if [[ "$cmd" == \$* || "$cmd" == \`* ]]; then
-											# cmd=$($cmd)
-											# fi
-											#einfo "        Running PM:"
-											call_cmd1_with_emerge_solver \
-												"      - ${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} '$cmd'" \
-												"${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $cmd" \
-												"$log_last" "$log"
+											if [[ "$cmd" == \$* || "$cmd" == \`* ]]; then
+												cmd=$($cmd)
+											fi
+											if [ "$cmd" ]; then
+												#einfo "        Running PM:"
+												call_cmd1_with_emerge_solver \
+													"      - ${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} '$cmd'" \
+													"${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $cmd" \
+													"$log_last" "$log"
+												cmdRet=$?
+											else
+												cmdRet=0
+											fi
 										fi
-										cmdRet=$?
-										#eend $?
+										# get result
 										if (($?)); then 
 											eend 1;	updated=0
 										else 
@@ -566,7 +570,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 		f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
 		if [ -e "$f" ]; then
 			cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\(`cat "$f" | sed -e :a -e '$!N; s/\n/\\\|/; ta'`\\\)}
-			echo "obslibs cmd: $cmd"
+			#echo "obslibs cmd: $cmd"
 			# call revdep
 			call_cmd1 "Rebuilding consumers for "`cat "$f" | wc -l`" advised libs" "$cmd" \
 					"${AELOG[OBSLLIBS_LAST]}" "${AELOG[OBSLLIBS]}"
@@ -608,6 +612,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 			# walk through to-do
 			while [ -e "$f" ]; do
 				i=$(head -n1 "$f")
+				i=${i# ?}
 				if [ "$i" ]; then
 					# start last log
 					dt_mark > "${AELOG[TASKS_LAST]}" 2>&1
