@@ -633,9 +633,9 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 						echo "Retcode $?" >> "${AELOG[TASKS_LAST]}" 2>&1
 					else # PM
 						# to-do: check for zero param (as at subset updates)
-						#einfo "      Running PM: '${AE_CMD[PM]} ${AECMD[USER_TASKS]} $i' ..."
-						einfo "      - ${AE_CMD[PM]} ${AECMD[USER_TASKS]} '$i' ..."
-						eval "${AE_CMD[PM]} ${AECMD[USER_TASKS]} $i >> \"${AELOG[TASKS_LAST]}\" 2>&1"
+						#einfo "      Running PM: '${AECMD[USER_TASKS]} $i' ..."
+						einfo "      - ${AECMD[USER_TASKS]} '$i' ..."
+						eval "${AECMD[USER_TASKS]} $i >> \"${AELOG[TASKS_LAST]}\" 2>&1"
 						echo "Retcode $?" >> "${AELOG[TASKS_LAST]}" 2>&1
 					fi
 					cmdRet=$?
