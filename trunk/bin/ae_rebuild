@@ -472,8 +472,8 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 											if [ "$cmd" ]; then
 												#einfo "        Running PM:"
 												call_cmd1_with_emerge_solver \
-													"    - ${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} '$cmd'" \
-													"${AE_CMD[PM]} ${AECMD[SUBSET_UPDATE]} $cmd" \
+													"    - ${AECMD[SUBSET_UPDATE]} '$cmd'" \
+													"${AECMD[SUBSET_UPDATE]} $cmd" \
 													"$log_last" "$log"
 												cmdRet=$?
 											else
