@@ -1,0 +1,120 @@
+#summary How to install AE.
+
+* draft 2 *
+
+= Brief =
+<code>
+</code>
+
+= Details =
+
+There are 3 simple steps to install async-emerge (AE). Fourth step is just the test if it is working. Fifth step is lead to be a top-level configuration task. Finer configuration will be described in "Configuration" section...
+
+= 1. Check Dependencies =
+
+Install some staff are needed to run AE.
+<code># emerge -av aufs2 gentoolkit</code>
+Then rebuild kernel (better - twice) and do reboot. 
+ 
+
+= 2. Add Overlay to Portage =
+
+Add AE repo:
+  * With layman (recommended way). Install layman if not installed yet:
+<code># emerge -av layman</code>
+
+Edit layman's config, add ae-repo to layman:
+<code>nano /etc/layman/layman.cfg
+  overlays  : http://www.gentoo.org/proj/en/overlays/repositories.xml
++             https://async-emerge.googlecode.com/svn/distfiles/layman/ae-overlay.xml
+</code>
+
+Add AE overlay:
+<code>layman -a async-emerge
+</code>
+
+= 3. Unmaks & install AE =
+
+If you want to use the last development version add:
+<code># echo "app-portage/async-emerge" > /etc/portage/package.keywords/async-emerge</code>
+If you want to use the last SVN version add:
+<code># echo "app-portage/async-emerge **" > /etc/portage/package.keywords/async-emerge</code>
+
+*Finally, install AE.*
+<code># emerge -av -j1 app-portage/async-emerge</code>
+
+
+= 4. Testing =
+
+Try to start VCS with "df -h" command:
+<code># ae_vcs df -h </code>
+example "screenshot":
+<pre>
+ `*` Chrooting to /var/async.emerge/chroot: 
+ `*`   Automounting AUFS, 
+ `*` Mounting AUFS root to /var/async.emerge/: 
+ `*`   Binded and mounted 26 dirs, +0 created, +5 binded as transparent (non-merged) and created 0 symlinks.                 `[ ok ]` 
+ `*` Chrooting to /var/async.emerge/chroot (continued): 
+ `*`   Cleaning /var/async.emerge/chroot/var/run from hosts `*`.pid.                                                           `[ ok ]` 
+ `*`   proc fs is mounted to /var/async.emerge/chroot/proc.                                                                  `[ ok ]` 
+ `*`   Mounting sys fs is not configured.                                                                                    `[ ok ]` 
+ `*` Virtually chrooted with: `"df -h"`                                                                                        `[ ok ]` 
+`Filesystem            Size  Used Avail Use% Mounted on` 
+`/dev/sdb3              20G   15G  4.1G  79% /` 
+`sysfs                  20G   15G  4.1G  79% /sys` 
+`udev                   20G   15G  4.1G  79% /dev` 
+`devpts                 20G   15G  4.1G  79% /dev/pts` 
+/dev/sda1              20G   15G  4.1G  79% /mnt/squid
+/dev/sdb1              20G   15G  4.1G  79% /mnt/free
+shm                    20G   15G  4.1G  79% /dev/shm
+df: `/var/async.emerge/chroot/bin': No such file or directory
+df: `/var/async.emerge/chroot/boot': No such file or directory
+df: `/var/async.emerge/chroot/dev': No such file or directory
+df: `/var/async.emerge/chroot/etc': No such file or directory
+df: `/var/async.emerge/chroot/home': No such file or directory
+df: `/var/async.emerge/chroot/lib': No such file or directory
+df: `/var/async.emerge/chroot/mnt': No such file or directory
+df: `/var/async.emerge/chroot/mnt/squid': No such file or directory
+df: `/var/async.emerge/chroot/mnt/free': No such file or directory
+df: `/var/async.emerge/chroot/opt': No such file or directory
+df: `/var/async.emerge/chroot/root': No such file or directory
+df: `/var/async.emerge/chroot/sbin': No such file or directory
+df: `/var/async.emerge/chroot/usr': No such file or directory
+df: `/var/async.emerge/chroot/var/amavis': No such file or directory
+df: `/var/async.emerge/chroot/var/bind': No such file or directory
+df: `/var/async.emerge/chroot/var/cache': No such file or directory
+df: `/var/async.emerge/chroot/var/db': No such file or directory
+df: `/var/async.emerge/chroot/var/dcc': No such file or directory
+df: `/var/async.emerge/chroot/var/empty': No such file or directory
+df: `/var/async.emerge/chroot/var/lib': No such file or directory
+df: `/var/async.emerge/chroot/var/lock': No such file or directory
+df: `/var/async.emerge/chroot/var/log': No such file or directory
+df: `/var/async.emerge/chroot/var/run': No such file or directory
+df: `/var/async.emerge/chroot/var/spool': No such file or directory
+df: `/var/async.emerge/chroot/var/state': No such file or directory
+df: `/var/async.emerge/chroot/var/svn': No such file or directory
+df: `/var/async.emerge/chroot/var/tmp': No such file or directory
+df: `/var/async.emerge/chroot/var/www': No such file or directory
+ `*` Unchrooting from /var/async.emerge/chroot:
+ `*`   proc fs is unmounted from /var/async.emerge/chroot/proc.                                                              `[ ok ]` 
+ `*`   Autounmounting AUFS, 
+ `*` Unmounting AUFS /+/var from /var/async.emerge/: 
+ `*`   Unmounted and unbinded 27 dirs, +6 as transparent (non-merged) and 0 specials.                                        `[ ok ]` 
+ `*` Unchrooting from /var/async.emerge/chroot (continued)                                                                   `[ ok ]` 
+#</pre>
+
+
+= 5. Add to cron/anacron =
+
+In order to build (cook) binaries of packages updates in background you have to schedule `ae_cron` task:
+  * Edit cron table:
+one example:
+<code># crontab -e
+`30 22 * * *	/usr/bin/ae_cron`</code>
+another example:
+<code># async emerge
+`30 01 * * *    /usr/bin/ae_cron; /usr/bin/ae_state -dwc | /bin/mail -s "Async Emerge" root`</code>
+
+  * ...or edit anacron table:
+<code># nano /etc/anacrontab</code>
+Recommended frequency of running is from 1 to 7 days. Anacron is suggested for rare used Gentoo boxes.
