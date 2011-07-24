@@ -2,11 +2,7 @@
 
 * draft 2 *
 
-= Brief =
-<code>
-</code>
-
-= Details =
+= AE Installation =
 
 There are 3 simple steps to install async-emerge (AE). Fourth step is just the test if it is working. Fifth step is lead to be a top-level configuration task. Finer configuration will be described in "Configuration" section...
 
@@ -25,20 +21,19 @@ Add AE repo:
 
 Edit layman's config, add ae-repo to layman:
 <code>nano /etc/layman/layman.cfg
-  overlays  : http://www.gentoo.org/proj/en/overlays/repositories.xml
+  overlays  : http://www.gentoo.org/proj/en/overlays/repositories.xml 
 +             https://async-emerge.googlecode.com/svn/distfiles/layman/ae-overlay.xml
 </code>
 
 Add AE overlay:
-<code>layman -a async-emerge
-</code>
+<code>layman -a async-emerge</code>
 
-= 3. Unmaks & install AE =
+= 3. Unmask & install AE =
 
 If you want to use the last development version add:
 <code># echo "app-portage/async-emerge" > /etc/portage/package.keywords/async-emerge</code>
 If you want to use the last SVN version add:
-<code># echo "app-portage/async-emerge **" > /etc/portage/package.keywords/async-emerge</code>
+<code># echo "app-portage/async-emerge `**`" > /etc/portage/package.keywords/async-emerge</code>
 
 *Finally, install AE.*
 <code># emerge -av -j1 app-portage/async-emerge</code>
