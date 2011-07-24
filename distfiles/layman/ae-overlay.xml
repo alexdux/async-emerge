@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE repositories SYSTEM "/dtd/repositories.dtd">
+<repositories xmlns="" version="1.0">
+  <repo quality="experimental" status="unofficial">
+    <name><![CDATA[async-emerge]]></name>
+    <description lang="en"><![CDATA[Async Emerge overlay]]></description>
+    <homepage>http://code.google.com/p/async-emerge/</homepage>
+    <owner type="person">
+      <email>alexdu.com.ae@gmail.com</email>
+      <name><![CDATA[Alex Dubenetsky]]></name>
+    </owner>
+    <source type="svn">http://async-emerge.googlecode.com/svn/trunk/</source>
+    <feed>https://code.google.com/feeds/p/async-emerge/updates/basic</feed>
+  </repo>
+</repositories>
+
