@@ -2,7 +2,10 @@
 
 * draft *
 
-All paths are given for default configuration!
+All paths are given for default configuration! 
+
+Nothing new - just reminders that could help someone ;) 
+
 
 = 1. Useful tools. =
 
@@ -29,3 +32,10 @@ It is recomended to install `xtail`:
 (Ctrl+\ to stop.) 
 
 First path is for GRS, second - for VCS.
+
+
+= 5. View many logs with colors. =
+
+For example:
+<code># less -r last.co`*`</code>
+(:n - next file, :p - prev file, :S - warp/unwarp long lines.)
