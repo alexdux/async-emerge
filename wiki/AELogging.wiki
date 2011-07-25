@@ -38,4 +38,4 @@ First path is for GRS, second - for VCS.
 
 For example:
 <code># less -r last.co`*`</code>
-(:n - next file, :p - prev file, :S - warp/unwarp long lines.)
+(:n - next file, :p - prev file, -S - warp/unwarp long lines.)
