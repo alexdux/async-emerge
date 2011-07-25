@@ -524,7 +524,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 						unset AE_SUPD[${i}_UPDATED]
 					fi
 					# collect hints for libs comsumers rebuild
-					scan_for_rdlibs "$log"
+					#scan_for_rdlibs "$log"
 					scan_for_rdlibs "$log_last"
 				else # pend depclean if collision occurred
 					dcPend=1
@@ -605,8 +605,20 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 		# call global revdep
 		call_cmd0 "Rebuilding world with revdep-rebuild" "${AECMD[REVDEP_REBUILD]}" \
 				"${AELOG[REVDEP_LAST]}" "${AELOG[REVDEP]}"
+		# collect hints for libs comsumers rebuild
+		scan_for_rdlibs "${AELOG[REVDEP_LAST]}"
+		if [ -e "${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}" ]; then
+			einfo "      Found libs advised for consumers rebuild:"
+			if (($max_loop < 2*${AE_REBUILD[REVDEPCO_MT]})); then
+				einfo "      Adding extra pass to the system-care loop."; eend 0
+				((max_loop++))
+			else
+				ewarn "      Skip adding extra pass to the system-care loop: the maximum is reached."; eend 0
+			fi
+			cmdRet=1
+		fi
 	else 
-		ewarn "    Rebuilding packages against advised libs is not configured."; eend 0
+		ewarn "    Rebuilding world with revdep-rebuild is not configured."; eend 0
 	fi
 
 	# Proceed tasks with cmd/emerge
