@@ -617,7 +617,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 			# walk through to-do
 			while [ -e "$f" ]; do
 				i=$(head -n1 "$f")
-				i=${i# ?}
+				i=${i# ?} # strip leading spaces
 				if [ "$i" ]; then
 					# start last log
 					dt_mark > "${AELOG[TASKS_LAST]}" 2>&1
@@ -658,7 +658,7 @@ for (( loop=1; $loop <= $max_loop && $cmdRet; loop++ )); do
 					rm -f "$f"
 				fi
 			done
-			if (($max_loop < ${AE_REBUILD[REVDEPCO_MT]})); then
+			if (($max_loop < 2*${AE_REBUILD[REVDEPCO_MT]})); then
 				einfo "      Adding extra pass to the system-care loop."; eend 0
 				((max_loop++))
 			else
@@ -676,7 +676,7 @@ done
 
 # Bye World
 collect_signes
-if [ "$st" == "NYY*" ]; then
+if [ "$st" == "?YYY" ]; then
 	einfo "  Now system is consistently."; eend 0
 else
 	eerror "  Can't recover system consistency! Will try again next time."; eend 1
