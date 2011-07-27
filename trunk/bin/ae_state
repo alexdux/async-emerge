@@ -2,7 +2,7 @@
 
 # ae_state - getting state of 'async emerge'
 # GPL ver. 2
-# version: 1.0
+# version: 1.1
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
@@ -112,7 +112,7 @@ ts_last=$ts_from
 #-rw-r--r-- 1 root root 37379100 Mar  9 01:42 icedtea6-bin-1.9.7.tbz2._checksum_failure_.aB8zER
 
 forupd=0
-for i in `ls -t$ls_sort */*bz2`; do
+for i in `ls -t$ls_sort */*bz2 2>/dev/null`; do
 	out=''
 	# stat mtime fo file
 	i_ts=`stat -c %Y "$i" 2>/dev/null`
@@ -162,7 +162,7 @@ for i in `ls -t$ls_sort */*bz2`; do
 done
 
 # total
-(($opt & 0x2)) || { (($opt & 0x80)) && echo; echo -n "    total:"; }
+(($opt & 0x2)) || { (($forupd)) && (($opt & 0x80)) && echo; echo -n "    total:"; }
 echo -e " \033[00;32m$forupd\033[00;10m"
 
 # list last
