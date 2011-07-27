@@ -47,6 +47,6 @@ src_install() {
 	cp -R ${S}/bin/* ${D}/usr/bin/ || die
 	insinto /etc
 	doins "${S}"/etc/* || die
-	dodir /var/log/async.emerge
+	keepdir ${D}/var/log/async.emerge
 }
 
