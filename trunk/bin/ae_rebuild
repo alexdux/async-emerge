@@ -697,7 +697,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							#einfo "      Running PM: '${AECMD[USER_TASKS]} $i' ..."
 							einfo "      - ${AECMD[USER_TASKS]} '$i' ..."
 							eval "${AECMD[USER_TASKS]} $i >> \"${AELOG[TASKS_LAST]}\" 2>&1"
-							echo "Retcode $?" >> "${AELOG[TASKS_LAST]}" 2>&1
+							echo "Retcode $?" >> "${AELOG[TASKS_LAST]}" 2>&1 
 						fi
 						cmdRet=$?
 						eend $?
