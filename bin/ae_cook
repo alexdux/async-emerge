@@ -53,7 +53,8 @@ if [ "${AE_COOK[DO_SYNC]}" == "y" ]; then
 		cat "$last_log" >> "$log" 2>&1
 		echo >> "$log" 2>&1
 		# exit on an error
-		(($cmdRet)) && { eend 1; exit 2; }
+		#(($cmdRet)) && { eend 1; exit 2; }
+		eend $cmdRet
 		# set sync mark
 		touch "${AE_SIGN[SYNCED]}" 2>&1
 	else
