@@ -323,24 +323,6 @@ compare_sysvers() {
 }
 
 
-# start logs subsets updates
-dt_mark > "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
-# save sysvers
-subsetf=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_SUBSET_SAVED]}
-if [ -e "$subsetf" ]; then
-	einfo "  Critical system packages versions already saved - use it ..."
-	echo " * Existed data (world rebuild was interrupted previously):" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
-	eend 0
-else
-	einfo "  Saving critical system packages versions ..."
-	scan_for_sysvers
-	echo "$sysvers" > "$subsetf"
-	echo " * Critical packages versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
-	eend 0
-fi
-cat "$subsetf" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
-echo >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
-
 
 # *** REBUILD & CO MAIN LOOP ***
 max_loop=${AE_REBUILD[REVDEPCO_MT]}
@@ -352,10 +334,28 @@ loopLogic=0xFF
 # 0x08 - rebuild obsoleted libs is needed
 # 0x10 - revdep-rebuild is needed
 # 0x20 - user task is needed
+subsetf=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_SUBSET_SAVED]}
 for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
 	einfo "  Updating system with restoring of consistency, try $loop of $max_loop:"
 	
+	# start logs subsets updates
+	dt_mark > "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+	# save sysvers
+	if [ -e "$subsetf" ]; then
+		einfo "  Critical system packages versions already saved - use it ..."
+		echo " * Existed data (world rebuild was interrupted previously):" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+		eend 0
+	else
+		einfo "  Saving critical system packages versions ..."
+		scan_for_sysvers
+		echo "$sysvers" > "$subsetf"
+		echo " * Critical packages versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+		eend 0
+	fi
+	cat "$subsetf" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+	echo >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+
 	# REBUILD world with emerge
 	if [ "${AE_REBUILD[DO_EMERGE_WORLD]}" == "y" ]; then
 		if (($loopLogic & 0x01)); then
