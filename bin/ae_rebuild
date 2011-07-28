@@ -343,7 +343,7 @@ echo >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 
 # *** REBUILD & CO MAIN LOOP ***
 max_loop=${AE_REBUILD[REVDEPCO_MT]}
-max_loop2=((2*${AE_REBUILD[REVDEPCO_MT]}))
+max_loop2=$((2*${AE_REBUILD[REVDEPCO_MT]}))
 # Control for loop iterations:
 loopLogic=0xFF
 # 0x01 - rebuild world is needed
