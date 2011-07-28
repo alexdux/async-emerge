@@ -345,11 +345,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		dt_mark > "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 		# save sysvers
 		if [ -e "$subsetf" ]; then
-			einfo "  Critical system packages versions already saved - use it ..."
+			einfo "    Critical system packages versions already saved - use it ..."
 			echo " * Existed data (world rebuild was interrupted previously):" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 			eend 0
 		else
-			einfo "  Saving critical system packages versions ..."
+			einfo "    Saving critical system packages versions ..."
 			scan_for_sysvers
 			echo "$sysvers" > "$subsetf"
 			echo " * Critical packages versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
