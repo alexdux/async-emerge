@@ -399,19 +399,24 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			# stop next try of subset updates (if fail any update - set flag again...)
 			((loopLogic&=0xFD))
 			# check sysvers
-			einfo "    Checking critical system packages versions ..."
-			scan_for_sysvers
-			compare_sysvers "$subsetf" "${AESIGN[SUBSET_UPDATES]}"
-			rm -v "$subsetf" 2>&1 >/dev/null
-			if [ -e "${AESIGN[SUBSET_UPDATES]}" ]; then
-				echo " * New critical packages versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
-				cat "${AESIGN[SUBSET_UPDATES]}" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+			if [ -e "$subsetf" ]; then 
+				einfo "    Checking critical system packages versions ..."
+				scan_for_sysvers
+				compare_sysvers "$subsetf" "${AESIGN[SUBSET_UPDATES]}"
+				rm -v "$subsetf" 2>&1 >/dev/null
+				if [ -e "${AESIGN[SUBSET_UPDATES]}" ]; then
+					echo " * New critical packages versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+					cat "${AESIGN[SUBSET_UPDATES]}" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+				else
+					echo " * No new critical packages versions found." >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+				fi
+				cat "${AELOG[SUBSET_UPDATE_LAST]}" >> "${AELOG[SUBSET_UPDATE]}" 2>&1
+				echo >> "${AELOG[SUBSET_UPDATE]}" 2>&1
+				eend 0
 			else
-				echo " * No new critical packages versions found." >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+				eerror "Internal error: saved data about critical packages versions is not found. Stop."; eend 1
+				exit 0xFF
 			fi
-			cat "${AELOG[SUBSET_UPDATE_LAST]}" >> "${AELOG[SUBSET_UPDATE]}" 2>&1
-			echo >> "${AELOG[SUBSET_UPDATE]}" 2>&1
-			eend 0
 
 			einfo "    Check for various subsets updates:"
 			undetected=''		
@@ -611,6 +616,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	# Revdep customers for advised libs, revdep --libs
 	if [ "${AE_REBUILD[DO_OBSOLETED_LIBS]}" == "y" ]; then
 		if (($loopLogic & 0x08)); then
+			((loopLogic&=0xF7))
 			# sign file
 			f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
 			if [ -e "$f" ]; then
@@ -630,9 +636,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					done
 					eend 0
 					true && rm -v "$f" 2>&1 >/dev/null
-					((loopLogic&=0xF7))
 				else # FAIL
 					ewarn "    Save lost libs list for further rebuild."; eend 0
+					((loopLogic|=0x08))
 				fi
 			else
 				einfo "    Not found any libs advised for consumers rebuild."; eend 0
@@ -666,6 +672,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	# Proceed tasks with cmd/emerge
 	if [ "${AE_REBUILD[DO_USER_TASKS]}" == "y" ]; then
 		if (($loopLogic & 0x20)); then
+			((loopLogic&=0xDF))
 			f="${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
 			if [ -e "$f" ]; then 
 				einfo "    Running scheduled tasks:" # + loop+1
@@ -715,7 +722,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					fi
 				done
 
-				(($cmdRet)) || ((loopLogic&=0xDF))
+				# if failed - set the flag again
+				(($cmdRet)) && ((loopLogic|=0x20))
 
 				# add depclean and revdep-rebuild pass
 				((loopLogic|=0x14))
