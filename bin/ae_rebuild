@@ -327,7 +327,7 @@ compare_sysvers() {
 # *** REBUILD & CO MAIN LOOP ***
 max_loop=${AE_REBUILD[REVDEPCO_MT]}
 # Control for loop iterations:
-loopLogic=0xFF
+loopLogic=0x3F
 # 0x01 - rebuild world is needed
 # 0x02 - subset update is needed
 # 0x04 - deplcean is needed
