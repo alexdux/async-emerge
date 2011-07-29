@@ -656,7 +656,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			scan_for_rdlibs "${AELOG[REVDEP_LAST]}"
 			(($?)) || ((loopLogic|=0x08))
 		else
-			einfop "    Rebuilding world with revdep-rebuild was already done."; eend 0
+			einfo "    Rebuilding world with revdep-rebuild was already done."; eend 0
 		fi
 	else 
 		ewarn "    Rebuilding world with revdep-rebuild is not configured."; eend 0
