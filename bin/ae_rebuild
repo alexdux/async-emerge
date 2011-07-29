@@ -732,6 +732,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	else 
 		ewarn "    Scheduled tasks is not configured."; eend 0
 	fi
+
+echo "loopLogic: $loopLogic"
 done
 
 # Bye World
