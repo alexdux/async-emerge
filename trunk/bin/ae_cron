@@ -2,7 +2,7 @@
 
 # ae_cron - 'ae_chroot ae_cook' shortcut for cron
 # GPL-2
-# version: 1.0
+# version: 1.1
 # alexdu@forums.gentoo.org
 
 # Using:
@@ -20,7 +20,7 @@
 
 
 # calling bakery
-if [ "`(ps -p \`cat \"${AE_PID[AE_COOK]}\" \` -o comm= ) 2>/dev/null`" == "$PNAME" ]; then
+if [ "$((ps -p $(<"${AE_PID[AE_COOK]}") -o comm= ) 2>/dev/null)" == "$PNAME" ]; then
 	echo -e "WARNING: 'ae_cook' already running, skip calling from CRON..." >> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
 else
 	# make lock

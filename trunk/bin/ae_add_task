@@ -48,8 +48,8 @@ if [[ (( ${#} )) && "$1" != "--help" ]]; then
 	echo -e "$o" >> "$addTo"
 	eend $?
 	
-	cntC=$((cat $fileC | wc -l) 2>/dev/null)
-	cntI=$((cat $fileI | wc -l) 2>/dev/null)
+	cntC=$((wc -l < "$fileC") 2>/dev/null)
+	cntI=$((wc -l < "$fileI") 2>/dev/null)
 
 	einfo "  Total task to do in VCS $cntC:"
 	[ -e "$fileC" ] && cat "$fileC"

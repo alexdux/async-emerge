@@ -81,13 +81,13 @@ call_emerge() {
 	eend $cmdRet
 	# if an error occurred - add log to warn (some errors do not out to stderr)
 	### (($cmdRet)) && cat "$log_last" >> "$warn_last" 2>&1
+	echo "Retcode: $cmdRet" >> "$log_last" 2>&1
 	# care logs
 	cat "$log_last" >> "$log" 2>&1
 	cat "$warn_last" >> "$warn" 2>&1
 	echo >> "$log" 2>&1
 	echo >> "$warn" 2>&1
 	# exit on an error
-	echo "Retcode $cmdRet" >> "$log_last" 2>&1
 	(($cmdRet>1)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 3; }
 	return $cmdRet
 }
@@ -101,10 +101,10 @@ call_cmd1() {
 	eval "$2" >> "$log_last" 2>&1
 	cmdRet=$?
 	eend $cmdRet
+	echo "Retcode: $cmdRet" >> "$log_last" 2>&1
 	cat "$log_last" >> "$log" 2>&1
 	echo >> "$log" 2>&1
 	# exit on an error
-	echo "Retcode $cmdRet" >> "$log_last" 2>&1
 	(($cmdRet>1)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 4; }
 	return $cmdRet
 }
@@ -186,7 +186,7 @@ emerge_solver() {
 			eval "${AE_CMD[PM]} -$eCmd" >> "$log_last" 2>&1
 			cmdRet=$?
 			eend $cmdRet
-			echo "Retcode $cmdRet" >> "$log_last" 2>&1
+			echo "Retcode: $cmdRet" >> "$log_last" 2>&1
 			if (($cmdRet>102)); then return 102; fi
 		
 			((loop--))
@@ -213,10 +213,10 @@ call_cmd1_with_emerge_solver() {
 	eend $cmdRet
 	(($cmdRet>1)) && return $cmdRet
 	(($cmdRet)) && emerge_solver "$1" "$3" # "$4"
+	echo "Retcode: $cmdRet" >> "$log_last" 2>&1
 	cat "$log_last" >> "$log" 2>&1
 	echo >> "$log" 2>&1
 	# exit on an error
-	echo "Retcode $cmdRet" >> "$log_last" 2>&1
 	(($cmdRet>1)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 4; }
 	#einfo "    Solved. $1 (continue)"
 	return $cmdRet
@@ -367,7 +367,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
 				if !(($cmdRet)); then touch "${AE_SIGN[COOKED]}" 2>&1; fi
 			else
-				# ((/path/to/oraMon.pl 2>&1 1>&3 | tee /tmp/errors.log) 3>&1 1>&2 | tee /tmp/output.log) > /tmp/final.log 2>&1
+			# ((/path/to/oraMon.pl 2>&1 1>&3 | tee /tmp/errors.log) 3>&1 1>&2 | tee /tmp/output.log) > /tmp/final.log 2>&1
 				call_emerge "  Rebuilding world" \
 					"((${AECMD[EMERGE]} 2>&1 1>&3 | tee \$warn_last) 3>&1 1>&2 | tee \$log_last) 2>&1" \
 					"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
@@ -620,16 +620,16 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			# sign file
 			f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
 			if [ -e "$f" ]; then
-				cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\(`cat "$f" | sed -e :a -e '$!N; s/\n/\\\|/; ta'`\\\)}
+				cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\($(sed -e :a -e '$!N; s,\n,\\\|,; ta' < cat)\\\)}
 				#echo "obslibs cmd: $cmd"
 				# call revdep
-				call_cmd1 "Rebuilding consumers for "`cat "$f" | wc -l`" advised libs" "$cmd" \
+				call_cmd1 "Rebuilding consumers for "$(wc -l < "$f")" advised libs" "$cmd" \
 						"${AELOG[OBSLLIBS_LAST]}" "${AELOG[OBSLLIBS]}"
 				# check the result
 				if !(($cmdRet)); then # OK
 					einfo "      Removing advised libs if has no owner ..."
 					# go throgh the list and unlink lost libs
-					for i in `cat "$f"`; do 
+					for i in $(<"$f"); do 
 						[ `equery b "$i" | head -n1` ] || { 
 							rm -v "$i" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
 						}

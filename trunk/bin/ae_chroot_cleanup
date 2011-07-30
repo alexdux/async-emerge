@@ -2,7 +2,7 @@
 
 # ae_chroot_cleanup - chrooted dirs cleaner for 'async emerge'
 # GPL ver. 2
-# version: 1.0
+# version: 1.1
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
@@ -20,7 +20,7 @@
 ebegin "Clearing ${AE_DIR[CHROOT]}"
 
 # check if aufs is mounted
-if [ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" != "" ]; then
+if [ "$(mount | grep ${AE_DIR[ROOT]} | grep aufs)" ]; then
 	eerror "  AUFS is mounted! Stop."
 	eend 1
 	exit 1
