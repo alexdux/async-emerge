@@ -239,15 +239,17 @@ esac
 if (($opt & 0x100)); then
 	echo -n '  Last cron message:'
 	f="${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
-	((`(cat "$f" | wc -l) 2>/dev/null`>1)) && \
-		{ echo; cat "$f"; } || echo -e ' \033[00;32mnone\033[00;10m.'
+	(($(wc -l < "$f" 2>/dev/null) > 1)) && \
+		echo -e "\n$(<"$f")" || \
+		echo -e ' \033[00;32mnone\033[00;10m.'
 fi
 # show last emerge Warn
 if (($opt & 0x20)); then
 	echo -n '  Last emerge warning:'
 	f="${AE_LOG[DIR_LAST]}${AE_LOG[DIR_COOK]}${AE_LOG[FILE_EMERGE_WARN]}${AE_LOG[EXT_COOK]}"
-	((`(cat "$f" | wc -l) 2>/dev/null`>1)) && \
-		{ echo; cat "$f"; } || echo -e ' \033[00;32mnone\033[00;10m.'
+	(($(wc -l < "$f" 2>/dev/null) > 1)) && \
+		echo -e "\n$(<"$f")" || \
+		echo -e ' \033[00;32mnone\033[00;10m.'
 fi
 
 exit 0

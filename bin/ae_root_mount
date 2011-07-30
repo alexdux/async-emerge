@@ -7,7 +7,7 @@
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
-# 	- mount AUFS merged tree from / nad /var of the box
+# 	- mount AUFS merged tree from / and /var of the box
 # 	- symlinks recreated with AUFS logic
 #	- separated disk partition supported via pre-rbinded root master dirs
 #	- config-excluded dirs not mounts and recreates empty
@@ -24,7 +24,7 @@ if [ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" != "" ]; then
 	exit 0
 fi
 
-# (re)create AE gw dir, logs dirs should exist
+# (re)create AE gw dir, logs dirs should exist (ebuild creates it)
 mkdir -p "${AE_DIR[GATEWAY]}" 2>/dev/null
 
 # clean mtab
@@ -34,8 +34,9 @@ if [ -e "${AE_DIR[DELTA]}/etc/mtab" ]; then
 	eend 0
 fi
 
-# bind+mount a set of dirs
-mnt_list() { # list of dirs, exclusion list, type-fs mark
+# bind+mount a set of dirs 
+# mnt_list: list of dirs, exclusion list, type-fs mark
+mnt_list() {
 	local mnts=$(mount | grep '^/dev/' | cut -f3 -d' ' | tr '\n' ' ')
 	# also bind ?
 	#echo "mounts: $mnts"
@@ -90,7 +91,8 @@ mnt_list() { # list of dirs, exclusion list, type-fs mark
 }
 
 # redo symlinks in dir
-redo_sln() { # src dir, dest dir level
+# redo_sln: src dir, dest dir level
+redo_sln() { 
 	for i in $1; do 
 		# skip non-symlinks, existed fs objects and non-dirs
 		if [[ -L "$i" && ! -e "${AE_DIR[CHROOT]}$i" && -d "`readlink \"$i\"`" ]]; then 
@@ -107,7 +109,8 @@ redo_sln() { # src dir, dest dir level
 }
 
 # redo not-copied dirs
-redo_dirs() { # a set of dirs
+# redo_dirs: a set of dirs
+redo_dirs() { 
 	for i in $1; do 
 		mkdir -v "${AE_DIR[CHROOT]}$i" 2>/dev/null >&2 
 		(($?)) || ((redirs++))
