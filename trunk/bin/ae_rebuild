@@ -620,7 +620,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			# sign file
 			f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
 			if [ -e "$f" ]; then
-				cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\($(sed -e :a -e '$!N; s,\n,\\\|,; ta' < cat)\\\)}
+				cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\($(sed -e :a -e '$!N; s,\n,\\\|,; ta' < "$f")\\\)}
 				#echo "obslibs cmd: $cmd"
 				# call revdep
 				call_cmd1 "Rebuilding consumers for "$(wc -l < "$f")" advised libs" "$cmd" \
