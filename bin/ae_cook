@@ -2,7 +2,7 @@
 
 # ae_cook - 'async emerge' binaries cooking
 # GPL ver. 2
-# version: 1.0
+# version: 1.1
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
@@ -69,20 +69,22 @@ fi
 
 
 # *** EMERGE ***
-# remove build & revdep-rebuild signes
-[ -e "${AE_SIGN[COOKED]}" ] && rm -v "${AE_SIGN[COOKED]}" 2>&1 >/dev/null
-[ -e "${AE_SIGN[REVDEPED]}" ] && rm -v "${AE_SIGN[REVDEPED]}" 2>&1 >/dev/null
+# remove cook signes
+rm -v "${AE_SIGN[COOKED]}" 2>&1 >/dev/null
+rm -v "${AE_SIGN[REVDEPED]}" 2>&1 >/dev/null
+rm -v "${AE_SIGN[REVDEPED]}" 2>&1 >/dev/null
 
 
 # calling 'ae_rebuild'
 $PPATH/ae_rebuild
 cmdRet=$?
 
+# setup the gateway signes
+(($cmdRet&0x01)) || touch "${AE_SIGN[COOKED]}" 2>&1
+(($cmdRet&0x1E)) || touch "${AE_SIGN[REVDEPED]}" 2>&1
+(($cmdRet&0x20)) || touch "${AE_SIGN[TASKED]}" 2>&1
 
-# set build sign
-(($cmdRet)) || touch "${AE_SIGN[REVDEPED]}" 2>&1
-
-if [[ -e "${AE_SIGN[COOKED]}" && -e "${AE_SIGN[REVDEPED]}" ]]; then
+if [[ -e "${AE_SIGN[COOKED]}" && -e "${AE_SIGN[REVDEPED]}" && -e "${AE_SIGN[TASKED]}" ]]; then
 	einfo "All binaries are well done ;-)"; eend 0
 else
 	eerror "There was an error at binaries cook or system's consistency care."; eend 2
