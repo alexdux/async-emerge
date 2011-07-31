@@ -367,7 +367,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		echo >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 	fi
 
-	# REBUILD world with emerge
+	# REBUILD WORLD with emerge
 	if [ "${AE_REBUILD[DO_EMERGE_WORLD]}" == "y" ]; then
 		if (($loopLogic & 0x01)); then
 			if (($AE_VCS)); then
@@ -395,14 +395,14 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			# add depclean and revdep-rebuild pass
 			((loopLogic|=0x14))
 		else
-			einfo "    World rebuilding was already done."; eend 0
+			einfo "    World already has been rebuilt."; eend 0
 		fi
 	else
 		ewarn "    World rebuilding is not configured."; eend 1
 	fi
 
 
-	# Subset updates
+	# SUBSET UPDATES
 	if [ "${AE_REBUILD[DO_SUBSET_UPDATES]}" == "y" ]; then
 		if (($loopLogic & 0x02)); then
 			# stop next try of subset updates (if fail any update - set flag again...)
@@ -585,14 +585,14 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			[ "$undetected" ] && einfo "      $undetected updates were not detected."; eend 0
 			[ "$notinstalled" ] && einfo "      $notinstalled updates were skipped: not installed."; eend 0
 		else
-			einfo "    Subsets updates was already done."; eend 0
+			einfo "    Subsets already have been updated."; eend 0
 		fi
 	else 
 		ewarn "    Checking for various subsets updates is not configured."; eend 0
 	fi
 
 	
-	# Cleanup all unneded (depclean), emerge -ca
+	# Cleanup all unneded (DEPCLEAN), emerge -ca
 	if [ "${AE_REBUILD[DO_DEPCLEAN]}" == "y" ]; then
 		if (($loopLogic & 0x04)); then
 			if [ $dcPend ]; then
@@ -619,14 +619,14 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				((loopLogic|=0x10))
 			fi
 		else
-			einfo "    Cleaning system was already done."; eend 0
+			einfo "    System already has been cleaned."; eend 0
 		fi
 	else 
 		ewarn "    Cleaning system is not configured."; eend 0
 	fi
 
 	
-	# Revdep customers for advised libs, revdep --libs
+	# REVDEP CONSUMERS for advised libs, revdep --libs
 	if [ "${AE_REBUILD[DO_OBSOLETED_LIBS]}" == "y" ]; then
 		if (($loopLogic & 0x08)); then
 			((loopLogic&=0xF7))
@@ -636,8 +636,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\($(sed -e :a -e '$!N; s,\n,\\\|,; s,<<< ,,g;  ta' < "$f")\\\)}
 				#echo "obslibs cmd: $cmd"
 				# call revdep
-				call_cmd1 "Rebuilding consumers for "$(wc -l < "$f")" advised libs" "$cmd" \
+				call_cmd1 "Rebuilding for "$(wc -l < "$f")" advised libs consumers" "$cmd" \
 						"${AELOG[OBSLLIBS_LAST]}" "${AELOG[OBSLLIBS]}"
+				# copy libs lit to logs
+				echo " * Copy of advised libs list:" | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
+				tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}" < "$f"
 				# check the result
 				if !(($cmdRet)); then # OK
 					einfo "      Removing advised obsoleted libs ..."
@@ -661,17 +664,17 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				# add revdep-rebuild pass
 				((loopLogic|=0x10))
 			else
-				einfo "    Not found any libs advised for consumers rebuild."; eend 0
+				einfo "    Not found any libs advised for consumers rebuilding."; eend 0
 			fi
 		else
-			einfo "    Rebuilding consumers for advised libs was already done. "; eend 0
+			einfo "    Consumers for advised libs have been already rebuilt. "; eend 0
 		fi
 	else 
-		ewarn "    Rebuilding consumers for advised libs is not configured."; eend 0
+		ewarn "    Rebuilding of consumers for advised libs is not configured."; eend 0
 	fi
 
 	
-	# Revdep system-wide
+	# REVDEP system-wide
 	if [ "${AE_REBUILD[DO_REVDEP_REBUILD]}" == "y" ]; then
 		if (($loopLogic & 0x10)); then
 			# call global revdep
@@ -686,14 +689,14 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			# collect hints for libs comsumers rebuild
 			scan_for_rdlibs "${AELOG[REVDEP_LAST]}"
 		else
-			einfo "    Rebuilding world with revdep-rebuild was already done."; eend 0
+			einfo "    Rebuilding world with revdep-rebuild has been already done."; eend 0
 		fi
 	else 
 		ewarn "    Rebuilding world with revdep-rebuild is not configured."; eend 0
 	fi
 
 
-	# Proceed tasks with cmd/emerge
+	# Proceed TASKS with cmd/emerge
 	if [ "${AE_REBUILD[DO_USER_TASKS]}" == "y" ]; then
 		if (($loopLogic & 0x20)); then
 			((loopLogic&=0xDF))
@@ -758,10 +761,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				einfo "    There are no scheduled tasks."; eend 0
 			fi
 		else
-			einfo "    Scheduled tasks was already done."; eend 0
+			einfo "    All scheduled tasks have been already done."; eend 0
 		fi
 	else 
-		ewarn "    Scheduled tasks is not configured."; eend 0
+		ewarn "    Running scheduled tasks is not configured."; eend 0
 	fi
 
 #echo "loopLogic: $loopLogic"
@@ -771,7 +774,7 @@ done
 if (($loopLogic)); then
 	eerror "  Can't recover system consistency! Will try again next time."; eend 1
 else
-	einfo "  Now system is consistently."; eend 0
+	einfo "  Now the system is consistently."; eend 0
 fi
 
 #times
