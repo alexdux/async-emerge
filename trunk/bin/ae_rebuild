@@ -385,6 +385,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			eend 0
 			# check subset update after any world rebuild
 			((loopLogic|=0x02))
+			# add depclean and revdep-rebuild pass
+			((loopLogic|=0x14))
 		else
 			einfo "    World rebuilding was already done."; eend 0
 		fi
@@ -517,6 +519,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											else 
 												eend 0; updated=2
 											fi
+											# only for real update
+											# add depclean and revdep-rebuild pass
+											((loopLogic|=0x14))
 										else
 											echo "skip empty line in '${AE_SUPD[${i}_CMD]}'"
 										fi
@@ -604,6 +609,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 								"${AELOG[DEPCLEAN_LAST]}" "${AELOG[DEPCLEAN]}"
 				fi
 				(($cmdRet)) || ((loopLogic&=0xFB))
+				# add revdep-rebuild pass
+				((loopLogic|=0x10))
 			fi
 		else
 			einfo "    Cleaning system was already done."; eend 0
@@ -640,6 +647,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					ewarn "    Save lost libs list for further rebuild."; eend 0
 					((loopLogic|=0x08))
 				fi
+				# add revdep-rebuild pass
+				((loopLogic|=0x10))
 			else
 				einfo "    Not found any libs advised for consumers rebuild."; eend 0
 			fi
