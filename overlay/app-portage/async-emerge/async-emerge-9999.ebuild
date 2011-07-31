@@ -32,7 +32,8 @@ RESTRICT="mirror"
 RDEPEND="sys-fs/aufs2
 app-portage/gentoolkit
 app-shells/bash
-app-portage/eix"
+app-portage/eix
+sys-process/lsof"
 #DEPEND="${RDEPEND}"
 
 
