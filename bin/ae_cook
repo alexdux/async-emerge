@@ -81,7 +81,7 @@ cmdRet=$?
 
 # setup the gateway signes
 (($cmdRet&0x01)) || touch "${AE_SIGN[COOKED]}" >/dev/null 2>&1
-(($cmdRet&0x1E)) || touch "${AE_SIGN[REVDEPED]}" >/dev/null 2>&1
+(($cmdRet&0x1E)) || echo "$cmdRet" > "${AE_SIGN[REVDEPED]}"
 (($cmdRet&0x20)) || touch "${AE_SIGN[TASKED]}" >/dev/null 2>&1
 
 if [[ -e "${AE_SIGN[COOKED]}" && -e "${AE_SIGN[REVDEPED]}" && -e "${AE_SIGN[TASKED]}" ]]; then
