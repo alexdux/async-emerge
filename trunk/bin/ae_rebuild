@@ -236,6 +236,8 @@ scan_for_rdlibs() {
 	#grep -E 'revdep-rebuild +\-\-library' "$1" | cut -f2 -d"'" | sort -u >> "$f"
 	# return true if file exists (there is libs to rebuilt in it)
 	[ -e "$f" ]
+	# set request for obsoleted libs update, the var is described below
+	(($?)) || ((loopLogic|=0x08))
 	return $?
 }
 
@@ -333,7 +335,7 @@ loopLogic=0x3F
 # 0x04 - deplcean is needed
 # 0x08 - rebuild obsoleted libs is needed
 # 0x10 - revdep-rebuild is needed
-# 0x20 - user task is needed
+# 0x20 - user task is scheduled
 subsetf=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_SUBSET_SAVED]}
 for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
@@ -379,9 +381,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			# ... double is not good, but just to be sure (duplicates will skipped)
 			einfo "    Collecting libs advised for consumers rebuild ..."
 			scan_for_rdlibs "${AELOG[EMERGE_LAST]}"
-			(($?)) || ((loopLogic|=0x08))
 			scan_for_rdlibs "${AELOG[EMERGE_WARN_LAST]}"
-			(($?)) || ((loopLogic|=0x08))
 			eend 0
 			# check subset update after any world rebuild
 			((loopLogic|=0x02))
@@ -520,6 +520,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												eend 0; updated=2
 											fi
 											# only for real update
+											# collect hints for libs comsumers rebuild
+											#scan_for_rdlibs "$log"
+											scan_for_rdlibs "$log_last"
 											# add depclean and revdep-rebuild pass
 											((loopLogic|=0x14))
 										else
@@ -559,10 +562,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						if (($updated-1)); then
 							unset AE_SUPD[${i}_UPDATED]
 						fi
-						# collect hints for libs comsumers rebuild
-						#scan_for_rdlibs "$log"
-						scan_for_rdlibs "$log_last"
-						(($?)) || ((loopLogic|=0x08))
 					else # pend depclean if collision occurred
 						dcPend=1
 						# failed - set the bit again!!!
@@ -637,9 +636,12 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					einfo "      Removing advised libs if has no owner ..."
 					# go throgh the list and unlink lost libs
 					for i in $(<"$f"); do 
-						[ `equery b "$i" | head -n1` ] || { 
+						if [ `equery b "$i" | head -n1` ]; then
+							echo "Skipping unlinking '$i' - has at least one owner." | \
+								tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
+						else
 							rm -v "$i" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
-						}
+						fi
 					done
 					eend 0
 					true && rm -v "$f" 2>&1 >/dev/null
@@ -647,6 +649,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					ewarn "    Save lost libs list for further rebuild."; eend 0
 					((loopLogic|=0x08))
 				fi
+				# collect hints for libs comsumers rebuild
+				scan_for_rdlibs "${AELOG[OBSLLIBS_LAST]}"
 				# add revdep-rebuild pass
 				((loopLogic|=0x10))
 			else
@@ -670,7 +674,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			(($cmdRet)) || ((loopLogic&=0xEF))
 			# collect hints for libs comsumers rebuild
 			scan_for_rdlibs "${AELOG[REVDEP_LAST]}"
-			(($?)) || ((loopLogic|=0x08))
 		else
 			einfo "    Rebuilding world with revdep-rebuild was already done."; eend 0
 		fi
@@ -740,7 +743,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
 				# check for rebuild advised libs
 				scan_for_rdlibs "${AELOG[TASKS_LAST]}"
-				(($?)) || ((loopLogic|=0x08))
 			else
 				einfo "    There are no scheduled tasks."; eend 0
 			fi
