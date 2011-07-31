@@ -230,10 +230,10 @@ scan_for_rdlibs() {
 	# in order of appearance
 	for i in $(grep -E 'revdep-rebuild +\-\-library' "$1" | sed "s/.*library[ =]*\([^ ,]*\).*/\1/;s/['\"]//g" ); {
 		# avoid duplicates - it's safe
-		[ $(grep "^$i$" "$f" 2>/dev/null) ] || echo "$i" >> "$f"
+		[ "$(grep "^$i$" "$f" 2>/dev/null)" ] || echo "$i" >> "$f"
 		# check for unlink advise
 		# *   # rm '/usr/lib64/libmpfr.so.1'
-		if [ $(grep "rm .*$i" "$1" 2>/dev/null) ]; then
+		if [ "$(grep "rm .*$i" "$1" 2>/dev/null)" ]; then
 			trdl=$(sed "s:^$i$:<<< &:" "$f")
 			echo -e "$trdl" > "$f"
 		fi
