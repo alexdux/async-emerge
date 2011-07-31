@@ -230,7 +230,13 @@ scan_for_rdlibs() {
 	# in order of appearance
 	for i in $(grep -E 'revdep-rebuild +\-\-library' "$1" | sed "s/.*library[ =]*\([^ ,]*\).*/\1/;s/['\"]//g" ); {
 		# avoid duplicates - it's safe
-		[ `grep "^$i$" "$f" 2>/dev/null` ] || echo "$i" >> "$f"
+		[ $(grep "^$i$" "$f" 2>/dev/null) ] || echo "$i" >> "$f"
+		# check for unlink advise
+		# *   # rm '/usr/lib64/libmpfr.so.1'
+		if [ $(grep "rm .*$i" "$1") ]; then
+			trdl=$(sed "s:^$i$:<<< &:" "$f")
+			echo -e "$trdl" > "$f"
+		fi
 	}
 	# sorted: no...
 	#grep -E 'revdep-rebuild +\-\-library' "$1" | cut -f2 -d"'" | sort -u >> "$f"
@@ -626,23 +632,23 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			# sign file
 			f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
 			if [ -e "$f" ]; then
-				cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\($(sed -e :a -e '$!N; s,\n,\\\|,; ta' < "$f")\\\)}
+				cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\($(sed -e :a -e '$!N; s,\n,\\\|,; s,<<< ,,g;  ta' < "$f")\\\)}
 				#echo "obslibs cmd: $cmd"
 				# call revdep
 				call_cmd1 "Rebuilding consumers for "$(wc -l < "$f")" advised libs" "$cmd" \
 						"${AELOG[OBSLLIBS_LAST]}" "${AELOG[OBSLLIBS]}"
 				# check the result
 				if !(($cmdRet)); then # OK
-					einfo "      Removing advised libs if has no owner ..."
+					einfo "      Removing advised obsoleted libs ..."
 					# go throgh the list and unlink lost libs
-					for i in $(<"$f"); do 
-						if [ `equery b "$i" | head -n1` ]; then
-							echo "Skipping unlinking '$i' - has at least one owner." | \
-								tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
-						else
+					while read i; do 
+						if [[ "$i" == "<<< "* ]]; then
 							rm -v "$i" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
+						else
+							echo "Skipping unlinking '$i' - not asked to remove it." | \
+								tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
 						fi
-					done
+					done < "$f"
 					eend 0
 					true && rm -v "$f" 2>&1 >/dev/null
 				else # FAIL
