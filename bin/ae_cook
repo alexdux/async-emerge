@@ -45,10 +45,10 @@ if [ "${AE_COOK[DO_SYNC]}" == "y" ]; then
 		last_log="${AE_LOG[DIR_LAST]}${AE_LOG[DIR_COOK]}${AE_LOG[FILE_SYNC]}${AE_LOG[EXT_COOK]}"
 		log="${AE_LOG[DIR_SAVE]}${AE_LOG[DIR_COOK]}${AE_LOG[FILE_SYNC]}${AE_LOG[EXT_COOK]}"
 		# remove sync mark
-		[ -e "${AE_SIGN[SYNCED]}" ] && rm -v "${AE_SIGN[SYNCED]}" 2>&1 >/dev/null
+		rm -v "${AE_SIGN[SYNCED]}" >/dev/null 2>&1
 		# logging syncing
 		dt_mark > "$last_log" 2>&1
-		eval "${AE_RCMD[COOK_SYNC]} 2>&1 >> \"$last_log\""
+		eval "${AE_RCMD[COOK_SYNC]} >> \"$last_log\"" 2>&1
 		cmdRet=$?
 		cat "$last_log" >> "$log" 2>&1
 		echo >> "$log" 2>&1
@@ -70,9 +70,9 @@ fi
 
 # *** EMERGE ***
 # remove cook signes
-rm -v "${AE_SIGN[COOKED]}" 2>&1 >/dev/null
-rm -v "${AE_SIGN[REVDEPED]}" 2>&1 >/dev/null
-rm -v "${AE_SIGN[REVDEPED]}" 2>&1 >/dev/null
+rm -v "${AE_SIGN[COOKED]}" >/dev/null 2>&1
+rm -v "${AE_SIGN[REVDEPED]}" >/dev/null 2>&1
+rm -v "${AE_SIGN[TASKED]}" >/dev/null 2>&1
 
 
 # calling 'ae_rebuild'
@@ -80,9 +80,9 @@ $PPATH/ae_rebuild
 cmdRet=$?
 
 # setup the gateway signes
-(($cmdRet&0x01)) || touch "${AE_SIGN[COOKED]}" 2>&1
-(($cmdRet&0x1E)) || touch "${AE_SIGN[REVDEPED]}" 2>&1
-(($cmdRet&0x20)) || touch "${AE_SIGN[TASKED]}" 2>&1
+(($cmdRet&0x01)) || touch "${AE_SIGN[COOKED]}" >/dev/null 2>&1
+(($cmdRet&0x1E)) || touch "${AE_SIGN[REVDEPED]}" >/dev/null 2>&1
+(($cmdRet&0x20)) || touch "${AE_SIGN[TASKED]}" >/dev/null 2>&1
 
 if [[ -e "${AE_SIGN[COOKED]}" && -e "${AE_SIGN[REVDEPED]}" && -e "${AE_SIGN[TASKED]}" ]]; then
 	einfo "All binaries are well done ;-)"; eend 0

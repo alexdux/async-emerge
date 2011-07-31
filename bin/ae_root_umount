@@ -68,7 +68,7 @@ fi
 umnt_path_type(){
 	local count=0
 	for i in `mount | grep "$1" | egrep "$2" | cut -f3 -d' ' | sort -r`; do
-		umount -lv "$i" 2>/dev/null >&2
+		umount -lv "$i" >/dev/null 2>&1
 		((count++))
 	done
 	[ "$3" ] && let "$3=$count"

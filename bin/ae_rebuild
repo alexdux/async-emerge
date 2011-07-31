@@ -233,7 +233,7 @@ scan_for_rdlibs() {
 		[ $(grep "^$i$" "$f" 2>/dev/null) ] || echo "$i" >> "$f"
 		# check for unlink advise
 		# *   # rm '/usr/lib64/libmpfr.so.1'
-		if [ $(grep "rm .*$i" "$1") ]; then
+		if [ $(grep "rm .*$i" "$1" 2>/dev/null) ]; then
 			trdl=$(sed "s:^$i$:<<< &:" "$f")
 			echo -e "$trdl" > "$f"
 		fi
@@ -320,7 +320,7 @@ compare_sysvers() {
 					if [ "$s1" ]; then
 						echo "$s1" > "$2"
 					else
-						rm -v "$2" 2>&1 >/dev/null
+						rm -v "$2" >/dev/null 2>&1
 					fi
 				fi
 				# (re)add item
@@ -411,7 +411,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				einfo "    Checking critical system packages versions ..."
 				scan_for_sysvers
 				compare_sysvers "$subsetf" "${AESIGN[SUBSET_UPDATES]}"
-				rm -v "$subsetf" 2>&1 >/dev/null
+				rm -v "$subsetf" >/dev/null 2>&1
 				if [ -e "${AESIGN[SUBSET_UPDATES]}" ]; then
 					echo " * New critical packages versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
 					cat "${AESIGN[SUBSET_UPDATES]}" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
@@ -450,7 +450,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
 										einfo "          - '${Cmds[$k]}'"
 									done
-									ae_add_task "${AE_SUPD[${i}_CMD]}" 2>>"$log_last" >&2 && \
+									ae_add_task "${AE_SUPD[${i}_CMD]}" >>"$log_last" 2>&1 && \
 										true && updated=2
 									eend 0
 									#unset Cmds
@@ -558,7 +558,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							if [ "$nsupd" ]; then
 								echo "$nsupd" > "${AESIGN[SUBSET_UPDATES]}"
 							else
-								rm -v "${AESIGN[SUBSET_UPDATES]}" 2>&1 >/dev/null
+								rm -v "${AESIGN[SUBSET_UPDATES]}" >/dev/null 2>&1
 							fi
 							if !(($updated-1)); then # readd subset sign with '1-pass'
 								echo "$sens: 2-pass, $sul" >> "${AESIGN[SUBSET_UPDATES]}"
@@ -650,7 +650,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						fi
 					done < "$f"
 					eend 0
-					true && rm -v "$f" 2>&1 >/dev/null
+					true && rm -v "$f" >/dev/null 2>&1
 				else # FAIL
 					ewarn "    Save lost libs list for further rebuild."; eend 0
 					((loopLogic|=0x08))

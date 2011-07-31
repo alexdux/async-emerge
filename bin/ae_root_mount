@@ -29,7 +29,7 @@ mkdir -p "${AE_DIR[GATEWAY]}" 2>/dev/null
 
 # clean mtab
 if [ -e "${AE_DIR[DELTA]}/etc/mtab" ]; then
-	rm "${AE_DIR[DELTA]}/etc/mtab" 2>/dev/null >&2
+	rm "${AE_DIR[DELTA]}/etc/mtab" >/dev/null 2>&1
 	einfo "  ${AE_DIR[DELTA]}/etc/mtab unlinked."
 	eend 0
 fi
@@ -52,7 +52,7 @@ mnt_list() {
 				# mount --make-rslave "$bind" && \
 			mount -vo remount,ro "$bind" && \
 			# mount with AUFS
-			mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) 2>/dev/null >&2
+			mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) >/dev/null 2>&1
 			if (($?)); then
 				eerror "  Error binding or mounting $i!" 
 				eend 1
@@ -71,7 +71,7 @@ mnt_list() {
 							(mkdir -vp "$bind" "$delta" "$chroot" && \
 							mount -vB "$k" "$bind" && \
 							mount -vo remount,ro "$bind" && \
-							mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) 2>/dev/null >&2
+							mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) >/dev/null 2>&1
 							#
 							if (($?)); then
 								eerror "  Error binding or mounting (rbind) $i!" 
@@ -97,7 +97,7 @@ redo_sln() {
 		# skip non-symlinks, existed fs objects and non-dirs
 		if [[ -L "$i" && ! -e "${AE_DIR[CHROOT]}$i" && -d "`readlink \"$i\"`" ]]; then 
 			# recreate symlinks relative to ${AE_DIR[CHROOT]}
-			ln -vsn "$2`readlink $i`" "${AE_DIR[CHROOT]}$i" 2>/dev/null >&2
+			ln -vsn "$2`readlink $i`" "${AE_DIR[CHROOT]}$i" >/dev/null 2>&1
 			if (($?)); then
 				ewarn "  Can't create symlink for $i." 
 				eend 1
@@ -112,7 +112,7 @@ redo_sln() {
 # redo_dirs: a set of dirs
 redo_dirs() { 
 	for i in $1; do 
-		mkdir -v "${AE_DIR[CHROOT]}$i" 2>/dev/null >&2 
+		mkdir -v "${AE_DIR[CHROOT]}$i" >/dev/null 2>&1
 		(($?)) || ((redirs++))
 	done
 }
@@ -123,7 +123,7 @@ bnd_trans() {
 		# check if it exists at this box
 		if [ -d "$i" ]; then
 			mkdir -vp "${AE_DIR[CHROOT]}$i"
-			mount -vR "$i" "${AE_DIR[CHROOT]}$i" 2>/dev/null >&2
+			mount -vR "$i" "${AE_DIR[CHROOT]}$i" >/dev/null 2>&1
 			if (($?)); then
 				eerror "  Can't bind transparent (non-merged) $i!" 
 				eend 1
