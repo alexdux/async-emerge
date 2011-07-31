@@ -373,7 +373,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			if (($AE_VCS)); then
 				call_emerge "  Rebuilding world" "${AECMD[EMERGE]}" \
 					"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
-				if !(($cmdRet)); then touch "${AE_SIGN[COOKED]}" 2>&1; fi
+				# needed for ae_state
+				(($cmdRet)) && rm -v "${AE_SIGN[COOKED]}" >/dev/null 2>&1 || touch "${AE_SIGN[COOKED]}" >/dev/null 2>&1
 			else
 			# ((/path/to/oraMon.pl 2>&1 1>&3 | tee /tmp/errors.log) 3>&1 1>&2 | tee /tmp/output.log) > /tmp/final.log 2>&1
 				call_emerge "  Rebuilding world" \
