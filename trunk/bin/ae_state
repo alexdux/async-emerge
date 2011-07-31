@@ -173,8 +173,9 @@ lsync=`date -r "${AE_SIGN[SYNCED]}" 2>/dev/null`
 echo "  Last synced at    : $lsync."
 # cooked (revderped,tasked)
 (($ts_last!=$ts_from)) && lcook=`date -d @$ts_last 2>/dev/null`
-[ "$lcook" ] || lcook=`date -r "${AE_SIGN[COOKED]}" 2>/dev/null`
+[ "$lcook" ] || lcook=`date -r "${AE_SIGN[TASKED]}" 2>/dev/null`
 [ "$lcook" ] || lcook=`date -r "${AE_SIGN[REVDEPED]}" 2>/dev/null`
+[ "$lcook" ] || lcook=`date -r "${AE_SIGN[COOKED]}" 2>/dev/null`
 [ "$lcook" ] || lcook='no binary packages is found'
 echo "  Last cooked at    : $lcook."
 # installed
