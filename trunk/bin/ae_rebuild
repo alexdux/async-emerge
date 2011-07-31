@@ -644,7 +644,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					# go throgh the list and unlink lost libs
 					while read i; do 
 						if [[ "$i" == "<<< "* ]]; then
-							rm -v "$i" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
+							rm -v "${i:4}" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
 						else
 							echo "Skipping unlinking '$i' - not asked to remove it." | \
 								tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
@@ -679,6 +679,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			call_cmd1 "Rebuilding world with revdep-rebuild" "${AECMD[REVDEP_REBUILD]}" \
 					"${AELOG[REVDEP_LAST]}" "${AELOG[REVDEP]}"
 			(($cmdRet)) || ((loopLogic&=0xEF))
+			if (($AE_VCS)); then
+				# needed for ae_state
+				(($cmdRet)) && rm -v "${AE_SIGN[REVDEPED]}" >/dev/null 2>&1 || touch "${AE_SIGN[REVDEPED]}" >/dev/null 2>&1
+			fi
 			# collect hints for libs comsumers rebuild
 			scan_for_rdlibs "${AELOG[REVDEP_LAST]}"
 		else
