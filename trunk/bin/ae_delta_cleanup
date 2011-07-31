@@ -27,7 +27,7 @@ if [ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" ]; then
 fi
 
 #rm -fv "$AE_SYNCED_SIGN" 2>/dev/null >&2
-rm -rfv "${AE_DIR[DELTA]}" 2>/dev/null >&2
+rm -rfv "${AE_DIR[DELTA]}" >/dev/null 2>&1
 
 eend $?
 exit $?
