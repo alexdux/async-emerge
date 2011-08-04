@@ -28,7 +28,7 @@ einfo "Chrooting to ${AE_DIR[CHROOT]}:"
 # mount/unmount a special device
 mnt_special() { # 'y'/'n', fs dir, fs type
 	if [ "$1" == "y" ]; then
-		if [ $(mount | grep "${AE_DIR[ROOT]}" | grep "$2") ]; then
+		if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep "$2") ]]; then
 			mount -vt $3 $3 "${AE_DIR[CHROOT]}/$2" &> /dev/null
 			if (($?)); then
 				error "  Error mounting $2 fs to ${AE_DIR[CHROOT]}/$2!"
@@ -59,7 +59,7 @@ unmnt_special() { # 'y'/'n', fs dir
 
 # mount AUFS if not mounted
 # to-do: /usr/bin/aubrsync:279
-if [ $(mount | grep "${AE_DIR[ROOT]}" | grep "aufs") ]; then
+if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep "aufs") ]]; then
 	einfo "  Automounting AUFS,"
 	ae_root_mount
 	if (($?)); then # check for errors
