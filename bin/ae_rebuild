@@ -643,7 +643,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}" < "$f"
 				# check the result
 				if !(($cmdRet)); then # OK
-					einfo "      Removing advised obsoleted libs ..."
+					einfo "      Unlinking advised obsoleted libs ..."
 					# go throgh the list and unlink lost libs
 					while read i; do 
 						if [[ "$i" == "<<< "* ]]; then
