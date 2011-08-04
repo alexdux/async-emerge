@@ -140,6 +140,8 @@ emerge_solver() {
 		while (($loop)) && (($cmdRet)); do # emerge reports us only one error at once
 			einfo "      trying to solve emerge '$1', try "$((${AE_REBUILD[EMERGE_SOLVER_MT]}-$loop+1)) \
 				"of ${AE_REBUILD[EMERGE_SOLVER_MT]} ..."
+
+			s=''
 		
 			# check masked
 			aMasked=$((grep -m1 'masked by:.*keyword' "$log_last") 2>> "$log_last")
@@ -176,7 +178,11 @@ emerge_solver() {
 				fi
 			done
 
-
+			[ "$s" ] || {
+				ewarn "      (...nothing more could be fixed in request: make one try to rebuild and return.)"
+				loop=1
+			}
+			
 			# run PM
 			eval "${AE_CMD[PM]} -$eCmd" &>> "$log_last"
 			cmdRet=$?
@@ -448,7 +454,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 								if (($AE_VCS)); then
 									# array cmds
 									#declare -a Cmds
-									mapfile -t Cmds <<< "${AE_SUPD[${i}_CMD]}"
+									#mapfile -t Cmds <<< "${AE_SUPD[${i}_CMD]}"
+									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
 									einfo "        Adding ${#Cmds[*]} tasks to update the subset:"
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
 										einfo "          - '${Cmds[$k]}'"
@@ -490,7 +497,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 								if !(($updated)); then
 									# array cmds
 									#declare -a Cmds
-									mapfile -t Cmds <<< "${AE_SUPD[${i}_CMD]}"
+									#mapfile -t Cmds <<< "${AE_SUPD[${i}_CMD]}"
+									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
 									# play cmds
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
 										(($cmdRet)) && break
