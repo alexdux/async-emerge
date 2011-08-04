@@ -224,15 +224,19 @@ call_cmd1_with_emerge_solver() {
 scan_for_rdlibs() {
 	# * Please run revdep-rebuild --library libnss3.so.12 ,
 	local f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
-	local i trdl
+	local i trdl s
 	# in order of appearance
 	for i in $(grep -E 'revdep-rebuild +\-\-library' "$1" | sed "s/.*library[ =]*\([^ ,]*\).*/\1/;s/['\"]//g" ); {
 		# avoid duplicates - it's safe
 		[ "$(grep "^$i$" "$f" 2>/dev/null)" ] || echo "$i" >> "$f"
 		# check for unlink advise
 		# *   # rm '/usr/lib64/libmpfr.so.1'
-		if [ "$(grep "rm .*$i" "$1" 2>/dev/null)" ]; then
-			trdl=$(sed "s:^$i$:<<< &:" "$f")
+		s=$(grep -m1 "rm .*$i" "$1" 2>/dev/null)
+		if [ "$s" ]; then
+			# normalize libname (add path from 'rm')
+			s=$(echo "$s" | sed "s:.* rm '\(.*\)':\1:")
+			# mark a lib for unlink with '<<< '
+			trdl=$(sed "s:^$i$:<<< $s:" "$f")
 			echo -e "$trdl" > "$f"
 		fi
 	}
@@ -290,20 +294,20 @@ compare_sysvers() {
 			# not installed
 			[ "${AE_SUPD[${s}_NOTINSTALLED]}" ] && continue
 			# old version
-			ov=`grep "$sens:" "$1"`
-			ov=`echo ${ov/*:}`
+			ov=$(grep -m1 "$sens:" "$1")
+			ov=$(echo ${ov/*:})
 			uv=''
 			# check if update is going
 			if [ -e "$2" ]; then
-				uv=`grep "$sens:" "$2"`
+				uv=$(grep -m1 "$sens:" "$2")
 				if [ "$uv" ]; then 
-					uv=`echo ${uv/*:}`; uv=`echo ${uv/->*}`
+					uv=$(echo ${uv/*:}); uv=$(echo ${uv/->*})
 					[ "$uv" ] && ov=$uv || uv='!'
 				fi
 			fi
 			# new version
-			nv=`echo "$sysvers" | grep "$sens:"`
-			nv=`echo ${nv/*:}`
+			nv=$(echo "$sysvers" | grep -m1 "$sens:")
+			nv=$(echo ${nv/*:})
 			# cmp
 			if [[ "$ov" != "$nv" ]] ; then
 				# save vers internally
@@ -316,7 +320,7 @@ compare_sysvers() {
 				fi
 				# remove old subset item
 				if [ "$uv" ]; then # update
-					s1=`grep -v "$sens:" "$2"`
+					s1=$(grep -v "$sens:" "$2")
 					if [ "$s1" ]; then
 						echo "$s1" > "$2"
 					else
