@@ -85,7 +85,7 @@ umnt_path_type "${AE_DIR[ROOT]}" 'bind' 'unbinded' # unmount binded below ${AE_D
 
 
 # out status
-if [ $(mount | grep ${AE_DIR[ROOT]}) ]; then
+if [ "$(mount | grep ${AE_DIR[ROOT]})" ]; then
 	if (($unbinded+$nonmerged)); then
 		eerror "  Unmounted and unbinded $unbinded dirs, +$nonmerged as transparent (non-merged) and $lost specials."
 	fi
