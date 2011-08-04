@@ -130,8 +130,7 @@ emerge_solver() {
 	
 	# get emerge cmd
 	# to-do: change to internal var?
-	eCmd=$((grep " \+${AE_CMD[PM_SEARCH]} \+-" "$log_last" | grep -m1 -v -e '--sync' -e '--info' | \
-				cut -f2- -d'-') 2>> "$log_last")
+	eCmd=$((grep "${AE_CMD[PM_SEARCH]}" "$log_last" | grep -m1 -v -e '--sync' -e '--info' | cut -f2- -d'-') 2>> "$log_last")
 
 	if [ "$eCmd" ]; then
 		# loop
@@ -446,7 +445,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 								if (($AE_VCS)); then
 									# array cmds
 									#declare -a Cmds
-									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
+									mapfile -t Cmds <$(echo -e "${AE_SUPD[${i}_CMD]}")
 									einfo "        Adding ${#Cmds[*]} tasks to update the subset:"
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
 										einfo "          - '${Cmds[$k]}'"
@@ -488,7 +487,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 								if !(($updated)); then
 									# array cmds
 									#declare -a Cmds
-									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
+									mapfile -t Cmds <$(echo -e "${AE_SUPD[${i}_CMD]}")
 									# play cmds
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
 										(($cmdRet)) && break
