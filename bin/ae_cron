@@ -24,8 +24,8 @@ if [ "$((ps -p $(<"${AE_PID[AE_COOK]}") -o comm= ) 2>/dev/null)" == "$PNAME" ]; 
 	echo -e "WARNING: 'ae_cook' already running, skip calling from CRON..." >> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
 else
 	# make lock
-	rm -f "${AE_PID[AE_COOK]}" >/dev/null 2>&1
+	rm -f "${AE_PID[AE_COOK]}" &> /dev/null
 	trap "cat \"${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}\" >> \"${AE_LOG[DIR_SAVE]}${AE_LOG[FILE_CRON]}\"" INT TERM EXIT
-	(echo '--- '`date`' ---'; time ae_chroot ae_cook; echo) > "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}" 2>&1
+	(echo '--- '$(date)' ---'; time ae_chroot ae_cook; echo) &> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
 fi
 

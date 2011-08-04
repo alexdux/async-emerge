@@ -28,8 +28,8 @@ einfo "Chrooting to ${AE_DIR[CHROOT]}:"
 # mount/unmount a special device
 mnt_special() { # 'y'/'n', fs dir, fs type
 	if [ "$1" == "y" ]; then
-		if [[ "`mount | grep ${AE_DIR[ROOT]} | grep $2`" == "" ]]; then
-			mount -vt $3 $3 "${AE_DIR[CHROOT]}/$2" >/dev/null 2>&1
+		if [ $(mount | grep "${AE_DIR[ROOT]}" | grep "$2") ]; then
+			mount -vt $3 $3 "${AE_DIR[CHROOT]}/$2" &> /dev/null
 			if (($?)); then
 				error "  Error mounting $2 fs to ${AE_DIR[CHROOT]}/$2!"
 				eend 1
@@ -46,7 +46,7 @@ mnt_special() { # 'y'/'n', fs dir, fs type
 }
 unmnt_special() { # 'y'/'n', fs dir
 	if [ "$1" == "y" ]; then
-		umount -v "${AE_DIR[CHROOT]}/$2" >/dev/null 2>&1
+		umount -v "${AE_DIR[CHROOT]}/$2" &> /dev/null
 		if (($?)); then
 			ewarn "  Can't unmount $2 fs." 
 			eend 2
@@ -59,7 +59,7 @@ unmnt_special() { # 'y'/'n', fs dir
 
 # mount AUFS if not mounted
 # to-do: /usr/bin/aubrsync:279
-if [[ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" == "" ]]; then
+if [ $(mount | grep "${AE_DIR[ROOT]}" | grep "aufs") ]; then
 	einfo "  Automounting AUFS,"
 	ae_root_mount
 	if (($?)); then # check for errors
@@ -75,8 +75,8 @@ if [[ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" == "" ]]; then
 	# wipe out chrooted /var/run ????????? (move to ae_root_mount?)
 	if [ "${AE_VCS[VAR_RUN_EXLUDE]}" == "y" ]; then
 		einfo "  Cleaning ${AE_DIR[CHROOT]}/var/run from host's *.pid."
-		rm -rfv "${AE_DIR[CHROOT]}/var/run" >/dev/null 2>&1
-		mkdir -pv "${AE_DIR[CHROOT]}/var/run/dbus" >/dev/null 2>&1
+		rm -rfv "${AE_DIR[CHROOT]}/var/run" &> /dev/null
+		mkdir -pv "${AE_DIR[CHROOT]}/var/run/dbus" &> /dev/null
 		eend 0
 	fi
 
@@ -119,7 +119,7 @@ einfo "Unchrooting from ${AE_DIR[CHROOT]}:"
 # unmount AUFS
 # check for last task of $PNAME
 # FIX THIS - A BUG!
-if ((`pgrep $PNAME | wc -l` < 3)); then # 3 because of pipe; might be unreliable
+if (($(pgrep $PNAME | wc -l) < 3)); then # 3 because of pipe; might be unreliable
 	# D-BUS stop in chroot
 	if [ "${AE_VCS[CHROOT_START_DBUS]}" == "y" ]; then
 		einfo "  Stopping chrooted D-BUS messagebus ..."

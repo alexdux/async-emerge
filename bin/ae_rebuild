@@ -70,7 +70,7 @@ call_emerge() {
 	# fixit
 	[[ $1 ]] && einfo "  $1 ..."
 	# pre-logging emerging
-	dt_mark | tee "$log_last" > "$warn_last" 2>&1
+	dt_mark | tee "$log_last" &> "$warn_last"
 	if [[ "$2" == *'1>&3'* ]]; then 
 		#echo '=== *1>&3* ==='
 		eval "$2"
@@ -81,12 +81,12 @@ call_emerge() {
 	eend $cmdRet
 	# if an error occurred - add log to warn (some errors do not out to stderr)
 	### (($cmdRet)) && cat "$log_last" >> "$warn_last" 2>&1
-	echo "Retcode: $cmdRet" >> "$log_last" 2>&1
+	echo "Retcode: $cmdRet" &>> "$log_last"
 	# care logs
-	cat "$log_last" >> "$log" 2>&1
-	cat "$warn_last" >> "$warn" 2>&1
-	echo >> "$log" 2>&1
-	echo >> "$warn" 2>&1
+	cat "$log_last" &>> "$log"
+	cat "$warn_last" &>> "$warn"
+	echo &>> "$log"
+	echo &>> "$warn"
 	# exit on an error
 	(($cmdRet>1)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 3; }
 	return $cmdRet
@@ -97,13 +97,13 @@ call_emerge() {
 call_cmd1() {
 	local log_last=$3 log=$4
 	[ "$1" ] && einfo "    $1 ..."
-	dt_mark > "$log_last" 2>&1
-	eval "$2" >> "$log_last" 2>&1
+	dt_mark &> "$log_last"
+	eval "$2" &>> "$log_last"
 	cmdRet=$?
 	eend $cmdRet
-	echo "Retcode: $cmdRet" >> "$log_last" 2>&1
-	cat "$log_last" >> "$log" 2>&1
-	echo >> "$log" 2>&1
+	echo "Retcode: $cmdRet" &>> "$log_last"
+	cat "$log_last" &>> "$log"
+	echo &>> "$log"
 	# exit on an error
 	(($cmdRet>1)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 4; }
 	return $cmdRet
@@ -155,7 +155,6 @@ emerge_solver() {
 			# check 'there are no ebuilds'
 			# emerge: there are no ebuilds to satisfy "=net-print/hplip-3.10.9-r1"
 			aMissed=$((grep -m1 'there are no ebuilds to satisfy' "$log_last" | cut -f2 -d'"') 2>> "$log_last")
-			#echo "$aMissed"
 			if [ "$aMissed" ]; then
 				# get packet category/name
 				aMissed=${aMissed%%-[0-9]*}; aMasked=${aMissed/* /}
@@ -179,10 +178,10 @@ emerge_solver() {
 
 
 			# run PM
-			eval "${AE_CMD[PM]} -$eCmd" >> "$log_last" 2>&1
+			eval "${AE_CMD[PM]} -$eCmd" &>> "$log_last"
 			cmdRet=$?
 			eend $cmdRet
-			echo "Retcode: $cmdRet" >> "$log_last" 2>&1
+			echo "Retcode: $cmdRet" &>> "$log_last"
 			if (($cmdRet>102)); then return 102; fi
 		
 			((loop--))
@@ -202,17 +201,17 @@ emerge_solver() {
 call_cmd1_with_emerge_solver() {
 	local log_last=$3 log=$4
 	[ "$1" ] && einfo "    $1 ..."
-	dt_mark > "$log_last" 2>&1
+	dt_mark &> "$log_last"
 	# eval
 	#$($2 >> "$log_last" 2>&1)
-	eval "$2" >> "$log_last" 2>&1
+	eval "$2" &>> "$log_last"
 	cmdRet=$?
 	eend $cmdRet
 	(($cmdRet>1)) && return $cmdRet
 	(($cmdRet)) && emerge_solver "$1" "$3" # "$4"
-	echo "Retcode: $cmdRet" >> "$log_last" 2>&1
-	cat "$log_last" >> "$log" 2>&1
-	echo >> "$log" 2>&1
+	echo "Retcode: $cmdRet" &>> "$log_last"
+	cat "$log_last" &>> "$log"
+	echo &>> "$log"
 	# exit on an error
 	(($cmdRet>1)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 4; }
 	#einfo "    Solved. $1 (continue)"
@@ -224,7 +223,7 @@ call_cmd1_with_emerge_solver() {
 scan_for_rdlibs() {
 	# * Please run revdep-rebuild --library libnss3.so.12 ,
 	local f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
-	local i trdl s
+	local i s
 	# in order of appearance
 	for i in $(grep -E 'revdep-rebuild +\-\-library' "$1" | sed "s/.*library[ =]*\([^ ,]*\).*/\1/;s/['\"]//g" ); {
 		# avoid duplicates - it's safe
@@ -234,10 +233,9 @@ scan_for_rdlibs() {
 		s=$(grep -m1 "rm .*$i" "$1" 2>/dev/null)
 		if [ "$s" ]; then
 			# normalize libname (add path from 'rm')
-			s=$(echo "$s" | sed "s:.* rm '\(.*\)':\1:")
+			s=$(sed "s:.* rm '\(.*\)':\1:" <<< "$s")
 			# mark a lib for unlink with '<<< '
-			trdl=$(sed "s:^$i$:<<< $s:" "$f")
-			echo -e "$trdl" > "$f"
+			echo -e "$(sed "s:^$i$:<<< $s:" "$f")" > "$f"
 		fi
 	}
 	# sorted: no...
@@ -250,7 +248,7 @@ scan_for_rdlibs() {
 }
 
 # scan and return to $sysvers versions of major system stuff
-scan_for_sysvers() {
+scan_for_sysvers() { # tod-: $(), echo ???
 	local s sens ver
 	sysvers=''
 	
@@ -285,7 +283,7 @@ scan_for_sysvers() {
 
 # compare and save to $2 $sysvers with saved in $1
 # compare_sysvers: $saved_sysvers_file
-compare_sysvers() {
+compare_sysvers() { # todo: change echo to sed/vars
 	local s sens ov uv nv
 	#rm "$2" 2>1 >/dev/null
 	# check versions
@@ -306,7 +304,7 @@ compare_sysvers() {
 				fi
 			fi
 			# new version
-			nv=$(echo "$sysvers" | grep -m1 "$sens:")
+			nv=$(grep -m1 "$sens:" <<< "$sysvers")
 			nv=$(echo ${nv/*:})
 			# cmp
 			if [[ "$ov" != "$nv" ]] ; then
@@ -324,7 +322,7 @@ compare_sysvers() {
 					if [ "$s1" ]; then
 						echo "$s1" > "$2"
 					else
-						rm -v "$2" >/dev/null 2>&1
+						rm -v "$2" &> /dev/null
 					fi
 				fi
 				# (re)add item
@@ -354,21 +352,21 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	# save critical packages versions (only if rebuild world or subset update is scheduled)
 	if (($loopLogic & 0x03)); then
 		# start logs subsets updates
-		dt_mark > "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+		dt_mark &> "${AELOG[SUBSET_UPDATE_LAST]}"
 		# save sysvers
 		if [ -e "$subsetf" ]; then
 			einfo "    Critical system packages versions already saved - use it ..."
-			echo " * Existed data (world rebuild was interrupted previously):" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+			echo " * Existed data (world rebuild was interrupted previously):" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
 			eend 0
 		else
 			einfo "    Saving critical system packages versions ..."
 			scan_for_sysvers
 			echo "$sysvers" > "$subsetf"
-			echo " * Critical packages versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+			echo " * Critical packages versions:" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
 			eend 0
 		fi
-		cat "$subsetf" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
-		echo >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+		cat "$subsetf" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
+		echo &>> "${AELOG[SUBSET_UPDATE_LAST]}"
 	fi
 
 	# REBUILD WORLD with emerge
@@ -378,7 +376,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				call_emerge "  Rebuilding world" "${AECMD[EMERGE]}" \
 					"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
 				# needed for ae_state
-				(($cmdRet)) && rm -v "${AE_SIGN[COOKED]}" >/dev/null 2>&1 || touch "${AE_SIGN[COOKED]}" >/dev/null 2>&1
+				(($cmdRet)) && rm -v "${AE_SIGN[COOKED]}" &> /dev/null || touch "${AE_SIGN[COOKED]}" &> /dev/null
 			else
 			# ((/path/to/oraMon.pl 2>&1 1>&3 | tee /tmp/errors.log) 3>&1 1>&2 | tee /tmp/output.log) > /tmp/final.log 2>&1
 				call_emerge "  Rebuilding world" \
@@ -416,15 +414,15 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				einfo "    Checking critical system packages versions ..."
 				scan_for_sysvers
 				compare_sysvers "$subsetf" "${AESIGN[SUBSET_UPDATES]}"
-				rm -v "$subsetf" >/dev/null 2>&1
+				rm -v "$subsetf" &> /dev/null
 				if [ -e "${AESIGN[SUBSET_UPDATES]}" ]; then
-					echo " * New critical packages versions:" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
-					cat "${AESIGN[SUBSET_UPDATES]}" >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+					echo " * New critical packages versions:" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
+					cat "${AESIGN[SUBSET_UPDATES]}" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
 				else
-					echo " * No new critical packages versions found." >> "${AELOG[SUBSET_UPDATE_LAST]}" 2>&1
+					echo " * No new critical packages versions found." &>> "${AELOG[SUBSET_UPDATE_LAST]}"
 				fi
-				cat "${AELOG[SUBSET_UPDATE_LAST]}" >> "${AELOG[SUBSET_UPDATE]}" 2>&1
-				echo >> "${AELOG[SUBSET_UPDATE]}" 2>&1
+				cat "${AELOG[SUBSET_UPDATE_LAST]}" &>> "${AELOG[SUBSET_UPDATE]}"
+				echo &>> "${AELOG[SUBSET_UPDATE]}"
 				eend 0
 			else
 				eerror "Internal error: saved data about critical packages versions is not found. Stop."; eend 1
@@ -443,19 +441,19 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					log=${AE_LOG[DIR_SAVE]}${AE_LOG[DIR_$eType]}${AE_SUPD[${i}_LOG]}${AE_LOG[EXT_$eType]}
 					log_last=${AE_LOG[DIR_LAST]}${AE_LOG[DIR_$eType]}${AE_SUPD[${i}_LOG]}${AE_LOG[EXT_$eType]}
 					# start last log
-					dt_mark > "$log_last" 2>&1
+					dt_mark &> "$log_last"
 					# choose update method and do update
 					case "-${AE_SUPD[${i}_METHOD]}-" in
 						-task-) # adding cmds to task file
 								if (($AE_VCS)); then
 									# array cmds
 									#declare -a Cmds
-									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
+									mapfile -t Cmds <<< "${AE_SUPD[${i}_CMD]}"
 									einfo "        Adding ${#Cmds[*]} tasks to update the subset:"
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
 										einfo "          - '${Cmds[$k]}'"
 									done
-									ae_add_task "${AE_SUPD[${i}_CMD]}" >>"$log_last" 2>&1 && \
+									ae_add_task "${AE_SUPD[${i}_CMD]}" &>> "$log_last" && \
 										true && updated=2
 									eend 0
 									#unset Cmds
@@ -492,7 +490,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 								if !(($updated)); then
 									# array cmds
 									#declare -a Cmds
-									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
+									mapfile -t Cmds <<< "${AE_SUPD[${i}_CMD]}"
 									# play cmds
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
 										(($cmdRet)) && break
@@ -505,8 +503,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												!(($AE_VCS)) && cmd=${cmd/--usepkg n/--usepkg y}
 												#einfo "        Running shell command:"
 												einfo "        - '$cmd' ..."
-												eval "$cmd >> \"$log_last\" 2>&1"
-												echo "Retcode $cmdRet" >> "$log_last" 2>&1
+												eval "$cmd &>> \"$log_last\""
+												echo "Retcode $cmdRet" &>> "$log_last"
 												cmdRet=$?
 											else # PM
 												if [[ "$cmd" == \$* || "$cmd" == \`* ]]; then
@@ -547,8 +545,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					esac
 				
 					# copy last to logs
-					cat "$log_last" >> "$log" 2>&1
-					echo >> "$log" 2>&1
+					cat "$log_last" &>> "$log"
+					echo &>> "$log"
 
 					# subset sign update
 					if (($updated)); then
@@ -563,7 +561,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							if [ "$nsupd" ]; then
 								echo "$nsupd" > "${AESIGN[SUBSET_UPDATES]}"
 							else
-								rm -v "${AESIGN[SUBSET_UPDATES]}" >/dev/null 2>&1
+								rm -v "${AESIGN[SUBSET_UPDATES]}" &> /dev/null
 							fi
 							if !(($updated-1)); then # readd subset sign with '1-pass'
 								echo "$sens: 2-pass, $sul" >> "${AESIGN[SUBSET_UPDATES]}"
@@ -658,7 +656,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						fi
 					done < "$f"
 					eend 0
-					true && rm -v "$f" >/dev/null 2>&1
+					true && rm -v "$f" &> /dev/null
 				else # FAIL
 					ewarn "    Save lost libs list for further rebuild."; eend 0
 					((loopLogic|=0x08))
@@ -688,7 +686,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			(($cmdRet)) || ((loopLogic&=0xEF))
 			if (($AE_VCS)); then
 				# needed for ae_state
-				(($cmdRet)) && rm -v "${AE_SIGN[REVDEPED]}" >/dev/null 2>&1 || touch "${AE_SIGN[REVDEPED]}" >/dev/null 2>&1
+				(($cmdRet)) && rm -v "${AE_SIGN[REVDEPED]}" &> /dev/null || touch "${AE_SIGN[REVDEPED]}" &> /dev/null
 			fi
 			# collect hints for libs comsumers rebuild
 			scan_for_rdlibs "${AELOG[REVDEP_LAST]}"
@@ -714,7 +712,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					i=${i# ?} # strip leading spaces
 					if [ "$i" ]; then
 						# start last log
-						dt_mark > "${AELOG[TASKS_LAST]}" 2>&1
+						dt_mark &> "${AELOG[TASKS_LAST]}"
 						# choose caller
 						is="$i"
 						if [[ "$i" == \#* ]]; then # shell cmd
@@ -723,20 +721,20 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							!(($AE_VCS)) && i=${i/--usepkg n/--usepkg y}
 							#einfo "      Running shell command: '$i' ..."
 							einfo "      - '$i' ..."
-							eval "$i >> \"${AELOG[TASKS_LAST]}\" 2>&1"
-							echo "Retcode $?" >> "${AELOG[TASKS_LAST]}" 2>&1
+							eval "$i &>> \"${AELOG[TASKS_LAST]}\""
+							echo "Retcode $?" &>> "${AELOG[TASKS_LAST]}"
 						else # PM
 							# to-do: check for zero param (as at subset updates)
 							#einfo "      Running PM: '${AECMD[USER_TASKS]} $i' ..."
 							einfo "      - ${AECMD[USER_TASKS]} '$i' ..."
-							eval "${AECMD[USER_TASKS]} $i >> \"${AELOG[TASKS_LAST]}\" 2>&1"
-							echo "Retcode $?" >> "${AELOG[TASKS_LAST]}" 2>&1 
+							eval "${AECMD[USER_TASKS]} $i &>> \"${AELOG[TASKS_LAST]}\""
+							echo "Retcode $?" &>> "${AELOG[TASKS_LAST]}" 
 						fi
 						cmdRet=$?
 						eend $?
 						# copy last to logs
-						cat "${AELOG[TASKS_LAST]}" >> "${AELOG[TASKS]}" 2>&1
-						echo >> "${AELOG[TASKS]}" 2>&1
+						cat "${AELOG[TASKS_LAST]}" &>> "${AELOG[TASKS]}"
+						echo &>> "${AELOG[TASKS]}"
 						# add cmd to install to-do
 						if (($AE_VCS)); then
 							echo "$is" >> "${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"

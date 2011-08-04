@@ -69,7 +69,7 @@ fi
 umnt_path_type(){
 	local count=0
 	for i in $(mount | grep "$1" | egrep "$2" | cut -f3 -d' ' | sort -r); do
-		umount -lv "$i" >/dev/null 2>&1
+		umount -lv "$i" &> /dev/null
 		((count++))
 	done
 	[ "$3" ] && let "$3=$count"
@@ -85,13 +85,7 @@ umnt_path_type "${AE_DIR[ROOT]}" 'bind' 'unbinded' # unmount binded below ${AE_D
 
 
 # out status
-if [ "`mount | grep ${AE_DIR[ROOT]}`" == "" ]; then
-	if (($unbinded+$nonmerged)); then
-		einfo "  Unmounted and unbinded $unbinded dirs, +$nonmerged as transparent (non-merged) and $lost specials."
-	else
-		ewarn "  Not found any AUFS for unmounting."
-	fi
-else
+if [ $(mount | grep ${AE_DIR[ROOT]}) ]; then
 	if (($unbinded+$nonmerged)); then
 		eerror "  Unmounted and unbinded $unbinded dirs, +$nonmerged as transparent (non-merged) and $lost specials."
 	fi
@@ -100,6 +94,11 @@ else
 	exit 1
 fi
 
+if (($unbinded+$nonmerged)); then
+	einfo "  Unmounted and unbinded $unbinded dirs, +$nonmerged as transparent (non-merged) and $lost specials."
+else
+	ewarn "  Not found any AUFS for unmounting."
+fi
 eend 0
 exit 0
 
