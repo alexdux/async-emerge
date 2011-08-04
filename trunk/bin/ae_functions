@@ -12,7 +12,7 @@ do_lock() {
 	# check locking with $1
 #-	[[ -e "$1" && "`(ps -p \`cat \"$1\" \` -o comm= ) 2>/dev/null`" == "$PNAME" ]] && {
 	[ "$((ps -p $(<"$1") -o comm= ) 2>/dev/null)" == "$PNAME" ] && {
-		[ "$3" == "" ] || eerror "$3"
+		[ "$3" ] && eerror "$3"
 		exit $2
 	}
 	# make lock

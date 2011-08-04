@@ -39,14 +39,14 @@ if [ "${AE_INSTALL[DO_SYNC]}" == "y" ]; then
 		einfo "  Rsyncing changed portage files ..."
 		sync_log="${AE_LOG[DIR_SAVE]}${AE_LOG[DIR_INSTALL]}${AE_LOG[FILE_SYNC]}${AE_LOG[EXT_INSTALL]}"
 		sync_log_last="${AE_LOG[DIR_LAST]}${AE_LOG[DIR_INSTALL]}${AE_LOG[FILE_SYNC]}${AE_LOG[EXT_INSTALL]}"
-		dt_mark > "$sync_log_last" 2>&1
+		dt_mark &> "$sync_log_last"
 		# prepare sources list
 		for d in ${AE_DIR[INSTALL_MERGE]}; do
 			d="${AE_DIR[DELTA]}/."${d/\\\*/\*}
 			if (($(ls $d 2>/dev/null | wc -l))); then src_list="$src_list $d"; fi
 		done
 		if [ "$src_list" ]; then
-			${AE_RCMD[INSTALL_SYNC]} $src_list / >> "$sync_log_last" 2>&1 # to-do: (to $ROOT)
+			${AE_RCMD[INSTALL_SYNC]} $src_list / &>> "$sync_log_last" # to-do: (to $ROOT)
 			eend 0
 		else
 			ewarn "  Rsyncing is skipped - empty VCS dirs."
@@ -60,13 +60,13 @@ if [ "${AE_INSTALL[DO_SYNC]}" == "y" ]; then
 			r=${i##${AE_DIR[DELTA]}}	# remove chroot prefix
 			r=${r/\.wh\./}		# remove basename .wh. prefix
 			# this couldn't occurs under normal conditions
-			[ -e "$r" ] || echo "rm: file not found: $r!" >> "$sync_log_last" 2>&1 
-			rm -rfv $r >> "$sync_log_last" 2>&1 && \
-			rm -rfv $i >> "$sync_log_last" 2>&1
+			[ -e "$r" ] || echo "rm: file not found: $r!" &>> "$sync_log_last" 
+			rm -rfv $r &>> "$sync_log_last" && \
+			rm -rfv $i &>> "$sync_log_last"
 		done
 
-		cat "$sync_log_last" >> "$sync_log" 2>&1
-		echo >> "$sync_log" 2>&1
+		cat "$sync_log_last" &>> "$sync_log"
+		echo &>> "$sync_log"
 
 		# Emaint packages
 		# to-do: check if this maintence is needed at ae_build and save as flag?

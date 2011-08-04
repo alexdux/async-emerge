@@ -20,14 +20,14 @@
 ebegin "Clearing ${AE_DIR[DELTA]}"
 
 # check if aufs is mounted
-if [ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" ]; then
+if [ "$(mount | grep ${AE_DIR[ROOT]} | grep aufs)" ]; then
 	eerror "  AUFS is mounted! Stop."
 	eend 1
 	exit 1
 fi
 
 #rm -fv "$AE_SYNCED_SIGN" 2>/dev/null >&2
-rm -rfv "${AE_DIR[DELTA]}" >/dev/null 2>&1
+rm -rfv "${AE_DIR[DELTA]}" &> /dev/null
 
 eend $?
 exit $?
