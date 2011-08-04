@@ -60,6 +60,7 @@ if [ "${AE_VCS[UNMOUNT_KILL_BLOCKERS]}" == "y" ]; then
 			eend 1
 		else
 			einfo "  All blockers were killed."
+			einfo "Unmounting AUFS /+/var from ${AE_DIR[ROOT]} (continued):"
 		fi
 	fi
 fi
@@ -75,7 +76,6 @@ umnt_path_type(){
 	return $count
 }
 
-einfo "Unmounting AUFS /+/var from ${AE_DIR[ROOT]} (continued):"
 
 # unmount everything
 umnt_path_type "${AE_DIR[CHROOT]}" '(proc|sysfs|tmpfs)' 'lost' # unmount special
