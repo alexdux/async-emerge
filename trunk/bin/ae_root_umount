@@ -67,7 +67,7 @@ fi
 # umount all for path $1 and type $2, let counter to $3
 umnt_path_type(){
 	local count=0
-	for i in `mount | grep "$1" | egrep "$2" | cut -f3 -d' ' | sort -r`; do
+	for i in $(mount | grep "$1" | egrep "$2" | cut -f3 -d' ' | sort -r); do
 		umount -lv "$i" >/dev/null 2>&1
 		((count++))
 	done
@@ -75,6 +75,7 @@ umnt_path_type(){
 	return $count
 }
 
+einfo "Unmounting AUFS /+/var from ${AE_DIR[ROOT]} (continued):"
 
 # unmount everything
 umnt_path_type "${AE_DIR[CHROOT]}" '(proc|sysfs|tmpfs)' 'lost' # unmount special
