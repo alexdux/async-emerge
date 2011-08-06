@@ -470,6 +470,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 										true && updated=2
 									eend 0
 									#unset Cmds
+									# add user task pass
+									((loopLogic|=0x20))
 								else
 									echo "Using tasks from VCS." >> "$log_last"
 									einfo "        Using tasks from VCS."
