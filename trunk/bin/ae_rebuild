@@ -226,23 +226,29 @@ call_cmd1_with_emerge_solver() {
 
 
 # scan $1 for 'revdep-rebuild --library' then add libs to ${AE_REBUILD[FILE_OBSOLETED_LIBS]: log_file_to_scan
+# optional $2 - ignore list
 scan_for_rdlibs() {
+	local ignore=''
+	[ "$2" ] && ignore=$2
 	# * Please run revdep-rebuild --library libnss3.so.12 ,
 	local f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
 	local i s
 	# in order of appearance
 	for i in $(grep -E 'revdep-rebuild +\-\-library' "$1" | sed "s/.*library[ =]*\([^ ,]*\).*/\1/;s/['\"]//g" ); {
-		# avoid duplicates - it's safe
-		[ "$(grep "^$i$" "$f" 2>/dev/null)" ] || echo "$i" >> "$f"
-		# check for unlink advise
-		# *   # rm '/usr/lib64/libmpfr.so.1'
-		s=$(grep -m1 "rm .*$i" "$1" 2>/dev/null)
-		if [ "$s" ]; then
-			# normalize libname (add path from 'rm')
-			s=$(sed "s:.* rm '\(.*\)':\1:" <<< "$s")
-			# mark a lib for unlink with '<<< '
-			echo -e "$(sed "s:^$i$:<<< $s:" "$f")" > "$f"
-		fi
+		# avoid duplicates - it's safe and check ignore list
+		#echo "ignore: -$ignore-"
+		[ "$(grep "^$i$" <(echo -e "$ignore") 2> /dev/null)" ] || {
+			[ "$(grep "^$i$" "$f" 2> /dev/null)" ] || echo "$i" >> "$f"
+			# check for unlink advise
+			# *   # rm '/usr/lib64/libmpfr.so.1'
+			s=$(grep -m1 "rm .*$i" "$1" 2>/dev/null)
+			if [ "$s" ]; then
+				# normalize libname (add path from 'rm')
+				s=$(sed "s:.* rm '\(.*\)':\1:" <<< "$s")
+				# mark a lib for unlink with '<<< '
+				echo -e "$(sed "s:^$i$:<<< $s:" "$f")" > "$f"
+			fi
+		}
 	}
 	# sorted: no...
 	#grep -E 'revdep-rebuild +\-\-library' "$1" | cut -f2 -d"'" | sort -u >> "$f"
@@ -291,7 +297,7 @@ scan_for_sysvers() { # tod-: $(), echo ???
 # compare_sysvers: $saved_sysvers_file
 compare_sysvers() { # todo: change echo to sed/vars
 	local s sens ov uv nv
-	#rm "$2" 2>1 >/dev/null
+
 	# check versions
 	for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
 		for sens in ${AE_SUPD[${s}_SENSOR]}; do # multisensor
@@ -435,7 +441,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				exit 0xFF
 			fi
 
-			einfo "    Check for various subsets updates:"
+			einfo "    Checking for various subsets updates:"
 			undetected=''		
 			notinstalled=''
 			for (( i=0; i<${AE_SUPD[TOTAL]}; i++ )); do
@@ -651,8 +657,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				# copy libs lit to logs
 				echo " * Copy of advised libs list:" | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
 				tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}" < "$f"
+				ol_ignore=''
 				# check the result
 				if !(($cmdRet)); then # OK
+					# save list to avoid recursion
+					ol_ignore=$(<"$f")
 					einfo "      Unlinking advised obsoleted libs ..."
 					# go throgh the list and unlink lost libs
 					while read i; do 
@@ -664,13 +673,13 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						fi
 					done < "$f"
 					eend 0
-					true && rm -v "$f" &> /dev/null
+					true && rm -v "$f" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
 				else # FAIL
 					ewarn "    Save lost libs list for further rebuild."; eend 0
 					((loopLogic|=0x08))
 				fi
 				# collect hints for libs comsumers rebuild
-				scan_for_rdlibs "${AELOG[OBSLLIBS_LAST]}"
+				scan_for_rdlibs "${AELOG[OBSLLIBS_LAST]}" "$ol_ignore"
 				# add revdep-rebuild pass
 				((loopLogic|=0x10))
 			else
