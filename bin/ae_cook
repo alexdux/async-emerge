@@ -24,6 +24,7 @@
 # check if AUFS is mounted, to-do: check if ae_chroot is running in the VCS
 if [[ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" == "" ]]; then
 	eerror "  AUFS is not mounted! $PNAME is not operational!!!"
+	eend 2
 	exit 1
 fi
 
@@ -52,8 +53,6 @@ if [ "${AE_COOK[DO_SYNC]}" == "y" ]; then
 		cmdRet=$?
 		cat "$last_log" &>> "$log"
 		echo &>> "$log"
-		# exit on an error
-		#(($cmdRet)) && { eend 1; exit 2; }
 		eend $cmdRet
 		# set sync mark
 		touch "${AE_SIGN[SYNCED]}" 2>&1
@@ -75,7 +74,6 @@ rm -v "${AE_SIGN[REVDEPED]}" &> /dev/null
 rm -v "${AE_SIGN[TASKED]}" &> /dev/null
 
 
-
 # calling 'ae_rebuild'
 $PPATH/ae_rebuild
 cmdRet=$?
@@ -85,7 +83,6 @@ cmdRet=$?
 (($cmdRet&0x01)) || touch "${AE_SIGN[COOKED]}" &> /dev/null
 (($cmdRet&0x1E)) || echo "$cmdRet" > "${AE_SIGN[REVDEPED]}"
 (($cmdRet&0x20)) || touch "${AE_SIGN[TASKED]}" &> /dev/null
-echo "$cmdRet" > "${AE_DIR[GATEWAY]}.loopLogic"
 
 if [[ -e "${AE_SIGN[COOKED]}" && -e "${AE_SIGN[REVDEPED]}" && -e "${AE_SIGN[TASKED]}" ]]; then
 	einfo "All binaries are well done ;-)"; eend 0
