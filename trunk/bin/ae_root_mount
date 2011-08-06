@@ -17,7 +17,7 @@
 
 einfo "Mounting AUFS root to ${AE_DIR[ROOT]}:"
 
-if [ "$(grep aufs /proc/filesystems)" ]; then
+if ! [ "$(grep aufs /proc/filesystems)" ]; then
 	eerror "  AUFS is not supported by the kernel! Please add AUFS support to kernel. Stop."
 	eend 2
 	exit 2
