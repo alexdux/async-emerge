@@ -75,9 +75,11 @@ rm -v "${AE_SIGN[REVDEPED]}" &> /dev/null
 rm -v "${AE_SIGN[TASKED]}" &> /dev/null
 
 
+
 # calling 'ae_rebuild'
 $PPATH/ae_rebuild
 cmdRet=$?
+
 
 # setup the gateway signes
 (($cmdRet&0x01)) || touch "${AE_SIGN[COOKED]}" &> /dev/null

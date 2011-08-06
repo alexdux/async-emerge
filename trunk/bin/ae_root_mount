@@ -17,6 +17,12 @@
 
 einfo "Mounting AUFS root to ${AE_DIR[ROOT]}:"
 
+[ "$(grep aufs /proc/filesystems)" ] || {
+	eerror "  AUFS is not supported by the kernel! Please add AUFS support to kernel. Stop."
+	eend 2
+	exit 2
+}
+
 # check if aufs-root is already mounted
 if [ "$(mount | grep ${AE_DIR[ROOT]} | grep aufs)" ]; then
 	ewarn "  AUFS-root is already mounted! Skipping mounting /+/var."

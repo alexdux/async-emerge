@@ -25,12 +25,41 @@ do_lock() {
 # check if VCS running, to-do: add MultiVCS support
 
 # date time
-dt_mark() { echo "*** `date` ***"; }
+dt_mark() { echo "*** $(date) ***"; }
 
 # get state: -> $st
 collect_signes() { # to-do: correct build lock
 	for i in "${AE_PID[AE_COOK]}" "${AE_SIGN[SYNCED]}" "${AE_SIGN[COOKED]}" "${AE_SIGN[REVDEPED]}"; do 
-		[ -e $i ] && st=$st'Y' || st=$st'N'
+		[ -e $i ] && st+='Y' || st+='N'
 	done
 }
+
+# check if emerge {update|rebuild} world is going to fall
+# check_if_emerge_possible: $type_of_check $log_last $warn_log_last $log $warn_log
+check_if_emerge_possible() {
+
+	dt_mark &> "$2"
+	dt_mark &> "$2"
+	
+	case "$1" in
+		update)
+				eval "${AE_CMD[CHECK_UPDATE]} &>> $2";;
+		rebuild)
+				eval "${AE_CMD[CHECK_REBUILD]} &>> $2";;
+		n|none)
+				return true;;
+		*)
+			echo "invalid constant '$1' for check_if_emerge_possible()"
+	esac
+	cmdRet=$?
+	echo "Retcode: $cmdRet" &>> "$2"
+
+	(($cmdRet)) && tail -n +$(grep -n "Size of downloads" "$2" | cut -f1 -d ':') "$2" &>> "$3"
+	
+	cat "$2" &>> "$4"
+	cat "$3" &>> "$5"
+	
+	return $cmdRet
+}
+
 
