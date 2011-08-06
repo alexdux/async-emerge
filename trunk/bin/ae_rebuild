@@ -439,7 +439,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				echo -en "\033[00;10m"
 				echo -en "\a"
 				#for (( i=0; i < 3; i++ )); do echo -en "\a"; sleep 1; done
-				#eend 0
 				
 				if [ "${AE_REBUILD[CHECK_WORLD_FOR]}" == "update" ]; then
 					einfo "  Checking for possibility of world rebuild ..."
@@ -477,7 +476,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			#	einfo "    Collecting libs advised for consumers rebuild ..."
 				scan_for_rdlibs "${AELOG[EMERGE_LAST]}"
 				scan_for_rdlibs "${AELOG[EMERGE_WARN_LAST]}"
-				eend 0
+			#	eend 0
 				# check subset update after any world rebuild
 				((loopLogic|=0x02))
 				# add depclean and revdep-rebuild pass
@@ -877,6 +876,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	else 
 		ewarn "    Running scheduled tasks is not configured."; eend 0
 	fi
+	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
 done
 
 # Bye World
