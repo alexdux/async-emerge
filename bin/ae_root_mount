@@ -128,7 +128,7 @@ bnd_trans() {
 	for i in $1; do
 		# check if it exists at this box
 		if [ -d "$i" ]; then
-			mkdir -vp "${AE_DIR[CHROOT]}$i"
+			mkdir -vp "${AE_DIR[CHROOT]}$i" &> /dev/null
 			mount -vR "$i" "${AE_DIR[CHROOT]}$i" &> /dev/null
 			if (($?)); then
 				eerror "  Can't bind transparent (non-merged) $i!" 

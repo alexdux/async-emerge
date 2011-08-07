@@ -370,7 +370,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 # * Check for possibility of update|rebuild world - stop if impossible
 (($AE_VCS)) && AE_REBUILD[CHECK_WORLD_FOR]="${AE_COOK[CHECK_WORLD_FOR]}" \
 	|| AE_REBUILD[CHECK_WORLD_FOR]="${AE_INSTALL[CHECK_WORLD_FOR]}"
-if [ "${AE_REBUILD[CHECK_WORLD_FOR]}" != "n"* ]; then
+if [[ "${AE_REBUILD[CHECK_WORLD_FOR]}" != "n"* ]]; then
 	einfo "  Checking for possibility of world ${AE_REBUILD[CHECK_WORLD_FOR]} ..."
 	
 	check_if_emerge_possible "${AE_REBUILD[CHECK_WORLD_FOR]}" "${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
