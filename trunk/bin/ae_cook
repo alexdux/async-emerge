@@ -59,8 +59,8 @@ if [ "${AE_COOK[DO_SYNC]}" == "y" ]; then
 	else
 		ewarn "    last sync was less than 1 day ago:"\
 				"sync is skipped due to follow gentoo-netiquette."
+		eend 0
 	fi
-	eend 0
 else
 	ewarn "    sync is disabled by configuration."
 	eend 1
