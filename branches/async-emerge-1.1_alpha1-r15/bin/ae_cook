@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# ae_cook - 'async emerge' binaries cooking
+# GPL ver. 2
+# version: 1.1
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+# 	- Sync using $AE_BUILD_SYNC_CMD, by default once a day
+#	- Update world using $AE_BUILD_EMERGE_CMD
+#	- Revdep-rebuild world using $AE_BUILD_REVDEP_CMD
+# removed	- Prerun update and revdep for logging
+#	- Allow only one instance of $0 for one VCS via $AE_BUILD_LOCK
+#	- Run python-updater, perl-cleaner if advised by "install warns"
+#	- Revdep obsoleted libs advised by "install warns" then remove it
+#	- Run --depclean
+#	- Cycling revdepping-updating-cleaning (max $AE_BUILD_REVDEPCO_MT times)
+# To-do:
+#	- Run tasks: user given command/merging
+
+# get config
+. /etc/async.emerge.conf
+
+# check if AUFS is mounted, to-do: check if ae_chroot is running in the VCS
+if [[ "`mount | grep ${AE_DIR[ROOT]} | grep aufs`" == "" ]]; then
+	eerror "  AUFS is not mounted! $PNAME is not operational!!!"
+	eend 2
+	exit 1
+fi
+
+# check locking with ${AE_PID[AE_COOK]}
+do_lock "${AE_PID[AE_COOK]}" 1 "  $PNAME is already running, but only one instance is allowed for one VCS! Exit."
+
+# to-do: check run in VCS?
+
+
+einfo "Cooking new binaries in virtual system (in VCS):"
+
+# *** SYNC ***
+einfo "  Syncing portage:"
+# check freq. of syncing
+ts_synced=`stat -c %Y "${AE_SIGN[SYNCED]}" 2>&1` || ts_synced=0
+# sync ones-a-day - 10min for skew
+if [ "${AE_COOK[DO_SYNC]}" == "y" ]; then
+	if ((`date +%s 2>&1`-$ts_synced > 24*60*60-600)); then
+		last_log="${AE_LOG[DIR_LAST]}${AE_LOG[DIR_COOK]}${AE_LOG[FILE_SYNC]}${AE_LOG[EXT_COOK]}"
+		log="${AE_LOG[DIR_SAVE]}${AE_LOG[DIR_COOK]}${AE_LOG[FILE_SYNC]}${AE_LOG[EXT_COOK]}"
+		# remove sync mark
+		rm -v "${AE_SIGN[SYNCED]}" &> /dev/null
+		# logging syncing
+		dt_mark &> "$last_log"
+		eval "${AE_RCMD[COOK_SYNC]} &>> \"$last_log\""
+		cmdRet=$?
+		cat "$last_log" &>> "$log"
+		echo &>> "$log"
+		eend $cmdRet
+		# set sync mark
+		touch "${AE_SIGN[SYNCED]}" 2>&1
+	else
+		ewarn "    last sync was less than 1 day ago:"\
+				"sync is skipped due to follow gentoo-netiquette."
+		eend 0
+	fi
+else
+	ewarn "    sync is disabled by configuration."
+	eend 1
+fi
+
+
+# *** EMERGE ***
+# remove cook signes
+rm -v "${AE_SIGN[COOKED]}" &> /dev/null
+rm -v "${AE_SIGN[REVDEPED]}" &> /dev/null
+rm -v "${AE_SIGN[TASKED]}" &> /dev/null
+
+
+# calling 'ae_rebuild'
+$PPATH/ae_rebuild
+cmdRet=$?
+
+
+# setup the gateway signes
+(($cmdRet&0x01)) || touch "${AE_SIGN[COOKED]}" &> /dev/null
+(($cmdRet&0x1E)) || echo "$cmdRet" > "${AE_SIGN[REVDEPED]}"
+(($cmdRet&0x20)) || touch "${AE_SIGN[TASKED]}" &> /dev/null
+
+if [[ -e "${AE_SIGN[COOKED]}" && -e "${AE_SIGN[REVDEPED]}" && -e "${AE_SIGN[TASKED]}" ]]; then
+	einfo "All binaries are well done ;-)"; eend 0
+else
+	eerror "There was an error at binaries cook or system's consistency care."; eend 2
+fi
+
+exit 0
+

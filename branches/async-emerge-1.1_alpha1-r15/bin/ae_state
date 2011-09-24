@@ -1,0 +1,257 @@
+#!/bin/bash
+
+# ae_state - getting state of 'async emerge'
+# GPL ver. 2
+# version: 1.1
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+# 	- List prebuilt packages
+#	- List -"- using eix/emerge -s
+#	- Show last -"- timestamp
+#	- Show state of a.e. (+ once a day if configured)
+#	- List older binaries
+# temp disabled	- Skip run in chrooted env (imposable?)
+#	- Grouping by date of cook
+#	- Show last cook emerge warning message
+#	- Variuos way to output: detailed list, list, row
+# To-do:
+#	- AUFS /var/cache/eix* to reflect proper per-package update state (eix only)?
+#	- add oneoption parsing
+#	- use cached eix packages list after build
+
+# get config
+. /etc/async.emerge.conf
+
+# skip run if asked
+[ $AE_STATE_SKIP ] && exit 0
+
+# help out
+if [ "$1" == "--help" ]; then
+	echo -e "\033[01;33mAsync Emerge\033[00;10m state report."
+	echo "USE: $PNAME [OPTIONS]"
+	echo "  Where valid OPTIONS are:"
+	echo "    -a        list All packages, including older (probably merged)'" # bitmask 0x1
+	echo "    -c        show last Cron log" # bitmask 0x100
+	echo "    -d        group by cooking Date" # bitmask 0x10
+	echo "    -e        force to use Eix (else use configs value)" # AE_STATE[USE_EIX]='y'
+	echo "    -f        don't search for description, just list cooked Filenames" # bitmask 0x8
+	echo "    -F        like -f but list in one line" # bitmask 0x88
+	echo "    -m        force to use eMerge (else use configs value)" # AE_STATE[USE_EIX]='n'
+	echo "    -o        report only Once a day (for adding to a shell profile)" # bitmask 0x4
+	echo "    -q        Quiet: skip package listing" # bitmask 0x2
+	echo "    -r        Reverse listing: last cooked - list first" # ls_sort=''
+	echo "    -v        to-do?: only with -e/eix: use VCS to list packages" # bitmask 0x40
+	echo "    -w        show emerge Warning from last cook" # bitmask 0x20
+	echo "    --help    print Help"
+	echo "NB: In order to reduce noise is only one instance of '$PNAME' can work simultaneously."
+	exit 0
+fi
+
+[ ${AE_STATE[USE_EIX]} ] || AE_STATE[USE_EIX]='y'
+# pasre command line options
+ls_sort='r'
+opt=0
+for o in $*; do
+	case $o in
+		-*) while eval 'o=${o:1}' && [ $o ]; do
+				case ${o:0:1} in
+					a) ((opt|=0x1));;
+					c) ((opt|=0x100));;
+					d) ((opt|=0x10));;
+					e) AE_STATE[USE_EIX]='y';;
+					f) ((opt|=0x8));;
+					F) ((opt|=0x88));;
+					m) AE_STATE[USE_EIX]='n';;
+					o) ((opt|=0x4));;
+					q) ((opt|=0x2));;
+					r) ls_sort='';;
+					v) ((opt|=0x40));;
+					w) ((opt|=0x20));;
+					*) echo "ignore invalid option: '-${o:0:1}'"
+				esac
+			done;;
+		*) echo "ignore invalid option: '$o'"
+	esac
+done
+#echo $opt
+
+# skip to run in chrooted env: useless????????
+#if [[ "`LC_ALL=en_EN df 2>&1 | grep $AE_ROOT | grep 'No such file or directory'`" ]]; then
+#	echo "$PNAME: Running in chrooted environment is impossible: skipped."
+#	exit 0
+#fi
+
+# check locking with ${AE_LOCK[AE_STATE_LOCK]}
+do_lock "${AE_LOCK[AE_STATE_LOCK]}" 0 #"One instance of '$PNAME' is already running, exit by lock..."
+
+# "Once a day" logic 
+ts_reported=$(stat -c %Y "${AE_SIGN[STATE]}" 2>/dev/null) || ts_reported=0
+(($opt & 0x4)) && (($(date +%s 2>/dev/null)-$ts_reported < ${AE_STATE[PERIOD]})) && exit 0
+touch "${AE_SIGN[STATE]}" #2>/dev/null
+
+# change workdir
+cd "${AE_DIR[PKGDIR]}"
+
+# welcome msg
+echo -e "\033[01;33m***\033[01;33m Async Emerge \033[01;33m***\033[00;10m"
+
+# list built packages
+echo -n "  Cooked binary packages:"
+(($opt & 0x2)) || echo
+
+# query some timestamps
+# to-do?: change to file1 -nt file2
+#ts_from=`stat -c %Y "$AE_MERGED_SIGN" 2>/dev/null` || ts_from=0
+#ts_from=`stat -c %Y "/usr/portage/metadata" 2>/dev/null` || ts_from=0
+ts_from=$(stat -c %Y "/var/db/pkg" 2> /dev/null) || ts_from=0
+ts_last=$ts_from
+
+# to-do : fix:
+#-rw-r--r-- 1 root root 37389478 Mar 20 02:02 icedtea6-bin-1.9.7.tbz2._checksum_failure_.8pFibM
+#-rw-r--r-- 1 root root 37379100 Mar  9 01:42 icedtea6-bin-1.9.7.tbz2._checksum_failure_.aB8zER
+
+forupd=0
+for i in $(ls -t$ls_sort */*bz2 2>/dev/null); do
+	out=''
+	# stat mtime fo file
+	i_ts=$(stat -c %Y "$i" 2>/dev/null)
+	# store the most new mtime
+	(($ts_last < $i_ts)) && ts_last=$i_ts
+	
+	if (($i_ts < $ts_from)); then # check if package is too old
+		# skip info if not specified '-a'
+		(($opt & 0x1)) || continue
+		out+='\033[00;32molder:\033[00;10m '
+	fi
+	
+	if (($opt & 0x10)) && !(($opt & 0x2)); then # group by date (prepend with uniq date)
+		i_dg=$(date -d @$i_ts +%x 2>/dev/null)
+		if [ "$i_dg" != "$dg_last" ]; then
+		    dg_last=$i_dg
+		    out="--- cooked at \033[00;32m$i_dg\033[00;10m ---\n"$out
+		    (($opt & 0x80)) && (($forupd)) && out="\n"$out
+		fi
+	fi
+	
+	# per-package out
+	((forupd++))
+	i=${i%.*} # remove file type (.tbz2)
+	if !(($opt & 0x2)); then # detailed view
+		if (($opt & 0x8)); then # raw view - list of files
+			#k=${i%-[0-9]*} ; i="${i%/*}/\033[01;37m${k#*/}\033[00;10m-${i##*[^0-9]-}"
+			k=${i%-[0-9]*} ; i="${i%/*}/\033[01;37m${k#*/}\033[00;10m${i/${k}}"
+			(($opt & 0x80)) && out+="$i  " || out+="$i\n"
+		else # detailed view
+			# choose search cmd
+			if [ "${AE_STATE[USE_EIX]}" == "y" ]; then # call eix
+				#echo "eix -Fec ${i%%-[0-9]*} 2>/dev/null"
+				# installed ??? out=$out`eix -ceFI ${i%%-[0-9]*} 2>/dev/null`"\n"
+				out+=$(eix -ceF ${i%%-[0-9]*} 2>/dev/null)"\n"
+				# out=${out/ (/-${i##*[^0-9]-} (}
+			else # call emerge, to-do: bad out
+				out+=$(emerge -sq "%@^${i%%-[0-9]*}$" | grep '*' 2>/dev/null && \
+						 emerge -s "%@^${i%%-[0-9]*}$" | grep 'available' | cut -f2 -d':' | \
+						 cut -f2- -d' ' 2>/dev/null)"\n"
+			fi
+			# package not found?
+			(($?)) && { out="\033[01;31mdescription not found:\033[00;10m $i\n"; ((forupd--)); }
+		fi
+		echo -en "$out"
+	fi
+done
+
+# total
+(($opt & 0x2)) || { (($forupd)) && (($opt & 0x80)) && echo; echo -n "    total:"; }
+echo -e " \033[00;32m$forupd\033[00;10m"
+
+# list last
+# synced
+lsync=$(date -r "${AE_SIGN[SYNCED]}" 2>/dev/null)
+[ "$lsync" ] || lsync=$(date -r "${AE_DIR[DELTA]}/usr/portage/metadata" 2>/dev/null)
+[ "$lsync" ] || lsync=$(date -r "/usr/portage/metadata" 2>/dev/null)
+echo "  Last synced at    : $lsync."
+# cooked (revderped,tasked)
+(($ts_last!=$ts_from)) && lcook=$(date -d @$ts_last 2>/dev/null)
+[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[TASKED]}" 2>/dev/null)
+[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[REVDEPED]}" 2>/dev/null)
+[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[COOKED]}" 2>/dev/null)
+[ "$lcook" ] || lcook='no binary packages is found'
+echo "  Last cooked at    : $lcook."
+# installed
+linst=$(date -r "/var/db/pkg" 2>/dev/null)
+echo "  Last installed at : $linst."
+
+
+# status and guide
+echo -n "  State: "
+# check state
+collect_signes
+case $st in
+	Y*) echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m"
+		(($forupd)) && echo "  Hint: installation at this phase is possible but not recommended." || \
+						echo "  Hint: nothing to install yet, please wait." 
+		;;
+	NN*) echo -e "\033[01;31mSYNC IS FAILED !!!\033[00;10m"
+		echo "  Hint: check and fix Internet connection, proxy, mirrors and other settings at GRS."
+		echo "	Then recheck syncing at VCS with 'ping', 'emerge --sync' or 'eix-sync' and so on..."
+		echo "	After repaire run 'ae_cron' or leave it for a cron service."
+		# add cron log
+		((opt|=0x100))
+		;;
+	NYNN) echo -e "\033[01;31mCOOK IS FAILED !!!\033[00;10m"
+		echo -e "  Hint: run 'ae_vcs' to enter into VCS to check if cooking is Ok." 
+		# add cron log
+		((opt|=0x100))
+		# add emerge warn
+		((opt|=0x20))
+		;;
+	NYNY) echo -e "\033[01;33mCOOK IS UNCOMPLETED !\033[00;10m"
+		echo -e "  Hint: some packages weren't built." \
+				"Run 'emerge -uDNkvtp world' in VCS or 'ae_vcs temerge -uDNkvtp world' in GRS for details..."
+				# bug with emerge
+		# add emerge warn
+		((opt|=0x20))
+		;;
+	NYYN) echo -e "\033[01;33mCOOK IS OK, BUT REVDEP-REBUILD IS FAILED !\033[00;10m"
+		echo -e "  Hint: run 'ae_vcs' to enter into VCS and check revdep-cooking." #\
+#			"\n\tLearn logs like: $AE_LOG_DIR*emerge.*last.log."\
+#			"\n\tFix configs and check building with 'emerge --pretend'."\
+#			"\n\t( With next 'ae_install' new configs will be copied to your real system.)"\
+#			"\n\tRun 'ae_build' or leave it for (ana)cron if success, else try to repair again (if it possible)."\
+#			"\n\t(*) also you can try to fix the problem in your real system. (please read documentation first)"
+		# add emerge warn
+		((opt|=0x20))
+		;;
+		
+	# to-do: add NYYY? (ae_install.pid) "INSTALL IS IN PROGRESS, please wait..."
+	NYYY) if (($forupd)); then
+				echo -e "\033[01;32mOK, READY TO INSTALL ...\033[00;10m"
+				echo "  Hint: run 'ae_install' to install cooked binaries to your real system."
+			else
+				echo -e "\033[01;32mSYSTEM IS UP TO DATE.\033[00;10m"
+				echo "  Hint: your system is up to date - no more actions is needed ;)"
+			fi
+		;;
+	*) echo "state is undefined (this is a bug.)"
+esac	
+
+# show last cron log
+if (($opt & 0x100)); then
+	echo -n '  Last cron message:'
+	f="${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+	(($(wc -l < "$f" 2>/dev/null) > 1)) && \
+		echo -e "\n$(<"$f")" || \
+		echo -e ' \033[00;32mnone\033[00;10m.'
+fi
+# show last emerge Warn
+if (($opt & 0x20)); then
+	echo -n '  Last emerge warning:'
+	f="${AE_LOG[DIR_LAST]}${AE_LOG[DIR_COOK]}${AE_LOG[FILE_EMERGE_WARN]}${AE_LOG[EXT_COOK]}"
+	(($(wc -l < "$f" 2>/dev/null) > 1)) && \
+		echo -e "\n$(<"$f")" || \
+		echo -e ' \033[00;32mnone\033[00;10m.'
+fi
+
+exit 0
+

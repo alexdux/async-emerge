@@ -1,0 +1,145 @@
+#!/bin/bash
+
+# ae_install - 'async emerge' cooked binaries installer
+# GPL ver. 2
+# version: 1.0
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+# 	- 
+# To-do:
+#	- Run user given command/merging
+# 	- Run cfg-update -ua ?
+# 	- Run eclean packages & distfiles ?
+# 	- Run update-pciids and update-usbids ?
+
+# get config
+. /etc/async.emerge.conf
+
+# check locking with ${AE_PID[AE_INSTALL]}
+do_lock "${AE_PID[AE_INSTALL]}" 1 "  $PNAME is already running, but only one instance is allowed for one GRS! Exit."
+
+
+einfo "Installing cooked binaries to real system (to GRS):"
+
+# gather async emerge state
+collect_signes
+# check if syncing is active (.N*)
+[[ ${st:1} == N* ]] && { # to-do: check sync.lock pid
+	eerror "  Syncing is failed or in progress: installation at this point is impossible! Please wait or check..."
+	eend 1;	exit 1 
+}
+# check state - warn if not OK (NYYY)
+[ "$st" != "NYYY" ] && { ewarn "  Actual status of cooking is not OK: warning of some system inconsistency."; eend 1; }
+
+# Syncing portage from VCS to GRS
+# to-do: Check if VCS is exists?
+if [ "${AE_INSTALL[DO_SYNC]}" == "y" ]; then
+	if [ -e "${AE_DIR[DELTA]}" ]; then
+		einfo "  Rsyncing changed portage files ..."
+		sync_log="${AE_LOG[DIR_SAVE]}${AE_LOG[DIR_INSTALL]}${AE_LOG[FILE_SYNC]}${AE_LOG[EXT_INSTALL]}"
+		sync_log_last="${AE_LOG[DIR_LAST]}${AE_LOG[DIR_INSTALL]}${AE_LOG[FILE_SYNC]}${AE_LOG[EXT_INSTALL]}"
+		dt_mark &> "$sync_log_last"
+		# prepare sources list
+		for d in ${AE_DIR[INSTALL_MERGE]}; do
+			d="${AE_DIR[DELTA]}/."${d/\\\*/\*}
+			if (($(ls $d 2>/dev/null | wc -l))); then src_list="$src_list $d"; fi
+		done
+		if [ "$src_list" ]; then
+			${AE_RCMD[INSTALL_SYNC]} $src_list / &>> "$sync_log_last" # to-do: (to $ROOT)
+			eend 0
+		else
+			ewarn "  Rsyncing is skipped - empty VCS dirs."
+			eend 1
+		fi
+
+		einfo "    Deleting obsoleted portage files ..."
+		# prepare sources list
+		for d in ${AE_DIR[INSTALL_MERGE]}; do whd_list="$whd_list ${AE_DIR[DELTA]}"${d/\\\*/\*}; done
+		for i in `find $whd_list -depth -name \.wh\.\* -a ! -name \.wh\.\.wh\.* 2>/dev/null`; do
+			r=${i##${AE_DIR[DELTA]}}	# remove chroot prefix
+			r=${r/\.wh\./}		# remove basename .wh. prefix
+			# this couldn't occurs under normal conditions
+			[ -e "$r" ] || echo "rm: file not found: $r!" &>> "$sync_log_last" 
+			rm -rfv $r &>> "$sync_log_last" && \
+			rm -rfv $i &>> "$sync_log_last"
+		done
+
+		cat "$sync_log_last" &>> "$sync_log"
+		echo &>> "$sync_log"
+
+		# Emaint packages
+		# to-do: check if this maintence is needed at ae_build and save as flag?
+		if [ "${AE_INSTALL[DO_EMAINT_MOVEINST]}" == "y" ]; then
+			einfo "    Performing Global Updates:"
+			emaint -f moveinst
+			# to-do? is it all?
+		fi
+		eend 0
+	else
+		ewarn "  Rsyncing is skipped - VCS not found."
+		eend 0
+	fi
+else
+	ewarn "  Rsyncing is skipped due to configuration."
+	eend 0
+fi
+
+
+# calling 'ae_rebuild'
+$PPATH/ae_rebuild
+cmdRet=$?
+
+# to-do: add checks for $cmdRet for einfo/eend
+
+sleep 2
+# Clean-up VCS if not building
+if [ "${AE_INSTALL[DO_VCS_CLEANUP]}" == "y" ]; then
+	if [ -e "${AE_PID[AE_COOK]}" ]; then # to-do: better locking
+		ewarn "  Cooking binary packages is in progress: skipping VCS cleanup!"; eend 1
+	else
+		einfo "  Cleaning VCS:"
+		ae_delta_cleanup && ae_chroot_cleanup
+	fi
+else
+	einfo "  VCS cleanup is not configured."
+	eend 0
+fi
+
+
+# eclean-dist
+if [ "${AE_INSTALL[DO_ECLEAN_DIST]}" == "y" ]; then
+	einfo "  Unlinking obsoleted distfiles:"
+	${AE_CMD[ECLEAN_DIST]}
+else
+	einfo "  Unlinking obsoleted distfiles is not configured."
+	eend 0
+fi
+
+
+# eclean-pkg
+if [ "${AE_INSTALL[DO_ECLEAN_PKG]}" == "y" ]; then
+	einfo "  Unlinking obsoleted binary packages:"
+	${AE_CMD[ECLEAN_PKG]}
+else
+	einfo "  Unlinking obsoleted binary packages is not configured."
+	eend 0
+fi
+
+
+# etc-update
+if [ "${AE_INSTALL[DO_ETC_UPDATE]}" == "y" ]; then
+	einfo "  Updating configs (interactively):"
+	${AE_CMD[ETC_UPDATE]}
+else
+	einfo "  Config update is not configured."
+	eend 0
+fi
+
+# to-do: print out install.emerge.warn.log
+
+einfo "Binary packages installation is finished!"
+eend 0
+
+exit 0
+

@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# CLOSED: NOT NEEDED.
+
+# ae_portage_sync - portage syncer for 'aync emerge'
+# GPL ver. 2
+# version: 1.1
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+# 	- sync portage not more than once a day
+#	- then update readiness with ae_readiness
+
+# get config
+. /etc/async.emerge.conf
+
+
+einfon "Syncing portage: "
+
+# test
+#emerge -vpe world &> /tmp/1.txt &
+#emerge &> /tmp/1.txt &
+cat /var/log/async.emerge/last.cook.sync.log | while read l; do
+	echo "$l"
+	sleep 5
+done > /tmp/1.txt &
+#pid=$!
+#sleep 2
+#echo $pid
+tail -n0 -F --pid=$! /tmp/1.txt 2>/dev/null | while read s ; do
+#tail -n0 -F --pid=$! $(<6) 2>/dev/null | while read s ; do
+#cat //var/log/async.emerge/last.cook.sync.log 2>/dev/null | while read s ; do
+	#echo -en "                                                                             \r"
+	#echo "$s" | tr '\n' '\r'
+	printf "%-15s %-79s\r" $(date +%s) "${s:0:79}"
+	#sleep 0.01
+done
+echo
+#while $(kill -0 $!); do
+#	tailf -n 1 /tmp/1.txt | tr '\n' '\r'
+#	sleep 0.05
+#done
+exit 0
+
+# check
+recho "checking timestamp ..."
+ts_synced=$(stat -c %Y "${AE_SYNC[TS_FILE]}" 2>&1) || ts_synced=0
+#echo $ts_synced
+if (($(date +%s 2>&1)-$ts_synced > 24*60*60-10*60)); then
+	raecho " allowed"
+	sleep 1
+else
+	#raecho " ... too soon - disallowed."
+	echo
+	eend "It's too soon to sync - disallowed."
+	sleep 0.5
+	exit 1
+fi
+
+
+# sync
+recho "syncing "
+
+log="${AE_SYNC[LOG]}"
+last_log="${AE_SYNC[LOG_LAST]}"
+# logging syncing
+dt_mark &> "$last_log"
+
+eval "${AE_SYNC[COOK_CMD]} &>> \"$last_log\""
+
+cmdRet=$?
+echo "Retcode: $cmdRet" &>> "$log_last"
+cat "$last_log" &>> "$log"
+echo &>> "$log"
+eend $cmdRet
+
+for ((i=0; i<50; i++)); do
+	rdash
+	sleep 0.05
+done
+
+rdash_end
+
+# update readiness
+
+recho "done."
+echo
+
+

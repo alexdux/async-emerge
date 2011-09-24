@@ -1,0 +1,894 @@
+#!/bin/bash
+
+# ae_rebuild - 'async emerge' Gentoo system re-builder
+# GPL ver. 2
+# version: 1.2
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+#	- Work in both GRS and VCS environments
+#	- Stop/rerun supported
+#	- Update world using $AE_BUILD_EMERGE_CMD
+#	- Revdep-rebuild world using $AE_BUILD_REVDEP_CMD
+# removed	- Prerun update and revdep for logging
+#	- Allow only one instance of $0 for one VCS via $AE_BUILD_LOCK
+#	- Run subset updates (gcc update, python update, perl update), configurable
+#	- PM solver for subset updates
+# removed	- Run python-updater, perl-cleaner if advised by "install warns"
+#	- Revdep obsoleted libs advised by "install warns" then remove it
+#	- Run --depclean
+#	- Cycling revdepping-updating-cleaning (max ${AE_REBUILD[REVDEPCO_MT]} times)
+#	- Run tasks: user given command/merging
+# To-do:
+
+# get config
+. /etc/async.emerge.conf
+
+# check if AUFS is mounted, to-do: check if ae_chroot is running in the VCS
+#if [[ "`mount | grep $AE_ROOT | grep aufs`" == "" ]]; then
+#	eerror "  AUFS is not mounted! $PNAME is not operational!!!"
+#	exit 1
+#fi
+
+# Detect VCS, set $AE_VCS
+AE_VCS=${#AE_CHROOT_PS1}
+
+# set config key prefix
+(($AE_VCS)) && eType='COOK' || eType='INSTALL'
+
+# Adjust CMD
+declare -A AECMD
+for i in ${!AE_RCMD[*]}; do
+	[[ "$i" != $eType'_'* ]] && continue
+	AECMD[${i:${#eType}+1}]=${AE_RCMD[$i]}
+done
+
+# Adjust LOGS
+declare -A AELOG
+for i in ${!AE_LOG[*]}; do
+	[[ "$i" != 'FILE_'* ]] && continue
+	AELOG[${i:5}]=${AE_LOG[DIR_SAVE]}${AE_LOG[DIR_$eType]}${AE_LOG[$i]}${AE_LOG[EXT_$eType]}
+	AELOG[${i:5}_LAST]=${AE_LOG[DIR_LAST]}${AE_LOG[DIR_$eType]}${AE_LOG[$i]}${AE_LOG[EXT_$eType]}
+done
+
+# Adjust SIGNS
+declare -A AESIGN
+for i in ${!AE_SIGN[*]}; do
+	[[ "$i" != *'_UPDATE'* ]] && continue
+	AESIGN[$i]=${AE_DIR[GATEWAY]}.${AECMD[FILE_PREFIX]}${AE_SIGN[$i]}
+done
+
+
+# check locking with ${AE_PID[AE_REBUILD]}
+do_lock "${AE_PID[AE_REBUILD_PATH]}${AECMD[FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" 1 \
+	"  $PNAME is already running, but only one instance is allowed for one VCS! Exit."
+
+# emerge caller: info_msg emerge_cmd log_file_last warn_file_last log_file warn_file -> $cmdRet
+# exit if retcode > 1
+call_emerge() {
+	local log_last=$3 warn_last=$4 log=$5 warn=$6
+	# fixit
+	[[ $1 ]] && einfo "  $1 ..."
+	# pre-logging emerging
+	dt_mark | tee "$log_last" &> "$warn_last"
+	if [[ "$2" == *'1>&3'* ]]; then 
+		#echo '=== *1>&3* ==='
+		eval "$2"
+	else
+		eval "$2 >> $log_last 2>> $warn_last"
+	fi
+	cmdRet=$? # 102 = killed (Ctrl+C)
+	eend $cmdRet
+	# if an error occurred - add log to warn (some errors do not out to stderr)
+	### (($cmdRet)) && cat "$log_last" >> "$warn_last" 2>&1
+	echo "Retcode: $cmdRet" &>> "$log_last"
+	# care logs
+	cat "$log_last" &>> "$log"
+	cat "$warn_last" &>> "$warn"
+	echo &>> "$log"
+	echo &>> "$warn"
+	# exit on an error
+	(($cmdRet>1)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 3; }
+	return $cmdRet
+}
+
+# a command caller: info_msg cmd log_file_last log_file -> return, $cmdRet
+# exit if retcode > 1
+call_cmd1() {
+	local log_last=$3 log=$4
+	[ "$1" ] && einfo "    $1 ..."
+	dt_mark &> "$log_last"
+	eval "$2" &>> "$log_last"
+	cmdRet=$?
+	eend $cmdRet
+	echo "Retcode: $cmdRet" &>> "$log_last"
+	cat "$log_last" &>> "$log"
+	echo &>> "$log"
+	# exit on an error
+	(($cmdRet>1)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 4; }
+	return $cmdRet
+}
+
+# same as call_cmd1, but exit if recode > 0
+call_cmd0() {
+	call_cmd1 "$1" "$2" "$3" "$4"
+	# exit on an error
+	(($cmdRet)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 5; }
+	return $cmdRet
+}
+
+# emerge solver: msg log_file_last -> $cmdRet
+# Features:
+#	- for 'python-updater' and 'perl-cleaner' ONLY !!!
+# To-do:
+#	- this is awful --> emerge --ignore-invalid-atoms
+# parse log, get emerge cmd, try to build it 'anyway' by escaping invalid atoms
+# : info_msg log_file
+emerge_solver() {
+	local log_last="$2" # log=$3
+	local i s eCmd loop aMasked aMissed aBlocker
+	[ "$1" ] && ewarn "    Emerge fault, trying to solve:"
+	
+	# get emerge cmd
+	# to-do: change to internal var?
+	eCmd=$((grep "${AE_CMD[PM_SEARCH]}" "$log_last" | grep -m1 -v -e '--sync' -e '--info' | cut -f2- -d'-') 2>> "$log_last")
+
+	if [ "$eCmd" ]; then
+		# loop
+		loop=${AE_REBUILD[EMERGE_SOLVER_MT]} # to-do: add const
+		cmdRet=1
+		while (($loop)) && (($cmdRet)); do # emerge reports us only one error at once
+			einfo "      trying to solve emerge '$1', try "$((${AE_REBUILD[EMERGE_SOLVER_MT]}-$loop+1)) \
+				"of ${AE_REBUILD[EMERGE_SOLVER_MT]} ..."
+
+			s=''
+		
+			# check masked
+			aMasked=$((grep -m1 'masked by:.*keyword' "$log_last") 2>> "$log_last")
+			if [ "$aMasked" ]; then
+				# get packet category/name
+				aMasked=${aMasked%%-[0-9]*}; aMasked=${aMasked/* /}
+				# too slow: shopt -s extglob; eCmd=${eCmd/$aMasked*([! ])/}; shopt -u extglob
+				s=$eCmd; eCmd=''
+				for i in $s; do [[ "$i" != *"$aMasked"* ]] && eCmd+=" $i"; done
+				eCmd=${eCmd:1}
+			fi
+	
+			# check 'there are no ebuilds'
+			# emerge: there are no ebuilds to satisfy "=net-print/hplip-3.10.9-r1"
+			aMissed=$((grep -m1 'there are no ebuilds to satisfy' "$log_last" | cut -f2 -d'"') 2>> "$log_last")
+			if [ "$aMissed" ]; then
+				# get packet category/name
+				aMissed=${aMissed%%-[0-9]*}; aMasked=${aMissed/* /}
+				s=$eCmd; eCmd=''
+				for i in $s; do [[ "$i" != *"$aMissed"* ]] && eCmd+=" $i"; done
+				eCmd=${eCmd:1}
+			fi
+		
+			# check 'pulled in by', not tested!
+			# (x11-libs/gdk-pixbuf-2.22.1-r2::gentoo, ebuild scheduled for merge) pulled in by
+			for aBlocker in $(grep -m1 'pulled in by' "$log_last" | sed 's/.*(\(.*\)::.*/\1/'); do #'
+				#echo "$aBlocker"
+				if [ "$aBlocker" ]; then
+					# get packet category/name
+					aBlocker=${aBlocker%%-[0-9]*}; aMasked=${aBlocker/* /}
+					s=$eCmd; eCmd=''
+					for i in $s; do [[ "$i" != *"$aBlocker"* ]] && eCmd+=" $i"; done
+					eCmd=${eCmd:1}
+				fi
+			done
+
+			[ "$s" ] || {
+				ewarn "      (...nothing more could be fixed in request: make one try to rebuild and return.)"
+				loop=1
+			}
+			
+			# run PM
+			eval "${AE_CMD[PM]} -$eCmd" &>> "$log_last"
+			cmdRet=$?
+			eend $cmdRet
+			echo "Retcode: $cmdRet" &>> "$log_last"
+			if (($cmdRet>102)); then return 102; fi
+		
+			((loop--))
+		done
+	else
+		ewarn "      Nothing to solve. Check if '--keep-going' logic works."; eend 0
+	fi
+	return 0
+}
+
+# Features:
+#	- for 'python-updater' and 'perl-cleaner' ONLY !!!
+#	- trying hard to escape invalid atoms (--skip-invalid-atoms)
+# a command caller: info_msg cmd log_file_last log_file -> return, $cmdRet
+# if something goes wrong - it calls emerge_solver
+# exit if retcode > 1
+call_cmd1_with_emerge_solver() {
+	local log_last=$3 log=$4
+	[ "$1" ] && einfo "    $1 ..."
+	dt_mark &> "$log_last"
+	# eval
+	#$($2 >> "$log_last" 2>&1)
+	eval "$2" &>> "$log_last"
+	cmdRet=$?
+	eend $cmdRet
+	(($cmdRet>1)) && return $cmdRet
+	(($cmdRet)) && emerge_solver "$1" "$3" # "$4"
+	echo "Retcode: $cmdRet" &>> "$log_last"
+	cat "$log_last" &>> "$log"
+	echo &>> "$log"
+	# exit on an error
+	(($cmdRet>1)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 4; }
+	#einfo "    Solved. $1 (continue)"
+	return $cmdRet
+}
+
+
+# scan $1 for 'revdep-rebuild --library' then add libs to ${AE_REBUILD[FILE_OBSOLETED_LIBS]: log_file_to_scan
+# optional $2 - ignore list
+scan_for_rdlibs() {
+	local ignore=''
+	[ "$2" ] && ignore=$2
+	# * Please run revdep-rebuild --library libnss3.so.12 ,
+	local f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
+	local i s
+	# in order of appearance
+	for i in $(grep -E 'revdep-rebuild +\-\-library' "$1" | sed "s/.*library[ =]*\([^ ,]*\).*/\1/;s/['\"]//g" ); {
+		# avoid duplicates - it's safe and check ignore list
+		#echo "ignore: -$ignore-"
+		[ "$(grep "^$i$" <(echo -e "$ignore") 2> /dev/null)" ] || {
+			[ "$(grep "^$i$" "$f" 2> /dev/null)" ] || echo "$i" >> "$f"
+			# check for unlink advise
+			# *   # rm '/usr/lib64/libmpfr.so.1'
+			s=$(grep -m1 "rm .*$i" "$1" 2>/dev/null)
+			if [ "$s" ]; then
+				# normalize libname (add path from 'rm')
+				s=$(sed "s:.* rm '\(.*\)':\1:" <<< "$s")
+				# mark a lib for unlink with '<<< '
+				echo -e "$(sed "s:^$i$:<<< $s:" "$f")" > "$f"
+			fi
+		}
+	}
+	# sorted: no...
+	#grep -E 'revdep-rebuild +\-\-library' "$1" | cut -f2 -d"'" | sort -u >> "$f"
+	# return true if file exists (there is libs to rebuilt in it)
+	[ -e "$f" ]
+	# set request for obsoleted libs update, the var is described below
+	(($?)) || ((loopLogic|=0x08))
+	return $?
+}
+
+# scan and return to $sysvers versions of major system stuff
+# scan_for_sysvers: ---
+scan_for_sysvers() { 
+	local s sens pkg dtc iver uver eig
+	sysvers=''
+	
+	# get versions with 'emerge --info' detector if required
+	for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do 					
+		for sens in ${AE_SUPD[${s}_SENSOR]}; do 
+			[[ "-${AE_SUPD[${s}_DETECTOR]}-" == "-ei-" ]] && {
+				[ "$eig" ] && eig+="\n"
+				eig+="^${sens}:"
+			}
+		done
+	done
+#	if [[ ${AE_SUPD[DETECTORS]} == *-ei-* ]]; then
+#	[ "$eig" ] && sysvers=$(emerge --info | egrep '[^/]*/[^:]*: ' | grep -f <(echo -e $eig))"\n"	
+	[ "$eig" ] && sysvers=$(emerge --info | grep -f <(echo -e $eig))"\n"
+	
+	# get more versions with other detectors
+	for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
+		# switch detector
+		dtc="-${AE_SUPD[${s}_DETECTOR]}-"
+		case $dtc in
+			-ei-) ;;
+			-eixc-|-pre-eixc-) 
+					for sens in ${AE_SUPD[${s}_SENSOR]}; do
+						pkg=$(eix '-I*' -e --format '<category>/<name>' $sens)
+						if [ "$pkg" ]; then
+							sysvers+="$pkg:\t"
+							iver=$(eix '-I*' -e --format '<installedversions:VERSION>' $sens)
+							sysvers+="$iver"
+							if [[ "$dtc" == "-pre-eixc-" ]]; then
+								uver=$(eix '-I*' -e --format '<bestversion:VERSION>' $sens)
+								[[ "$iver" == "$uver" ]] || {
+									sysvers+=" -> $uver"
+									# set mark to rebuild world
+									((loopLogic|=0x1000)) #AE_SUPD[REMERGE_WORLD]=1
+								}
+							fi
+						else
+							sysvers+="$sens:\t-- not installed --"
+							AE_SUPD[${s}_NOTINSTALLED]=1
+						fi
+						sysvers+="\n"
+					done
+					;;
+			*) echo "Invalid version detectors method: '${AE_SUPD[${s}_DETECTOR]}'!"
+		esac
+	done
+	
+	return 0
+}
+
+# compare and save to $2 $sysvers with saved in $1
+# compare_sysvers: $saved_sysvers_file $sysvers_delta_file
+compare_sysvers() { # todo: change echo to sed/vars
+	local s s1 sens ov uv nv vmrk
+
+	# check versions
+	for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
+		for sens in ${AE_SUPD[${s}_SENSOR]}; do # multisensor
+			# not installed
+			[ "${AE_SUPD[${s}_NOTINSTALLED]}" ] && continue
+			# old version
+			ov=$(grep -m1 "$sens:" "$1")
+			ov=$(echo ${ov/*:})
+			uv=''
+			# check if update is going
+			if [ -e "$2" ]; then
+				uv=$(grep -m1 "$sens:" "$2")
+				if [ "$uv" ]; then 
+					uv=$(echo ${uv/*:}); uv=$(echo ${uv/->*})
+					uv=${${uv/*:}/->*}
+					[ "$uv" ] && ov=$uv || uv='!'
+				fi
+			fi
+			# new version
+			nv=$(grep -m1 "$sens:" <(echo -e "$sysvers"))
+			nv=$(echo ${nv/*:})
+			# cmp
+			if [[ "$ov" != "$nv" || "$ov" == *'->'* ]] ; then
+				vmrk="$sens: $ov"
+				[[ "$ov" != *'->'* ]] && vmrk+=" -> $nv"
+				# save vers internally
+				#AE_SUPD[${s}_OLDVER]=$ov
+				#AE_SUPD[${s}_NEWVER]=$nv
+				[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+='; '
+				AE_SUPD[${s}_UPDATED]+="$vmrk"
+
+				# remove old subset item
+				if [ "$uv" ]; then # update
+					s1=$(grep -v "$sens:" "$2")
+					if [ "$s1" ]; then
+						echo -e "$s1" > "$2"
+					else
+						rm -v "$2" &> /dev/null
+					fi
+				fi
+				# (re)add item
+				echo "$vmrk" >> "$2" 
+			fi
+		done
+	done
+}
+
+
+
+# * Check for possibility of update|rebuild world - stop if impossible
+(($AE_VCS)) && AE_REBUILD[CHECK_WORLD_FOR]="${AE_COOK[CHECK_WORLD_FOR]}" \
+	|| AE_REBUILD[CHECK_WORLD_FOR]="${AE_INSTALL[CHECK_WORLD_FOR]}"
+if [[ "${AE_REBUILD[CHECK_WORLD_FOR]}" != "n"* ]]; then
+	einfo "  Checking for possibility of world ${AE_REBUILD[CHECK_WORLD_FOR]} ..."
+	
+	check_if_emerge_possible "${AE_REBUILD[CHECK_WORLD_FOR]}" "${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
+							"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
+	cmdRet=$?
+	eend $?
+	(($cmdRet)) && {
+		eerror "  Oops, human is needed... Re-check your configs with 'emerge -epv world'..."; eend 2
+		exit 8447
+	}
+else
+	ewarn "  Checking possibility of world update or rebuild is not configured ..."; eend 0
+fi
+
+
+
+
+# *** REBUILD & CO MAIN LOOP ***
+max_loop=${AE_REBUILD[REVDEPCO_MT]}
+# Control for loop iterations:
+((loopLogic|=0x003F))
+# 0x01 - rebuild world is needed
+# 0x02 - subset update is needed
+# 0x04 - deplcean is needed
+# 0x08 - rebuild obsoleted libs is needed
+# 0x10 - revdep-rebuild is needed
+# 0x20 - user task is scheduled
+# 0x1000 - world rebuild request (update of -pre-eixc-)
+subsetf="${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_SUBSET_SAVED]}"
+for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
+
+	einfo "  Updating system with restoring of consistency, pass $loop of $max_loop:"
+	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+	
+	# save critical packages versions (only if rebuild world or subset update is scheduled)
+	if (($loopLogic & 0x03)); then
+		# start logs subsets updates
+		dt_mark &> "${AELOG[SUBSET_UPDATE_LAST]}"
+		# save sysvers
+		if [ -e "$subsetf" ]; then
+			einfo "    Critical system packages versions already saved - use it ..."
+			echo " * Existed data (world update was interrupted previously):" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
+			eend 0
+			# but check for world rebuild is needed...
+			[ "$(grep -m1 '\->' "$subsetf")" ] && ((loopLogic|=0x1000))
+		else
+			einfo "    Saving critical system packages versions ..."
+			scan_for_sysvers
+			echo -e "$sysvers" > "$subsetf"
+			echo " * Critical packages versions:" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
+			eend 0
+		fi
+		cat "$subsetf" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
+		#echo &>> "${AELOG[SUBSET_UPDATE_LAST]}"
+	fi
+
+	# REBUILD WORLD with emerge
+	if [ "${AE_REBUILD[DO_EMERGE_WORLD]}" == "y" ]; then
+		if (($loopLogic & 0x01)); then
+			if (($loopLogic & 0x1000)) && [ "${AE_REBUILD[SKIP_WORLD_UPDATE]}" == "y" ]; then
+				echo -en "\033[01;37m"
+				echo "   *   ATTENTION!  Something important like GCC is going to been updated!   *" 
+				echo "   *                  The world rebuild is necessary!                       *"
+				echo "   *          WORLD REBUILD will been added to scheduled tasks!             *"
+				echo "   *  Possible WORLD UPDATE is pending till the scheduled tasks will done;) *"
+				echo -en "\033[00;10m"
+				echo -en "\a"
+				#for (( i=0; i < 3; i++ )); do echo -en "\a"; sleep 1; done
+				
+				if [ "${AE_REBUILD[CHECK_WORLD_FOR]}" == "update" ]; then
+					einfo "  Checking for possibility of world rebuild ..."
+
+					check_if_emerge_possible "rebuild" "${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
+											"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
+					cmdRet=$?
+
+					eend $?
+					(($cmdRet)) && {
+						eerror "  Oops, human is needed... Re-check your configs with 'emerge -epv world'..."; eend 2
+						exit
+					}
+				else
+					ewarn "  Checking possibility of world update or rebuild is not configured ..."; eend 0
+				fi
+			else
+				if (($AE_VCS)); then
+					call_emerge "  Updating world" "${AECMD[EMERGE]}" \
+						"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
+					# needed for ae_state
+					(($cmdRet)) && rm -v "${AE_SIGN[COOKED]}" &> /dev/null || touch "${AE_SIGN[COOKED]}" &> /dev/null
+				else
+			# ((/path/to/oraMon.pl 2>&1 1>&3 | tee /tmp/errors.log) 3>&1 1>&2 | tee /tmp/output.log) > /tmp/final.log 2>&1
+					call_emerge "  Updating world" \
+						"((${AECMD[EMERGE]} 2>&1 1>&3 | tee \$warn_last) 3>&1 1>&2 | tee \$log_last) 2>&1" \
+						"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
+				fi
+		
+				# if OK - reset 0x1
+				(($cmdRet)) || ((loopLogic&=0xFE))
+		
+				# libs advised to rebuild consumers
+				# ... double is not good, but just to be sure (duplicates will skipped)
+			#	einfo "    Collecting libs advised for consumers rebuild ..."
+				scan_for_rdlibs "${AELOG[EMERGE_LAST]}"
+				scan_for_rdlibs "${AELOG[EMERGE_WARN_LAST]}"
+			#	eend 0
+				# check subset update after any world rebuild
+				((loopLogic|=0x02))
+				# add depclean and revdep-rebuild pass
+				((loopLogic|=0x14))
+			fi
+			# reset 0x1000
+			((loopLogic&=0xFF))
+		else
+			einfo "    World already has been updated."; eend 0
+		fi
+	else
+		ewarn "    World updating is not configured."; eend 1
+	fi
+	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+
+
+	# SUBSET UPDATES
+	if [ "${AE_REBUILD[DO_SUBSET_UPDATES]}" == "y" ]; then
+		if (($loopLogic & 0x02)); then
+			# stop next try of subset updates (if fail any update - set flag again...)
+			((loopLogic&=0xFD))
+			# check sysvers
+			if [ -e "$subsetf" ]; then 
+				einfo "    Checking critical system packages versions ..."
+				scan_for_sysvers
+				compare_sysvers "$subsetf" "${AESIGN[SUBSET_UPDATES]}"
+				rm -v "$subsetf" &> /dev/null
+				if [ -e "${AESIGN[SUBSET_UPDATES]}" ]; then
+					echo " * Critical packages versions updates:" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
+					cat "${AESIGN[SUBSET_UPDATES]}" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
+				else
+					echo " * Critical packages versions updates not found." &>> "${AELOG[SUBSET_UPDATE_LAST]}"
+				fi
+				cat "${AELOG[SUBSET_UPDATE_LAST]}" &>> "${AELOG[SUBSET_UPDATE]}"
+				echo &>> "${AELOG[SUBSET_UPDATE]}"
+				eend 0
+			else
+				eerror "Internal error: saved data about critical packages versions is not found. Stop."; eend 1
+				exit 0xFF
+			fi
+
+			einfo "    Checking for various subsets updates:"
+			undetected=''		
+			notinstalled=''
+			for (( i=0; i<${AE_SUPD[TOTAL]}; i++ )); do
+				if [ "${AE_SUPD[${i}_UPDATED]}" ]; then
+					cmdRet=0
+					einfo "      ${AE_SUPD[${i}_TITLE]} update detected, update method is '${AE_SUPD[${i}_METHOD]}':"
+					einfo "        (${AE_SUPD[${i}_UPDATED]})"
+					updated=0
+					log=${AE_LOG[DIR_SAVE]}${AE_LOG[DIR_$eType]}${AE_SUPD[${i}_LOG]}${AE_LOG[EXT_$eType]}
+					log_last=${AE_LOG[DIR_LAST]}${AE_LOG[DIR_$eType]}${AE_SUPD[${i}_LOG]}${AE_LOG[EXT_$eType]}
+					# start last log
+					dt_mark &> "$log_last"
+					# choose update method and do update
+					case "-${AE_SUPD[${i}_METHOD]}-" in
+						-task-) # adding cmds to task file
+								if (($AE_VCS)); then
+									# array cmds
+									#declare -a Cmds
+									#mapfile -t Cmds <<< "${AE_SUPD[${i}_CMD]}"
+									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
+									einfo "        Adding ${#Cmds[*]} tasks to update the subset:"
+									for ((k=0; k < ${#Cmds[*]}; k++)); do
+										einfo "          - '${Cmds[$k]}'"
+										# check for world rebuild
+										# [[ "$k" == *"-e @world"* ]] && ((loopLogic|=0x1000))
+									done
+									ae_add_task "${AE_SUPD[${i}_CMD]}" &>> "$log_last" && \
+										true && updated=2
+									eend 0
+									#unset Cmds
+									# add user task pass
+									((loopLogic|=0x20))
+								else
+									echo "Using tasks from VCS." >> "$log_last"
+									einfo "        Using tasks from VCS."
+									eend 0
+								fi
+								;;
+						-1-pass-|-2-pass-) 
+								# 2-pass logic:
+								if [ "${AE_SUPD[${i}_METHOD]}" == "2-pass" ]; then
+									# get opponent for 'two-pass' update
+									if [ "$eType" == "COOK" ]; then
+										osf="${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[SUBSET_UPDATES]}"
+									else
+										osf="${AE_DIR[GATEWAY]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[SUBSET_UPDATES]}"
+									fi
+									if [ -e "$osf" ]; then
+										gexp=''
+										for sens in ${AE_SUPD[${i}_SENSOR]}; do gexp+=" -e $sens:"; done # multisensor
+										ostest=$((`grep $gexp "$osf" | grep '2-pass' | wc -l`))
+									else
+										ostest=0
+									fi
+									if !(($ostest)); then
+										ewarn "        This is the first pass of the update. " \
+											"Skipping package switch and system depclean."; eend 0
+										dcPend=1
+										updated=1
+									fi
+								fi
+								# update (1-pass/second pass) logic
+								if !(($updated)); then
+									# array cmds
+									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
+									# play cmds
+									for ((k=0; k < ${#Cmds[*]}; k++)); do
+										(($cmdRet)) && break
+										cmd="${Cmds[$k]# ?}"
+										if [ "$cmd" ]; then
+											# choose caller
+											if [[ "$cmd" == \#* ]]; then # shell cmd
+												cmd=${cmd:1}
+												# --usepkg logic
+												!(($AE_VCS)) && cmd=${cmd/--usepkg n/--usepkg y}
+												#einfo "        Running shell command:"
+												einfo "        - '$cmd' ..."
+												eval "$cmd &>> \"$log_last\""
+												echo "Retcode $cmdRet" &>> "$log_last"
+												cmdRet=$?
+											else # PM
+												if [[ "$cmd" == \$* || "$cmd" == \`* ]]; then
+													cmd=$(eval echo -n $cmd)
+												fi
+												if [ "$cmd" ]; then
+													#einfo "        Running PM:"
+													call_cmd1_with_emerge_solver \
+														"    - ${AECMD[SUBSET_UPDATE]} '$cmd'" \
+														"${AECMD[SUBSET_UPDATE]} $cmd" \
+														"$log_last" "$log"
+													cmdRet=$?
+												else
+													einfo "        Not found any dependencies for this subset."
+													cmdRet=0
+												fi
+											fi
+											# get result
+											if (($cmdRet)); then 
+												eend 1;	updated=0
+											else 
+												eend 0; updated=2
+											fi
+											# only for real update
+											# collect hints for libs comsumers rebuild
+											#scan_for_rdlibs "$log"
+											scan_for_rdlibs "$log_last"
+											# add depclean and revdep-rebuild pass
+											((loopLogic|=0x14))
+										else
+											echo "skip empty line in '${AE_SUPD[${i}_CMD]}'"
+										fi
+									done
+								fi
+								;;
+						*) echo "Invalid update method: '${AE_SUPD[${s}_METHOD]}'!"
+					esac
+				
+					# copy last to logs
+					cat "$log_last" &>> "$log"
+					echo &>> "$log"
+
+					# subset sign update
+					if (($updated)); then
+						# multisensor
+						for sens in ${AE_SUPD[${i}_SENSOR]}; do 
+							# save update sign (for 2-pass)
+							sul=`grep "$sens:" "${AESIGN[SUBSET_UPDATES]}"`
+							sul=${sul/*: /}; sul=${sul/2-pass, /}
+							# remove subset sign
+							nsupd=`grep -v "$sens:" "${AESIGN[SUBSET_UPDATES]}"`
+							# remove empty
+							if [ "$nsupd" ]; then
+								echo "$nsupd" > "${AESIGN[SUBSET_UPDATES]}"
+							else
+								rm -v "${AESIGN[SUBSET_UPDATES]}" &> /dev/null
+							fi
+							if !(($updated-1)); then # readd subset sign with '1-pass'
+								echo "$sens: 2-pass, $sul" >> "${AESIGN[SUBSET_UPDATES]}"
+							fi
+						done
+						# if update is done - remove sign of update
+						if (($updated-1)); then
+							unset AE_SUPD[${i}_UPDATED]
+						fi
+					else # pend depclean if collision occurred
+						dcPend=1
+						# failed - set the bit again!!!
+						((loopLogic|=0x02))
+					fi
+				elif [ "${AE_SUPD[${i}_NOTINSTALLED]}" ]; then
+					[ "$notinstalled" ] && notinstalled+=', '
+					notinstalled+=${AE_SUPD[${i}_TITLE]}
+				else
+					[ "$undetected" ] && undetected+=', '
+					undetected+=${AE_SUPD[${i}_TITLE]}
+				fi
+			done
+			[ "$undetected" ] && einfo "      $undetected updates were not detected."; eend 0
+			[ "$notinstalled" ] && einfo "      $notinstalled updates were skipped: not installed."; eend 0
+		else
+			einfo "    Subsets already have been updated."; eend 0
+		fi
+	else 
+		ewarn "    Checking for various subsets updates is not configured."; eend 0
+	fi
+	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+
+	
+	# Cleanup all unneded (DEPCLEAN), emerge -ca
+	if [ "${AE_REBUILD[DO_DEPCLEAN]}" == "y" ]; then
+		if (($loopLogic & 0x04)); then
+			if [ $dcPend ]; then
+				ewarn "    Cleaning system is pending till the next cooking. "\
+					"(2-pass subset update behavior or subset update fail)"; eend 0
+			else
+				if [[ "${AECMD[DEPCLEAN]}" == *a* ]]; then # interactively (GRS)
+					#call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
+					#			"&1" "/dev/null"
+					einfo "    Cleaning system from unused dependencies (interactively):"
+					# idiot. dt_mark > "${AELOG[DEPCLEAN_LAST]}" 2>&1
+					# to-do: add tee to log
+					eval "${AECMD[DEPCLEAN]}" # >> "${AELOG[DEPCLEAN_LAST]}" 2>&1
+					cmdRet=$?
+					eend $?
+					# cat "${AELOG[DEPCLEAN_LAST]}" >> "${AELOG[DEPCLEAN]}" 2>&1
+					# echo >> "${AELOG[DEPCLEAN]}" 2>&1
+				else # bash mode (GRS/VCS)
+					call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
+								"${AELOG[DEPCLEAN_LAST]}" "${AELOG[DEPCLEAN]}"
+				fi
+				(($cmdRet)) || ((loopLogic&=0xFB))
+				# add revdep-rebuild pass
+				((loopLogic|=0x10))
+			fi
+		else
+			einfo "    System already has been cleaned."; eend 0
+		fi
+	else 
+		ewarn "    Cleaning system is not configured."; eend 0
+	fi
+	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+
+	
+	# REVDEP CONSUMERS for advised libs, revdep --libs
+	if [ "${AE_REBUILD[DO_OBSOLETED_LIBS]}" == "y" ]; then
+		if (($loopLogic & 0x08)); then
+			((loopLogic&=0xF7))
+			# sign file
+			f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
+			if [ -e "$f" ]; then
+				cmd=${AECMD[OBSOLETED_LIBS]/\?/\\\($(sed -e :a -e '$!N; s,\n,\\\|,; s,<<< ,,g;  ta' < "$f")\\\)}
+				#echo "obslibs cmd: $cmd"
+				# call revdep
+				call_cmd1 "Rebuilding for "$(wc -l < "$f")" advised libs consumers" "$cmd" \
+						"${AELOG[OBSLLIBS_LAST]}" "${AELOG[OBSLLIBS]}"
+				# copy libs lit to logs
+				echo " * Copy of advised libs list:" | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
+				tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}" < "$f"
+				ol_ignore=''
+				# check the result
+				if !(($cmdRet)); then # OK
+					# save list to avoid recursion
+					ol_ignore=$(<"$f")
+					einfo "      Unlinking advised obsoleted libs ..."
+					# go throgh the list and unlink lost libs
+					while read i; do 
+						if [[ "$i" == "<<< "* ]]; then
+							rm -v "${i:4}" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
+						else
+							echo "Skipping unlinking '$i' - not asked to remove it." | \
+								tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
+						fi
+					done < "$f"
+					eend 0
+					true && rm -v "$f" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
+				else # FAIL
+					ewarn "    Save lost libs list for further rebuild."; eend 0
+					((loopLogic|=0x08))
+				fi
+				# collect hints for libs comsumers rebuild
+				scan_for_rdlibs "${AELOG[OBSLLIBS_LAST]}" "$ol_ignore"
+				# add revdep-rebuild pass
+				((loopLogic|=0x10))
+			else
+				einfo "    Not found any libs advised for consumers rebuilding."; eend 0
+			fi
+		else
+			einfo "    Consumers for advised libs have been already rebuilt. "; eend 0
+		fi
+	else 
+		ewarn "    Rebuilding of consumers for advised libs is not configured."; eend 0
+	fi
+	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+
+	
+	# REVDEP system-wide
+	if [ "${AE_REBUILD[DO_REVDEP_REBUILD]}" == "y" ]; then
+		if (($loopLogic & 0x10)); then
+			# call global revdep
+			# checking: call_cmd0
+			call_cmd1 "Rebuilding world with revdep-rebuild" "${AECMD[REVDEP_REBUILD]}" \
+					"${AELOG[REVDEP_LAST]}" "${AELOG[REVDEP]}"
+			(($cmdRet)) || ((loopLogic&=0xEF))
+			if (($AE_VCS)); then
+				# needed for ae_state
+				(($cmdRet)) && rm -v "${AE_SIGN[REVDEPED]}" &> /dev/null || touch "${AE_SIGN[REVDEPED]}" &> /dev/null
+			fi
+			# collect hints for libs comsumers rebuild
+			scan_for_rdlibs "${AELOG[REVDEP_LAST]}"
+		else
+			einfo "    Rebuilding world with revdep-rebuild has been already done."; eend 0
+		fi
+	else 
+		ewarn "    Rebuilding world with revdep-rebuild is not configured."; eend 0
+	fi
+	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+
+
+	# Proceed TASKS with cmd/emerge
+	if [ "${AE_REBUILD[DO_USER_TASKS]}" == "y" ]; then
+		if (($loopLogic & 0x20)); then
+			((loopLogic&=0xDF))
+			f="${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
+			if [ -e "$f" ]; then 
+				einfo "    Running scheduled tasks:" # + loop+1
+				# walk through to-do
+				cmdRet=0
+				while [[ -e "$f" && $cmdRet == 0 ]]; do
+					i=$(head -n1 "$f")
+					i=${i# ?} # strip leading spaces
+					if [ "$i" ]; then
+						# start last log
+						dt_mark &> "${AELOG[TASKS_LAST]}"
+						# choose caller
+						is="$i"
+						if [[ "$i" == \#* ]]; then # shell cmd
+							i=${i:1}
+							# --usepkg logic
+							!(($AE_VCS)) && i=${i/--usepkg n/--usepkg y}
+							#einfo "      Running shell command: '$i' ..."
+							einfo "      - '$i' ..."
+							eval "$i &>> \"${AELOG[TASKS_LAST]}\""
+							echo "Retcode $?" &>> "${AELOG[TASKS_LAST]}"
+						else # PM
+							#einfo "      Running PM: '${AECMD[USER_TASKS]} $i' ..."
+							einfo "      - ${AECMD[USER_TASKS]} '$i' ..."
+							# 
+							if [[ "$i" == '$'* || "$i" == '`'* ]]; then
+								i=$(eval echo -n $i)
+							fi
+							if [ "$i" ]; then
+								eval "${AECMD[USER_TASKS]} $i &>> \"${AELOG[TASKS_LAST]}\""
+								cmdRet=$?
+							else
+								einfo "        Not found any params for this task."
+								cmdRet=0
+							fi
+							echo "Retcode $?" &>> "${AELOG[TASKS_LAST]}" 
+						fi
+						cmdRet=$?
+						eend $?
+						# copy last to logs
+						cat "${AELOG[TASKS_LAST]}" &>> "${AELOG[TASKS]}"
+						echo &>> "${AELOG[TASKS]}"
+						# add cmd to install to-do
+						if (($AE_VCS)); then
+							echo "$is" >> "${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
+						fi
+					else
+						echo "skip empty line in '$f'"
+					fi
+					# remove 1st line from to-do
+					c=$(tail -n+2 "$f")
+					if [ "$c" ]; then
+						echo -e "$c" > "$f"
+					else
+						rm -f "$f"
+					fi
+				done
+
+				# if failed - set the flag again
+				(($cmdRet)) && ((loopLogic|=0x20))
+
+				# add depclean and revdep-rebuild pass
+				((loopLogic|=0x14))
+
+				# check for rebuild advised libs
+				scan_for_rdlibs "${AELOG[TASKS_LAST]}"
+			else
+				einfo "    There are no scheduled tasks."; eend 0
+			fi
+		else
+			einfo "    All scheduled tasks have been already done."; eend 0
+		fi
+	else 
+		ewarn "    Running scheduled tasks is not configured."; eend 0
+	fi
+	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+done
+
+# Bye World
+if (($loopLogic)); then
+	eerror "  Can't recover system consistency! Will try again next time."; eend 1
+else
+	einfo "  Now the system is consistently."; eend 0
+fi
+
+#times
+
+#return $cmdRet
+exit $loopLogic
+
+

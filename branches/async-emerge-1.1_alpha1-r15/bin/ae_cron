@@ -1,0 +1,31 @@
+#!/bin/bash -l
+
+# ae_cron - 'ae_chroot ae_cook' shortcut for cron
+# GPL-2
+# version: 1.1
+# alexdu@forums.gentoo.org
+
+# Using:
+# - install to (ana)cron (example) -
+# # crontab -e
+# 30 22 * * *	/usr/bin/ae_cron
+# ^D
+# - 'manual' use -
+# # ae_cron
+# - that is the same as -
+# # ae_chroot ae_cook
+
+# get config
+. /etc/async.emerge.conf
+
+
+# calling bakery
+if [ "$((ps -p $(<"${AE_PID[AE_COOK]}") -o comm= ) 2>/dev/null)" == "$PNAME" ]; then
+	echo -e "WARNING: 'ae_cook' already running, skip calling from CRON..." >> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+else
+	# make lock
+	rm -f "${AE_PID[AE_COOK]}" &> /dev/null
+	trap "cat \"${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}\" >> \"${AE_LOG[DIR_SAVE]}${AE_LOG[FILE_CRON]}\"" INT TERM EXIT
+	(echo '--- '$(date)' ---'; time ae_chroot ae_cook; echo) &> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+fi
+
