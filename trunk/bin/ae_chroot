@@ -2,7 +2,7 @@
 
 # ae_chroot - Chrooter for 'async emerge'
 # GPL ver. 2
-# version: 1.0
+# version: 1.2
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
@@ -94,25 +94,28 @@ if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep "aufs") ]]; then
 	mnt_special ${AE_VCS[CHROOT_MOUNT_SYSFS]} 'sys' 'sysfs'
 fi
 
-# do chroot
-chr_cmd="AE_STATE_SKIP=1 AE_CHROOT_PS1=\"\[\033[01;33m\]$PNAME\" \
-  chroot \"${AE_DIR[CHROOT]}\" /bin/bash --rcfile /etc/async.emerge.chroot.bashrc"
-#chr_cmd="PS1=\"\[\033[01;33m\]$PNAME $PS1\" \
-#  chroot \"${AE_DIR[CHROOT]}\" /bin/bash --norc"
-[ "$1" ] && { einfo "Virtually chrooted with: '$*'"; chr_cmd=$chr_cmd" -c \"$*\""; } || \
+
+# DO CHROOT
+# todo: remove --rcfile ?
+chr_cmd="AE_STATE_SKIP=1 chroot \"${AE_DIR[CHROOT]}\" /bin/bash"
+##chr_cmd="AE_STATE_SKIP=1 AE_CHROOT_PS1=\"\[\033[01;33m\]$PNAME\" \
+##  chroot \"${AE_DIR[CHROOT]}\" /bin/bash --rcfile /etc/async.emerge.chroot.bashrc"
+if [ "$1" ]; then
+	einfo "Virtually chrooted with: '$*'"
+	chr_cmd+=" -c \"$*\""
+else	
+	TempBashRC=$(mktemp --tmpdir="${AE_DIR[GATEWAY]}")
+	#echo $TempBashRC
+	cat ".bashrc" > "$TempBashRC"
+	echo "PS1=\"\[\033[01;33m\]$PNAME \$PS1\";cd" >> "$TempBashRC"
 	einfo "Welcome to Virtually Chrooted System !"
+	chr_cmd+=" --rcfile \"$TempBashRC\""
+fi
 eend 0
 
 eval $chr_cmd
+[ "$1" ] || rm -v "$TempBashRC" &> /dev/null
 
-# todo: remove --rcfile ?
-#if [ "$1" ]; then
-##AE_CHROOT_PS1="\[\033[01;33m\]"`basename $0` \
-##  chroot "${AE_DIR[CHROOT]}" /bin/bash --rcfile /etc/async.emerge.chroot.bashrc -c "$*"
-#AE_CHROOT_PS1="\[\033[01;33m\]"`basename $0` \
-#  chroot "${AE_DIR[CHROOT]}" /bin/bash --rcfile (~/.bashrc) $*
-#PS1="\[\033[01;33m\]"`basename $0`" \[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] "\
-#	chroot "${AE_DIR[CHROOT]}" /bin/bash --norc $*
 
 einfo "Unchrooting from ${AE_DIR[CHROOT]}:"
 
