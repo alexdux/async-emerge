@@ -19,12 +19,6 @@ einfo "Chrooting to ${AE_DIR[CHROOT]}:"
 
 # to-do: add autounmount at trap???.......
 
-## check if $0 alredy running - to-do: change to .lock
-#[[ `pgrep $PNAME` = "$$" ]] || {
-#	eerror "  $PNAME is already running, but only one instance is allowed! Exit."
-#	exit 1
-#}
-
 # mount/unmount a special device
 mnt_special() { # 'y'/'n', fs dir, fs type
 	if [ "$1" == "y" ]; then
@@ -57,9 +51,10 @@ unmnt_special() { # 'y'/'n', fs dir
 	fi
 }
 
+
 # mount AUFS if not mounted
 # to-do: /usr/bin/aubrsync:279
-if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep "aufs") ]]; then
+if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep 'aufs') ]]; then
 	einfo "  Automounting AUFS,"
 	ae_root_mount
 	if (($?)); then # check for errors
@@ -87,12 +82,13 @@ if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep "aufs") ]]; then
 		chroot "${AE_DIR[CHROOT]}" start-stop-daemon -S -p /var/run/dbus.pid -x /usr/bin/dbus-daemon -- --system
 		eend 0
 	fi
-
-	# to-do: add separate check for proc, sys
-	# mounting /proc, /sys, if configured to do
-	mnt_special ${AE_VCS[CHROOT_MOUNT_PROCFS]} 'proc' 'proc'
-	mnt_special ${AE_VCS[CHROOT_MOUNT_SYSFS]} 'sys' 'sysfs'
+	autoMountedAUFS=1
 fi
+
+
+# mounting /proc, /sys, if configured to do
+mnt_special ${AE_VCS[CHROOT_MOUNT_PROCFS]} 'proc' 'proc' # (check for mounted inside)
+mnt_special ${AE_VCS[CHROOT_MOUNT_SYSFS]} 'sys' 'sysfs'
 
 
 # DO CHROOT
@@ -100,12 +96,14 @@ fi
 chr_cmd="AE_STATE_SKIP=1 chroot \"${AE_DIR[CHROOT]}\" /bin/bash"
 ##chr_cmd="AE_STATE_SKIP=1 AE_CHROOT_PS1=\"\[\033[01;33m\]$PNAME\" \
 ##  chroot \"${AE_DIR[CHROOT]}\" /bin/bash --rcfile /etc/async.emerge.chroot.bashrc"
+#TempBashRC=$(mktemp --tmpdir="${AE_DIR[GATEWAY]}")
+TempBashRC="${AE_DIR[GATEWAY]}.$PNAME.vcs.lock.$$"
+#echo $TempBashRC
 if [ "$1" ]; then
+	touch "$TempBashRC"
 	einfo "Virtually chrooted with: '$*'"
 	chr_cmd+=" -c \"$*\""
 else	
-	TempBashRC=$(mktemp --tmpdir="${AE_DIR[GATEWAY]}")
-	#echo $TempBashRC
 	cat ".bashrc" > "$TempBashRC"
 	echo "PS1=\"\[\033[01;33m\]$PNAME \$PS1\";cd" >> "$TempBashRC"
 	einfo "Welcome to Virtually Chrooted System !"
@@ -114,29 +112,43 @@ fi
 eend 0
 
 eval $chr_cmd
-[ "$1" ] || rm -v "$TempBashRC" &> /dev/null
+#[ "$1" ] || 
+rm -v "$TempBashRC" &> /dev/null
 
 
 einfo "Unchrooting from ${AE_DIR[CHROOT]}:"
 
 # unmount AUFS
-# check for last task of $PNAME
-# FIX THIS - A BUG!
-if (($(pgrep $PNAME | wc -l) < 3)); then # 3 because of pipe; might be unreliable
-	# D-BUS stop in chroot
-	if [ "${AE_VCS[CHROOT_START_DBUS]}" == "y" ]; then
-		einfo "  Stopping chrooted D-BUS messagebus ..."
-		chroot "${AE_DIR[CHROOT]}" start-stop-daemon -K -p /var/run/dbus.pid
-		eend 0
+# looking for a active VCS env.
+for i in ${AE_DIR[GATEWAY]}.*.lock.*; do
+#	echo "$i"
+ 	if [ -e "$i" ]; then
+		k=${i/*\/./}
+ 		[[ $(ps -p ${i/*./} -o comm=) == ${k/.vcs*/} ]] && break || rm -v $i # &> /dev/null
+ 	fi
+ 	i=''
+done
+# unmount AUFS if no one found above
+#echo "-$i-"
+if [[ ! "$i" ]]; then
+	if [ $autoMountedAUFS ]; then
+		# D-BUS stop in chroot
+		if [ "${AE_VCS[CHROOT_START_DBUS]}" == "y" ]; then
+			einfo "  Stopping chrooted D-BUS messagebus ..."
+			chroot "${AE_DIR[CHROOT]}" start-stop-daemon -K -p /var/run/dbus.pid
+			eend 0
+		fi
 	fi
 
-	# unmointig special fs
+		# unmointig special fs
 	unmnt_special ${AE_VCS[CHROOT_MOUNT_PROCFS]} 'proc'
 	unmnt_special ${AE_VCS[CHROOT_MOUNT_SYSFS]} 'sys'
 
-	einfo "  Autounmounting AUFS,"
-	ae_root_umount
-	einfo "Unchrooting from ${AE_DIR[CHROOT]} (continued)"
+	if [ $autoMountedAUFS ]; then
+		einfo "  Autounmounting AUFS,"
+		ae_root_umount
+		einfo "Unchrooting from ${AE_DIR[CHROOT]} (continued)"
+	fi
 fi
 
 eend 0
