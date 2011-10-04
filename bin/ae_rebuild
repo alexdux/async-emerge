@@ -379,7 +379,8 @@ if [[ "${AE_REBUILD[CHECK_WORLD_FOR]}" != "n"* ]]; then
 	cmdRet=$?
 	eend $?
 	(($cmdRet)) && {
-		eerror "  Oops, human is needed... Re-check your configs with 'emerge -epv world'..."; eend 2
+		eerror "  Oops, human is needed !!!" \
+		"See log for details or re-check your configs with 'emerge -epv/-DNpvu world'..."; eend 2
 		exit 8447
 	}
 else
@@ -435,8 +436,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				echo -en "\033[01;37m"
 				echo "   *   ATTENTION!  Something important like GCC is going to been updated!   *" 
 				echo "   *                  The world rebuild is necessary!                       *"
-				echo "   *          WORLD REBUILD will been added to scheduled tasks!             *"
-				echo "   *  Possible WORLD UPDATE is pending till the scheduled tasks will done;) *"
+				#echo "   *          WORLD REBUILD will been added to scheduled tasks!             *"
+				#echo "   *  Possible WORLD UPDATE is pending till the scheduled tasks will done;) *"
 				echo -en "\033[00;10m"
 				echo -en "\a"
 				#for (( i=0; i < 3; i++ )); do echo -en "\a"; sleep 1; done
@@ -450,7 +451,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
 					eend $?
 					(($cmdRet)) && {
-						eerror "  Oops, human is needed... Re-check your configs with 'emerge -epv world'..."; eend 2
+						eerror "  Oops, human is needed!!!"\
+							"See log for details or re-check your configs with 'emerge -epv world'..."; eend 2
 						exit
 					}
 				else
