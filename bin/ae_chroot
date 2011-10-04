@@ -106,7 +106,7 @@ if [ "$1" ]; then
 	einfo "Virtually chrooted with: '$*'"
 	chr_cmd+=" -c \"$*\""
 else	
-	cat "~/.bashrc" > "$TempBashRC"
+	cat "${AE_SIGN[BASHRC]}" > "$TempBashRC"
 	echo "PS1=\"\[\033[01;33m\]$PNAME \$PS1\";cd" >> "$TempBashRC"
 	einfo "Welcome to Virtually Chrooted System !"
 	chr_cmd+=" --rcfile \"$TempBashRC\""
