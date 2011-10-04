@@ -125,7 +125,7 @@ einfo "Unchrooting from ${AE_DIR[CHROOT]}:"
 for i in ${AE_DIR[GATEWAY]}.*.lock.*; do
  	if [ -e "$i" ]; then
 		k=${i/*\/./}
- 		[[ $(ps -p ${i/*./} -o comm=) == ${k/.vcs*/} ]] && break || rm -v $i # &> /dev/null
+ 		[[ $(ps -p ${i/*./} -o comm=) == ${k/.vcs*/} ]] && break || rm -v $i &> /dev/null
  	fi
  	i=''
 done
