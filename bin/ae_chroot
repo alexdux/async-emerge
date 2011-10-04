@@ -2,7 +2,7 @@
 
 # ae_chroot - Chrooter for 'async emerge'
 # GPL ver. 2
-# version: 1.2
+# version: 2.0
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
@@ -82,7 +82,8 @@ if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep 'aufs') ]]; then
 		chroot "${AE_DIR[CHROOT]}" start-stop-daemon -S -p /var/run/dbus.pid -x /usr/bin/dbus-daemon -- --system
 		eend 0
 	fi
-	#autoMountedAUFS=1
+	
+	# touch autoMountedAUFS sign
 	touch "${AE_SIGN[VCSAM]}"
 fi
 
@@ -105,7 +106,7 @@ if [ "$1" ]; then
 	einfo "Virtually chrooted with: '$*'"
 	chr_cmd+=" -c \"$*\""
 else	
-	cat ".bashrc" > "$TempBashRC"
+	cat "~/.bashrc" > "$TempBashRC"
 	echo "PS1=\"\[\033[01;33m\]$PNAME \$PS1\";cd" >> "$TempBashRC"
 	einfo "Welcome to Virtually Chrooted System !"
 	chr_cmd+=" --rcfile \"$TempBashRC\""
@@ -148,7 +149,7 @@ if [[ ! "$i" ]]; then
 		einfo "  Autounmounting AUFS,"
 		ae_root_umount
 		einfo "Unchrooting from ${AE_DIR[CHROOT]} (continued)"
-		rm -v "${AE_SIGN[VCSAM]}" # &> /dev/null
+		rm -v "${AE_SIGN[VCSAM]}" &> /dev/null
 	fi
 fi
 
