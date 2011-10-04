@@ -82,7 +82,8 @@ if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep 'aufs') ]]; then
 		chroot "${AE_DIR[CHROOT]}" start-stop-daemon -S -p /var/run/dbus.pid -x /usr/bin/dbus-daemon -- --system
 		eend 0
 	fi
-	autoMountedAUFS=1
+	#autoMountedAUFS=1
+	touch "${AE_SIGN[VCSAM]}"
 fi
 
 
@@ -121,7 +122,6 @@ einfo "Unchrooting from ${AE_DIR[CHROOT]}:"
 # unmount AUFS
 # looking for a active VCS env.
 for i in ${AE_DIR[GATEWAY]}.*.lock.*; do
-#	echo "$i"
  	if [ -e "$i" ]; then
 		k=${i/*\/./}
  		[[ $(ps -p ${i/*./} -o comm=) == ${k/.vcs*/} ]] && break || rm -v $i # &> /dev/null
@@ -131,7 +131,7 @@ done
 # unmount AUFS if no one found above
 #echo "-$i-"
 if [[ ! "$i" ]]; then
-	if [ $autoMountedAUFS ]; then
+	if [ -e "${AE_SIGN[VCSAM]}" ]; then
 		# D-BUS stop in chroot
 		if [ "${AE_VCS[CHROOT_START_DBUS]}" == "y" ]; then
 			einfo "  Stopping chrooted D-BUS messagebus ..."
@@ -140,14 +140,15 @@ if [[ ! "$i" ]]; then
 		fi
 	fi
 
-		# unmointig special fs
+	# unmointig special fs
 	unmnt_special ${AE_VCS[CHROOT_MOUNT_PROCFS]} 'proc'
 	unmnt_special ${AE_VCS[CHROOT_MOUNT_SYSFS]} 'sys'
 
-	if [ $autoMountedAUFS ]; then
+	if [ -e "${AE_SIGN[VCSAM]}" ]; then
 		einfo "  Autounmounting AUFS,"
 		ae_root_umount
 		einfo "Unchrooting from ${AE_DIR[CHROOT]} (continued)"
+		rm -v "${AE_SIGN[VCSAM]}" # &> /dev/null
 	fi
 fi
 
