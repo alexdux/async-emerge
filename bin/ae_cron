@@ -1,11 +1,11 @@
 #!/bin/bash -l
 
-# ae_cron - 'ae_chroot ae_cook' shortcut for cron
+# ae_cron - 'ae_chroot ae_makeworld' shortcut for cron
 # GPL-2
-# version: 1.1
+# version: 2.0
 # alexdu@forums.gentoo.org
 
-# Using:
+# Usage:
 # - install to (ana)cron (example) -
 # # crontab -e
 # 30 22 * * *	/usr/bin/ae_cron
@@ -13,19 +13,23 @@
 # - 'manual' use -
 # # ae_cron
 # - that is the same as -
-# # ae_chroot ae_cook
+# # ae_chroot ae_makeworld
+# - or -
+# # ae_vcs ae_makeworld
 
 # get config
 . /etc/async.emerge.conf
 
 
+local lockFile="${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}"
+
 # calling bakery
-if [ "$((ps -p $(<"${AE_PID[AE_COOK]}") -o comm= ) 2>/dev/null)" == "$PNAME" ]; then
+if [ "$((ps -p $(<"$lockFile") -o comm= ) 2>/dev/null)" == "$PNAME" ]; then
 	echo -e "WARNING: 'ae_cook' already running, skip calling from CRON..." >> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
 else
 	# make lock
-	rm -f "${AE_PID[AE_COOK]}" &> /dev/null
+	rm -f "$lockFile" &> /dev/null
 	trap "cat \"${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}\" >> \"${AE_LOG[DIR_SAVE]}${AE_LOG[FILE_CRON]}\"" INT TERM EXIT
-	(echo '--- '$(date)' ---'; time ae_chroot ae_cook; echo) &> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+	(echo '--- '$(date)' ---'; time ae_chroot ae_makeworld; echo) &> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
 fi
 

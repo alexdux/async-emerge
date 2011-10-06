@@ -394,7 +394,7 @@ if [[ "${AE_REBUILD[CHECK_WORLD_FOR]}" != "n"* ]]; then
 	eend $?
 	(($cmdRet)) && {
 		eerror "  Oops, human is needed !!!" \
-		"See log for details or re-check your configs with 'emerge -epv/-DNpvu world'..."; eend 2
+		"See logs for details or re-check your configs with 'emerge -epv/-DNpvu world'..."; eend 2
 		exit 8447
 	}
 else
@@ -468,8 +468,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					eend $?
 					(($cmdRet)) && {
 						eerror "    Oops, human is needed!!!"\
-							"See log for details or re-check your configs with 'emerge -epv world'..."; eend 2
-						exit
+							"See logs for details or re-check your configs with 'emerge -epv world'..."; eend 2
+						exit 8448
 					}
 				else
 					ewarn "  Checking possibility of world update or rebuild is not configured ..."; eend 0
