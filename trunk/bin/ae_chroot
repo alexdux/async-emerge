@@ -113,6 +113,7 @@ else
 fi
 eend 0
 
+
 eval $chr_cmd
 #[ "$1" ] || 
 rm -v "$TempBashRC" &> /dev/null
@@ -122,7 +123,7 @@ einfo "Unchrooting from ${AE_DIR[CHROOT]}:"
 
 # unmount AUFS
 # looking for a active VCS env.
-for i in ${AE_DIR[GATEWAY]}.*.lock.*; do
+for i in ${AE_DIR[GATEWAY]}.*.vcs.lock.*; do
  	if [ -e "$i" ]; then
 		k=${i/*\/./}
  		[[ $(ps -p ${i/*./} -o comm=) == ${k/.vcs*/} ]] && break || rm -v $i &> /dev/null
