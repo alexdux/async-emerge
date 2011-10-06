@@ -56,7 +56,7 @@ unmnt_special() { # 'y'/'n', fs dir
 # to-do: /usr/bin/aubrsync:279
 if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep 'aufs') ]]; then
 	einfo "  Automounting AUFS,"
-	ae_root_mount
+	_ae_root_mount
 	if (($?)); then # check for errors
 		eerror "  Can't mount AUFS! '$PNAME' is not operational!!!"
 		# clennup
