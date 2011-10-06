@@ -10,7 +10,7 @@
 # 	- mount /proc, /sys if configured
 #	- start chrooted DBUS if configured
 #	- wipe out chrooted /var/run
-#	- Allow only one instance of $0 for one VCS
+#	- Allow many instances of $0 for one VCS
 
 # get config
 . /etc/async.emerge.conf
@@ -60,7 +60,7 @@ if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep 'aufs') ]]; then
 	if (($?)); then # check for errors
 		eerror "  Can't mount AUFS! '$PNAME' is not operational!!!"
 		# clennup
-		ae_root_umount
+		_ae_root_umount
 		exit 1
 	fi
 
@@ -147,7 +147,7 @@ if [[ ! "$i" ]]; then
 
 	if [ -e "${AE_SIGN[VCSAM]}" ]; then
 		einfo "  Autounmounting AUFS,"
-		ae_root_umount
+		_ae_root_umount
 		einfo "Unchrooting from ${AE_DIR[CHROOT]} (continued)"
 		rm -v "${AE_SIGN[VCSAM]}" &> /dev/null
 	fi
