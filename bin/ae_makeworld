@@ -1,25 +1,33 @@
 #!/bin/bash
 
-# ae_rebuild - 'async emerge' Gentoo system re-builder
+# ae_makeworld - 'async emerge' Gentoo system updater/rebuilder
 # GPL ver. 2
 # version: 2.0
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
-#	- Work in both GRS and VCS environments
+#	- Work in both GRS and VCS environments. Auto-detect it.
 #	- Stop/rerun supported
-#	- Update world using $AE_BUILD_EMERGE_CMD
-#	- Revdep-rebuild world using $AE_BUILD_REVDEP_CMD
-# removed	- Prerun update and revdep for logging
-#	- Allow only one instance of $0 for one VCS via $AE_BUILD_LOCK
-#	- Run subset updates (gcc update, python update, perl update), configurable
+#	- Widely configurable
+#	- Care about system in the cycle (max ${AE_REBUILD[REVDEPCO_MT]} times):
+#		- check for critical system packages updates at several phases
+#			- rebuild the whole world if detected
+#		- update world
+#		- update subsets (python update, perl update & others)
+#		- run depclean
+#		- rebuild consumers for advised obsoleted libs
+#		- run revdep-rebuild
+#		- do scheduled user tasks (shell commands or emerge params)
+#	- Allow only one instance of $0 for one GRS and one for VCS
 #	- PM solver for subset updates
-# removed	- Run python-updater, perl-cleaner if advised by "install warns"
-#	- Revdep obsoleted libs advised by "install warns" then remove it
-#	- Run --depclean
-#	- Cycling revdepping-updating-cleaning (max ${AE_REBUILD[REVDEPCO_MT]} times)
-#	- Run tasks: user given command/merging
+#	- For VCS care about actual state report
+#	- For GRS additionally does:
+#		- Clean-up VCS if not building
+#		- Unlink obsoleted distfiles
+#		- Unlink obsoleted binary packages
+#		- Updating configs (interactively)
 # To-do:
+#	- add services reload for GRS
 
 # get config
 . /etc/async.emerge.conf
@@ -36,6 +44,8 @@ AE_VCS=${#AE_STATE_SKIP}
 
 # set config key prefix
 (($AE_VCS)) && eType='COOK' || eType='INSTALL'
+# COOK = VCS
+# INSTALL = GRS
 
 # Adjust CMD
 declare -A AECMD
@@ -63,6 +73,7 @@ done
 # check locking with ${AE_PID[AE_REBUILD]}
 do_lock "${AE_PID[AE_REBUILD_PATH]}${AECMD[FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" 1 \
 	"  $PNAME is already running, but only one instance is allowed for one VCS! Exit."
+
 
 # emerge caller: info_msg emerge_cmd log_file_last warn_file_last log_file warn_file -> $cmdRet
 # exit if retcode > 1
@@ -368,6 +379,9 @@ compare_sysvers() { # todo: change echo to sed/vars
 
 
 
+# Msg 'World update (Rebuild)'
+einfo "Starting The World Update:"
+
 # * Check for possibility of update|rebuild world - stop if impossible
 (($AE_VCS)) && AE_REBUILD[CHECK_WORLD_FOR]="${AE_COOK[CHECK_WORLD_FOR]}" \
 	|| AE_REBUILD[CHECK_WORLD_FOR]="${AE_INSTALL[CHECK_WORLD_FOR]}"
@@ -435,7 +449,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			if (($loopLogic & 0x1000)) && [ "${AE_REBUILD[SKIP_WORLD_UPDATE]}" == "y" ]; then
 				echo -en "\033[01;37m"
 				echo "   *   ATTENTION!  Something important like GCC is going to been updated!   *" 
-				echo "   *                  The world rebuild is necessary!                       *"
+				echo "   *                   The world rebuild is necessary!                      *"
+				echo "   *                Going to REBUILD WORLD then came back.                  *"
 				#echo "   *          WORLD REBUILD will been added to scheduled tasks!             *"
 				#echo "   *  Possible WORLD UPDATE is pending till the scheduled tasks will done;) *"
 				echo -en "\033[00;10m"
@@ -887,6 +902,57 @@ if (($loopLogic)); then
 	eerror "  Can't recover system consistency! Will try again next time."; eend 1
 else
 	einfo "  Now the system is consistently."; eend 0
+fi
+
+# DO GRS CLEAN-UPs & ETC-UPDATE
+# to-do: add logging!!!
+if [ "$eType" == 'INSTALL' ]; then
+	# Clean-up VCS if not building
+	if [ "${AE_INSTALL[DO_VCS_CLEANUP]}" == "y" ]; then
+		if [ -e "${AE_PID[AE_COOK]}" ]; then # to-do: better locking
+			ewarn "  Cooking binary packages is in progress: skipping VCS cleanup!"; eend 1
+		else
+			einfo "  Cleaning VCS:"
+			ae_delta_cleanup && ae_chroot_cleanup
+		fi
+	else
+		einfo "  VCS cleanup is not configured."
+		eend 0
+	fi
+
+
+	# eclean-dist
+	if [ "${AE_INSTALL[DO_ECLEAN_DIST]}" == "y" ]; then
+		einfo "  Unlinking obsoleted distfiles:"
+		${AE_CMD[ECLEAN_DIST]}
+	else
+		einfo "  Unlinking obsoleted distfiles is not configured."
+		eend 0
+	fi
+
+
+	# eclean-pkg
+	if [ "${AE_INSTALL[DO_ECLEAN_PKG]}" == "y" ]; then
+		einfo "  Unlinking obsoleted binary packages:"
+		${AE_CMD[ECLEAN_PKG]}
+	else
+		einfo "  Unlinking obsoleted binary packages is not configured."
+		eend 0
+	fi
+
+
+	# etc-update
+	if [ "${AE_INSTALL[DO_ETC_UPDATE]}" == "y" ]; then
+		einfo "  Updating configs (interactively):"
+		${AE_CMD[ETC_UPDATE]}
+	else
+		einfo "  Config update is not configured."
+		eend 0
+	fi
+
+	# to-do: print out install.emerge.warn.log
+
+	einfo "Binary packages installation is finished!"
 fi
 
 #times
