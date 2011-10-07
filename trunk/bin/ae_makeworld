@@ -70,7 +70,7 @@ for i in ${!AE_SIGN[*]}; do
 done
 
 
-# check locking with ${AE_PID[AE_REBUILD]}
+# check locking with ${AE_PID[AE_REBUILD_FILE]}
 do_lock "${AE_PID[AE_REBUILD_PATH]}${AECMD[FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" 1 \
 	"  $PNAME is already running, but only one instance is allowed for one VCS! Exit."
 
@@ -404,11 +404,12 @@ fi
 
 
 
+# to-do: better reset 'last' log files
 # *** REBUILD & CO MAIN LOOP ***
 max_loop=${AE_REBUILD[REVDEPCO_MT]}
 # Control for loop iterations:
 ((loopLogic|=0x003F))
-# 0x01 - rebuild world is needed
+# 0x01 - world update is needed
 # 0x02 - subset update is needed
 # 0x04 - deplcean is needed
 # 0x08 - rebuild obsoleted libs is needed
@@ -421,7 +422,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	einfo "  Updating system with restoring of consistency, pass $loop of $max_loop:"
 	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
 	
-	# save critical packages versions (only if rebuild world or subset update is scheduled)
+	# save critical packages versions (only if world update or subset update is scheduled)
 	if (($loopLogic & 0x03)); then
 		# start logs subsets updates
 		dt_mark &> "${AELOG[SUBSET_UPDATE_LAST]}"
@@ -441,9 +442,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		fi
 		cat "$subsetf" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
 		#echo &>> "${AELOG[SUBSET_UPDATE_LAST]}"
+		cat "${AELOG[SUBSET_UPDATE_LAST]}" &>> "${AELOG[SUBSET_UPDATE]}"
+		echo &>> "${AELOG[SUBSET_UPDATE]}"
 	fi
 
-	# REBUILD WORLD with emerge
+	# UPDATE WORLD with emerge
 	if [ "${AE_REBUILD[DO_EMERGE_WORLD]}" == "y" ]; then
 		if (($loopLogic & 0x01)); then
 			if (($loopLogic & 0x1000)) && [ "${AE_REBUILD[SKIP_WORLD_UPDATE]}" == "y" ]; then
@@ -496,7 +499,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				scan_for_rdlibs "${AELOG[EMERGE_LAST]}"
 				scan_for_rdlibs "${AELOG[EMERGE_WARN_LAST]}"
 			#	eend 0
-				# check subset update after any world rebuild
+				# check subset update after any world update
 				((loopLogic|=0x02))
 				# add depclean and revdep-rebuild pass
 				((loopLogic|=0x14))
