@@ -836,8 +836,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					if [ "$i" ]; then
 						# start last log
 						dt_mark &> "${AELOG[TASKS_LAST]}"
-						# choose caller
+						# save origin line
 						is="$i"
+						# choose caller
 						if [[ "$i" == \#* ]]; then # shell cmd
 							i=${i:1}
 							# --usepkg logic
@@ -868,7 +869,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						cat "${AELOG[TASKS_LAST]}" &>> "${AELOG[TASKS]}"
 						echo &>> "${AELOG[TASKS]}"
 						# add cmd to install to-do
-						if (($AE_VCS)); then
+						# skip duplicates
+						if (($AE_VCS)) && \
+							[[ '' == $(egrep "^${is}$" \
+								"${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}") ]]; then
 							echo "$is" >> "${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
 						fi
 					else
