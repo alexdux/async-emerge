@@ -825,7 +825,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			((loopLogic&=0xDF))
 			f="${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
 			if [ -e "$f" ]; then 
-				einfo "    Running scheduled tasks:" # + loop+1
+				totalTasks=$(wc -l < "$f")
+				countTasks=1
+				einfo "    Running $totalTasks scheduled tasks:" # + loop+1
 				# walk through to-do
 				cmdRet=0
 				while [[ -e "$f" && $cmdRet == 0 ]]; do
@@ -841,12 +843,12 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							# --usepkg logic
 							!(($AE_VCS)) && i=${i/--usepkg n/--usepkg y}
 							#einfo "      Running shell command: '$i' ..."
-							einfo "      - '$i' ..."
+							einfo "      - $countTasks/$totalTasks. '$i' ..."
 							eval "$i &>> \"${AELOG[TASKS_LAST]}\""
 							echo "Retcode $?" &>> "${AELOG[TASKS_LAST]}"
 						else # PM
 							#einfo "      Running PM: '${AECMD[USER_TASKS]} $i' ..."
-							einfo "      - '${AECMD[USER_TASKS]} $i' ..."
+							einfo "      - $countTasks/$totalTasks. '${AECMD[USER_TASKS]} $i' ..."
 							# 
 							if [[ "$i" == '$'* || "$i" == '`'* ]]; then
 								i=$(eval echo -n $i)
@@ -879,6 +881,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					else
 						rm -f "$f"
 					fi
+					countTasks+=1
 				done
 
 				# if failed - set the flag again
