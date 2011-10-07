@@ -872,7 +872,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						# skip duplicates
 						if (($AE_VCS)) && \
 							[[ '' == $(egrep "^${is}$" \
-								"${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}") ]]; then
+								"${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}" \
+								&> /dev/null) ]]; then
 							echo "$is" >> "${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
 						fi
 					else
@@ -885,7 +886,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					else
 						rm -f "$f"
 					fi
-					countTasks+=1
+					((countTasks++))
 				done
 
 				# if failed - set the flag again
