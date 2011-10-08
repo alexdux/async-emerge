@@ -382,11 +382,11 @@ compare_sysvers() { # todo: change echo to sed/vars
 
 
 # Msg 'World update (Rebuild)'
-einfo "Starting The World Update:"
+einfo "Starting Gentoo Update:"
 
 # Check for possibility of update|rebuild world - stop if impossible
 if [ "${AECMD[TEST]}" ]; then
-	einfo "  Testing possibility of various updates:"
+	einfo "  Testing possibilities of various updates:"
 	mapfile -t Cmds < <(echo -e "${AECMD[TEST]}")
 	for ((k=0; k < ${#Cmds[*]}; k++)); do
 		einfo "    - testing with '${Cmds[$k]}' ..."
@@ -409,7 +409,7 @@ if [ "${AECMD[TEST]}" ]; then
 		}
 	done
 else
-	ewarn "  Testing possibility of various updates is not configured ..."; eend 0
+	ewarn "  Testing possibilities of various updates is not configured ..."; eend 0
 fi
 
 

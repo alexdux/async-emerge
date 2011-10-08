@@ -103,7 +103,7 @@ TempBashRC="${AE_DIR[GATEWAY]}.$PNAME.vcs.lock.$$"
 #echo $TempBashRC
 if [ "$1" ]; then
 	touch "$TempBashRC"
-	einfo "Virtually chrooted with: '$*'"
+	einfo "Starting Virtually Chrooted System with: '$*' ..."
 	chr_cmd+=" -c \"$*\""
 else	
 	cat "${AE_SIGN[BASHRC]}" > "$TempBashRC"
