@@ -41,22 +41,23 @@ collect_signes() { # to-do: correct build lock
 }
 
 # check if emerge {update|rebuild} world is going to fall
-# check_if_emerge_possible: $type_of_check $log_last $warn_log_last $log $warn_log
+# check_if_emerge_possible: $full_cmd_to_check $log_last $warn_log_last $log $warn_log
 check_if_emerge_possible() {
 
 	dt_mark &> "$2"
 	dt_mark &> "$3"
-	
-	case "$1" in
-		update)
-				eval "${AE_CMD[CHECK_UPDATE]} &>> $2";;
-		rebuild)
-				eval "${AE_CMD[CHECK_REBUILD]} &>> $2";;
-		n|none)
-				return true;;
-		*)
-			echo "invalid constant '$1' for check_if_emerge_possible()"
-	esac
+# to-do: add $() & `` support
+#	case "$1" in
+#		update)
+#				eval "${AE_CMD[CHECK_UPDATE]} &>> $2";;
+#		rebuild)
+#				eval "${AE_CMD[CHECK_REBUILD]} &>> $2";;
+#		n|none)
+#				return true;;
+#		*)
+#			echo "invalid constant '$1' for check_if_emerge_possible()"
+#	esac
+	eval "$1 &>> $2"
 	cmdRet=$?
 	echo "Retcode: $cmdRet" &>> "$2"
 
