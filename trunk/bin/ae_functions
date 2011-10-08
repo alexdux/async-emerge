@@ -63,7 +63,8 @@ check_if_emerge_possible() {
 
 	if (($cmdRet)); then
 		grep -e 'is blocking' "$2" >> "$3" 2> /dev/null
-		tail -n +$(grep -n "Size of downloads" "$2" | cut -f1 -d ':') "$2" &>> "$3"
+		dsLine=$(grep -n "Size of downloads" "$2" | cut -f1 -d ':')
+		[ "$dsLine" ] && tail -n +$dsLine "$2" &>> "$3" || cat "$2" &>> "$3"
 	fi
 	
 	cat "$2" &>> "$4"
