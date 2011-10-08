@@ -441,7 +441,18 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			echo " * Existed data (world update was interrupted previously):" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
 			eend 0
 			# but check for world rebuild is needed...
-			[ "$(grep -m1 '\->' "$subsetf")" ] && ((loopLogic|=0x1000))
+			if [ "$(grep -m1 '\->' "$subsetf")" ]; then
+				((loopLogic|=0x1000))
+				# get updating critical packages
+				mapfile -t Pkgs < <(echo -e "$subsetf")
+				for ((k=0; k < ${#Pkgs[*]}; k++)); do
+					for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
+						if [[ "${AE_SUPD[${s}_SENSOR]}" == *"${Pkgs[$k]}"* ]]; then
+							AE_SUPD[${s}_CRITICAL_CHANGE]=1
+						fi
+					done
+				done
+			fi
 		else
 			einfo "    Saving critical system packages versions ..."
 			scan_for_sysvers # (set 0x1000 in the func, if needed)
@@ -481,7 +492,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							einfo "      - for '${AE_SUPD[${s}_TITLE]}' package:"
 							for ((k=0; k < ${#Cmds[*]}; k++)); do
 								if [[ "${Cmds[$k]}" != '#'* ]]; then
-									einfo "        - check '${Cmds[$k]}'"
+									einfo "        - checking with '${Cmds[$k]}'"
 
 									check_if_emerge_possible "${AE_CMD[PRECHECK]} ${Cmds[$k]}" \
 															"${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
@@ -705,7 +716,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							else
 								rm -v "${AESIGN[SUBSET_UPDATES]}" &> /dev/null
 							fi
-							if !(($updated-1)); then # readd subset sign with '1-pass'
+							if !(($updated-1)); then # re-add subset sign with '1-pass'
 								echo "$sens: 2-pass, $sul" >> "${AESIGN[SUBSET_UPDATES]}"
 							fi
 						done
