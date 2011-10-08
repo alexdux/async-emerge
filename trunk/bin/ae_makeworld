@@ -396,8 +396,9 @@ if [ "${AECMD[PRECHECK]}" ]; then
 		eend $cmdRet
 		(($cmdRet)) && {
 			(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
-			eerror "  Oops, human is needed !!!" \
-			"See logs for details or re-check your configs with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."; eend 2
+			eerror "  \033[01;31mOops, human is needed !!!"
+			eeeror "See logs for details or re-check your configs with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."
+			eend 2
 			exit 8447
 		}
 	done
