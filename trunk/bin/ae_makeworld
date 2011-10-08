@@ -399,8 +399,8 @@ if [ "${AECMD[PRECHECK]}" ]; then
 		(($cmdRet)) && {
 			(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
 			eerror "  Oops, human is needed !!!"
-			eerror "  See the log 'less ${AELOG[CHECK_WARN_LAST]}' for details"\
-				"or re-check your configs with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."
+			eerror "  See the log 'less ${AELOG[CHECK_WARN_LAST]}' for details ..."
+			eerror "  or re-check your configs with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}' ..."
 			eend 2
 			exit 8447
 		}
@@ -491,10 +491,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									eend $cmdRet
 									(($cmdRet)) && {
 										(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
-										eerror "    Oops, human is needed!!!"
-										eerror "    See the log 'less ${AELOG[CHECK_WARN_LAST]}' for details"\
-											"or re-check your configs"\
-											"with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."
+										eerror "    Oops, human is needed !!!"
+										eerror "    See the log 'less ${AELOG[CHECK_WARN_LAST]}' for details ..."
+										eerror "    or re-check your configs"\
+											"with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}' ..."
 										eend 2
 										exit 8448
 									}
