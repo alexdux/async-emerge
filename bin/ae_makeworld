@@ -446,8 +446,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				# get updating critical packages
 				mapfile -t Pkgs < <(grep -e '->' "$subsetf")
 				for ((k=0; k < ${#Pkgs[*]}; k++)); do
+					echo "Pkgs:${Pkgs[$k]},Pkgs:${Pkgs[$k]/:*/}"
 					for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
-						if [[ "${AE_SUPD[${s}_SENSOR]}" == *"${Pkgs[$k]}"* ]]; then
+						if [[ "${AE_SUPD[${s}_SENSOR]}" == *"${Pkgs[$k]/:*/}"* ]]; then
 							AE_SUPD[${s}_CRITICAL_CHANGE]=1
 						fi
 					done
