@@ -400,13 +400,15 @@ if [ "${AECMD[TEST]}" ]; then
 			(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
 			eerror "  Oops, human is needed !!!"
 			eerror "  Test '${sVCS}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
-			eerror "  Use 'less ${AELOG[CHECK_WARN_LAST]}' to see why ..."
+			#eerror "  Use 'cat ${AELOG[CHECK_WARN_LAST]}' to see why ..."
 			eend 2
+			echo "  !!! Log file '${AELOG[CHECK_WARN_LAST]}' !!!"
+			cat "${AELOG[CHECK_WARN_LAST]}"
 			exit 8447
 		}
 	done
 else
-	ewarn "  Checking possibility of update is not configured ..."; eend 0
+	ewarn "  Testing possibility of various updates is not configured ..."; eend 0
 fi
 
 
@@ -505,8 +507,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 										(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
 										eerror "    Oops, human is needed !!!"
 										eerror "    Test '${sVCS}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
-										eerror "    Use 'less ${AELOG[CHECK_WARN_LAST]}' to see why ..."
+										#eerror "    Use 'cat ${AELOG[CHECK_WARN_LAST]}' to see why ..."
 										eend 2
+										echo "  !!! Log file '${AELOG[CHECK_WARN_LAST]}' !!!"
+										cat "${AELOG[CHECK_WARN_LAST]}"
 										exit 8448
 									}
 								fi
