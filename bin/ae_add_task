@@ -29,8 +29,8 @@ fi
 # check if params exist
 if [[ (( ${#} )) && "$1" != "--help" ]]; then
 	(($addToGRS)) && \
-		ebegin "Adding user task (to GRS only!)" || \
-		ebegin "Adding user task" 
+		ebegin "Adding user tasks (to GRS only!)" || \
+		ebegin "Adding user tasks" 
 
 	# join params to 1 line
 	for s in ${*}; do
@@ -51,13 +51,13 @@ if [[ (( ${#} )) && "$1" != "--help" ]]; then
 	cntC=$((wc -l < "$fileC") 2>/dev/null)
 	cntI=$((wc -l < "$fileI") 2>/dev/null)
 
-	einfo "  Total task to do in VCS $cntC:"
+	einfo "  Total tasks to do in VCS $cntC:"
 	[ -e "$fileC" ] && cat "$fileC"
-	einfo "  Total task to do in GRS $cntI:"
+	einfo "  Total tasks to do in GRS $cntI:"
 	[ -e "$fileI" ] && cat "$fileI"
 else
-	echo "Help: $PNAME [-grs] [\"]cmd[ params...][\"]"
-	echo "  -grs   add to install phase only"
+	echo "Help: $PNAME [-grs] [\"]cmd[ params...][\"] ..."
+	echo "  -grs   add tasks to install phase only (to GRS)"
 fi
 
 # bye
