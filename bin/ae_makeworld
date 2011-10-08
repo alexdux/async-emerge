@@ -385,13 +385,13 @@ compare_sysvers() { # todo: change echo to sed/vars
 einfo "Starting The World Update:"
 
 # Check for possibility of update|rebuild world - stop if impossible
-if [ "${AECMD[PRECHECK]}" ]; then
-	einfo "  Prechecking for possibility of various updates:"
-	mapfile -t Cmds < <(echo -e "${AECMD[PRECHECK]}")
+if [ "${AECMD[TEST]}" ]; then
+	einfo "  Testing possibility of various updates:"
+	mapfile -t Cmds < <(echo -e "${AECMD[TEST]}")
 	for ((k=0; k < ${#Cmds[*]}; k++)); do
-		einfo "    - with '${Cmds[$k]}' ..."
+		einfo "    - testing with '${Cmds[$k]}' ..."
 	
-		check_if_emerge_possible "${AE_CMD[PRECHECK]} ${Cmds[$k]}" \
+		check_if_emerge_possible "${AE_CMD[TEST]} ${Cmds[$k]}" \
 								"${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
 								"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
 		cmdRet=$?
@@ -399,8 +399,8 @@ if [ "${AECMD[PRECHECK]}" ]; then
 		(($cmdRet)) && {
 			(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
 			eerror "  Oops, human is needed !!!"
-			eerror "  See the log 'less ${AELOG[CHECK_WARN_LAST]}' for details ..."
-			eerror "  or re-check your configs with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}' ..."
+			eerror "  Test '${sVCS}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
+			eerror "  Use 'less ${AELOG[CHECK_WARN_LAST]}' to see why ..."
 			eend 2
 			exit 8447
 		}
@@ -446,7 +446,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				# get updating critical packages
 				mapfile -t Pkgs < <(grep -e '->' "$subsetf")
 				for ((k=0; k < ${#Pkgs[*]}; k++)); do
-					echo "Pkgs:${Pkgs[$k]},Pkgs:${Pkgs[$k]/:*/}"
+					#echo "Pkgs:${Pkgs[$k]},Pkgs:${Pkgs[$k]/:*/}"
 					for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
 						if [[ "${AE_SUPD[${s}_SENSOR]}" == *"${Pkgs[$k]/:*/}"* ]]; then
 							AE_SUPD[${s}_CRITICAL_CHANGE]=1
@@ -482,20 +482,20 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				echo -en "\a"
 				#for (( i=0; i < 3; i++ )); do echo -en "\a"; sleep 1; done
 				
-				if [[ "${AECMD[PRECHECK]}" != *'@system'* || "${AECMD[PRECHECK]}" != *'@world'* ]]; then
-					einfo "    Checking for possibility of world rebuild for updating critical system packages:"
+				if [[ "${AECMD[TEST]}" != *'@system'* || "${AECMD[TEST]}" != *'@world'* ]]; then
+					einfo "    Testing possibility of world rebuild for critical system packages updates:"
 					
 					# walk through critical changes
 					for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
 						if [ "${AE_SUPD[${s}_CRITICAL_CHANGE]}" ]; then
 							# get cmds for world rebuild
 							mapfile -t Cmds < <(echo -e "${AE_SUPD[${s}_CMD]}")
-							einfo "      - for '${AE_SUPD[${s}_TITLE]}' package:"
+							einfo "      - for package '${AE_SUPD[${s}_TITLE]}':"
 							for ((k=0; k < ${#Cmds[*]}; k++)); do
 								if [[ "${Cmds[$k]}" != '#'* ]]; then
-									einfo "        - checking with '${Cmds[$k]}'"
+									einfo "        - testing with '${Cmds[$k]}' ..."
 
-									check_if_emerge_possible "${AE_CMD[PRECHECK]} ${Cmds[$k]}" \
+									check_if_emerge_possible "${AE_CMD[TEST]} ${Cmds[$k]}" \
 															"${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
 															"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
 									cmdRet=$?
@@ -504,9 +504,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									(($cmdRet)) && {
 										(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
 										eerror "    Oops, human is needed !!!"
-										eerror "    See the log 'less ${AELOG[CHECK_WARN_LAST]}' for details ..."
-										eerror "    or re-check your configs"\
-											"with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}' ..."
+										eerror "    Test '${sVCS}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
+										eerror "    Use 'less ${AELOG[CHECK_WARN_LAST]}' to see why ..."
 										eend 2
 										exit 8448
 									}
@@ -515,7 +514,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						fi
 					done
 				else
-					ewarn "  Possibility of world rebuild is already checked ..."; eend 0
+					ewarn "  Possibility of world rebuild is already tested ..."; eend 0
 				fi
 			else
 				if (($AE_VCS)); then
