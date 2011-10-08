@@ -61,7 +61,10 @@ check_if_emerge_possible() {
 	cmdRet=$?
 	echo "Retcode: $cmdRet" &>> "$2"
 
-	(($cmdRet)) && tail -n +$(grep -n "Size of downloads" "$2" | cut -f1 -d ':') "$2" &>> "$3"
+	if (($cmdRet)); then
+		grep -e '[blocks' "$2" >> "$3" 2> /den/null
+		tail -n +$(grep -n "Size of downloads" "$2" | cut -f1 -d ':') "$2" &>> "$3"
+	fi
 	
 	cat "$2" &>> "$4"
 	cat "$3" &>> "$5"
