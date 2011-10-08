@@ -402,7 +402,7 @@ if [ "${AECMD[TEST]}" ]; then
 			eerror "  Test '${sVCS}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
 			#eerror "  Use 'cat ${AELOG[CHECK_WARN_LAST]}' to see why ..."
 			eend 2
-			echo -e "\n  \033[01;31m!!! Log file '${AELOG[CHECK_WARN_LAST]}' !!!\033[00;10m"
+			echo -e "\n\033[01;31m<<< Log file '${AELOG[CHECK_WARN_LAST]}' >>>\033[00;10m"
 			cat "${AELOG[CHECK_WARN_LAST]}"
 			echo
 			exit 8447
@@ -510,7 +510,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 										eerror "    Test '${sVCS}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
 										#eerror "    Use 'cat ${AELOG[CHECK_WARN_LAST]}' to see why ..."
 										eend 2
-										echo -e "\n  \033[01;31m!!! Log file '${AELOG[CHECK_WARN_LAST]}' !!!\033[00;10m"
+										echo -e "\n\033[01;37m<<< Log file '${AELOG[CHECK_WARN_LAST]}' >>>\033[00;10m"
 										cat "${AELOG[CHECK_WARN_LAST]}"
 										echo
 										exit 8448
