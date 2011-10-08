@@ -385,18 +385,21 @@ einfo "Starting The World Update:"
 
 # * Check for possibility of update|rebuild world - stop if impossible
 if [ "${AECMD[PRECHECK]}" ]; then
-	einfo "  Checking for possibility of update with '${AECMD[PRECHECK]}' ..."
+	mapfile -t Cmds < <(echo -e "${AECMD[PRECHECK]}")
+	for ((k=0; k < ${#Cmds[*]}; k++)); do
+		einfo "  Checking for possibility of update with '${Cmds[$k]}' ..."
 	
-	check_if_emerge_possible "${AE_CMD[PRECHECK]} ${AECMD[PRECHECK]}" \
-							"${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
-							"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
-	cmdRet=$?
-	eend $cmdRet
-	(($cmdRet)) && {
-		eerror "  Oops, human is needed !!!" \
-		"See logs for details or re-check your configs with '${AE_CMD[PRECHECK]} ${AECMD[PRECHECK]}'..."; eend 2
-		exit 8447
-	}
+		check_if_emerge_possible "${AE_CMD[PRECHECK]} ${Cmds[$k]}" \
+								"${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
+								"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
+		cmdRet=$?
+		eend $cmdRet
+		(($cmdRet)) && {
+			eerror "  Oops, human is needed !!!" \
+			"See logs for details or re-check your configs with '${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."; eend 2
+			exit 8447
+		}
+	done
 else
 	ewarn "  Checking possibility of update is not configured ..."; eend 0
 fi
