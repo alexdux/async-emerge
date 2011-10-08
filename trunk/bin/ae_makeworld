@@ -422,6 +422,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	einfo "  Updating system with restoring of consistency, pass $loop of $max_loop:"
 	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
 	
+	# to-do: restore after TERM or incomplete in tasks
 	# save critical packages versions (only if world update or subset update is scheduled)
 	if (($loopLogic & 0x03)); then
 		# start logs subsets updates
