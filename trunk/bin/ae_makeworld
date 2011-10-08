@@ -485,7 +485,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				echo -en "\a"
 				#for (( i=0; i < 3; i++ )); do echo -en "\a"; sleep 1; done
 				
-				if [[ "${AECMD[TEST]}" != *'@system'* || "${AECMD[TEST]}" != *'@world'* ]]; then
+				if [[ $loop == 1 && "${AECMD[TEST]}" != *'@system'* || "${AECMD[TEST]}" != *'@world'* ]]; then
 					einfo "    Testing possibility of world rebuild for critical system packages updates:"
 					
 					# walk through critical changes
@@ -520,7 +520,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						fi
 					done
 				else
-					ewarn "  Possibility of world rebuild is already tested ..."; eend 0
+					ewarn "    Possibility of world rebuild is already tested, skipping it ..."; eend 0
 				fi
 			else
 				if (($AE_VCS)); then
