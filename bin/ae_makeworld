@@ -383,7 +383,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 # Msg 'World update (Rebuild)'
 einfo "Starting The World Update:"
 
-# * Check for possibility of update|rebuild world - stop if impossible
+# Check for possibility of update|rebuild world - stop if impossible
 if [ "${AECMD[PRECHECK]}" ]; then
 	mapfile -t Cmds < <(echo -e "${AECMD[PRECHECK]}")
 	for ((k=0; k < ${#Cmds[*]}; k++)); do
@@ -395,8 +395,9 @@ if [ "${AECMD[PRECHECK]}" ]; then
 		cmdRet=$?
 		eend $cmdRet
 		(($cmdRet)) && {
+			(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
 			eerror "  Oops, human is needed !!!" \
-			"See logs for details or re-check your configs with '${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."; eend 2
+			"See logs for details or re-check your configs with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."; eend 2
 			exit 8447
 		}
 	done
@@ -426,7 +427,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
 	
 	# to-do: restore after TERM? or incomplete in tasks
-	# save critical packages versions (only if world update or subset update is scheduled)
+	# SAVE CRITICAL PACKAGES VERSIONS (only if world update or subset update is scheduled - todo: is it OK?)
 	if (($loopLogic & 0x03)); then
 		# start logs subsets updates
 		dt_mark &> "${AELOG[SUBSET_UPDATE_LAST]}"
@@ -485,9 +486,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
 									eend $cmdRet
 									(($cmdRet)) && {
+										(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
 										eerror "    Oops, human is needed!!!"\
 											"See logs for details or re-check your configs"\
-											"with '${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."; eend 2
+											"with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."; eend 2
 										exit 8448
 									}
 								fi
@@ -736,7 +738,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				ewarn "    Cleaning system is pending till the next cooking. "\
 					"(2-pass subset update behavior or subset update fail)"; eend 0
 			else
-				if [[ "${AECMD[DEPCLEAN]}" == *a* ]]; then # interactively (GRS)
+				if [[ "${AECMD[DEPCLEAN]}" == *'-a'* ]]; then # interactively (GRS)
 					#call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
 					#			"&1" "/dev/null"
 					einfo "    Cleaning system from unused dependencies (interactively):"
