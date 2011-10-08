@@ -385,9 +385,10 @@ einfo "Starting The World Update:"
 
 # Check for possibility of update|rebuild world - stop if impossible
 if [ "${AECMD[PRECHECK]}" ]; then
+	einfo "  Prechecking for possibility of various updates:"
 	mapfile -t Cmds < <(echo -e "${AECMD[PRECHECK]}")
 	for ((k=0; k < ${#Cmds[*]}; k++)); do
-		einfo "  Checking for possibility of update with '${Cmds[$k]}' ..."
+		einfo "    - with '${Cmds[$k]}' ..."
 	
 		check_if_emerge_possible "${AE_CMD[PRECHECK]} ${Cmds[$k]}" \
 								"${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
@@ -396,8 +397,8 @@ if [ "${AECMD[PRECHECK]}" ]; then
 		eend $cmdRet
 		(($cmdRet)) && {
 			(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
-			eerror "  \033[01;31mOops, human is needed !!!"
-			eeeror "See logs for details or re-check your configs with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."
+			eerror "  Oops, human is needed !!!"
+			eerror "  See logs for details or re-check your configs with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."
 			eend 2
 			exit 8447
 		}
@@ -467,7 +468,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				echo -en "\a"
 				#for (( i=0; i < 3; i++ )); do echo -en "\a"; sleep 1; done
 				
-				if [[ "${AECMD[PRECHECK]}" != *'@system'*'@world'* ]]; then
+				if [[ "${AECMD[PRECHECK]}" != *'@system'* || "${AECMD[PRECHECK]}" != *'@world'* ]]; then
 					einfo "    Checking for possibility of world rebuild for updating critical system packages:"
 					
 					# walk through critical changes
@@ -489,8 +490,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									(($cmdRet)) && {
 										(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
 										eerror "    Oops, human is needed!!!"\
-											"See logs for details or re-check your configs"\
-											"with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."; eend 2
+										eerror "    See logs for details or re-check your configs"\
+											"with '${sVCS}${AE_CMD[PRECHECK]} ${Cmds[$k]}'..."
+										eend 2
 										exit 8448
 									}
 								fi
