@@ -441,10 +441,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			echo " * Existed data (world update was interrupted previously):" &>> "${AELOG[SUBSET_UPDATE_LAST]}"
 			eend 0
 			# but check for world rebuild is needed...
-			if [ "$(grep -m1 '\->' "$subsetf")" ]; then
+			if [ "$(grep -m1 -e '->' "$subsetf")" ]; then
 				((loopLogic|=0x1000))
 				# get updating critical packages
-				mapfile -t Pkgs < <(echo -e "$subsetf")
+				mapfile -t Pkgs < <(grep -e '->' "$subsetf")
 				for ((k=0; k < ${#Pkgs[*]}; k++)); do
 					for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
 						if [[ "${AE_SUPD[${s}_SENSOR]}" == *"${Pkgs[$k]}"* ]]; then
