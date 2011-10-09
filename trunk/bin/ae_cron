@@ -21,7 +21,7 @@
 . /etc/async.emerge.conf
 
 
-local lockFile="${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}"
+lockFile="${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}"
 
 # calling bakery
 if [ "$((ps -p $(<"$lockFile") -o comm= ) 2>/dev/null)" == "$PNAME" ]; then

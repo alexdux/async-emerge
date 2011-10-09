@@ -842,6 +842,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
 	
 	# REVDEP system-wide
+	# to-do: add out for GRS
 	if [ "${AE_REBUILD[DO_REVDEP_REBUILD]}" == "y" ]; then
 		if (($loopLogic & 0x10)); then
 			# call global revdep
@@ -914,9 +915,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						# copy last to logs
 						cat "${AELOG[TASKS_LAST]}" &>> "${AELOG[TASKS]}"
 						echo &>> "${AELOG[TASKS]}"
-						# add cmd to install to-do; skip duplicates
-						if (($AE_VCS)) && \
-							[[ '' == $(egrep "^${is}$" \
+						# add cmd to install to-do; skip duplicates. only if success 
+						if [[ $cmdRet && (($AE_VCS)) && \
+							'' == $(egrep "^${is}$" \
 								"${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}" \
 								&> /dev/null) ]]; then
 							echo "$is" >> "${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
@@ -924,12 +925,14 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					else
 						echo "skip empty line in '$f'"
 					fi
-					# remove 1st line from to-do
-					c=$(tail -n+2 "$f")
-					if [ "$c" ]; then
-						echo -e "$c" > "$f"
-					else
-						rm -f "$f"
+					# remove 1st line from to-do. only if success 
+					if [[ $cmdRet ]]; then
+						c=$(tail -n+2 "$f")
+						if [ "$c" ]; then
+							echo -e "$c" > "$f"
+						else
+							rm -f "$f"
+						fi
 					fi
 					((countTasks++))
 				done
@@ -963,7 +966,7 @@ fi
 
 # DO GRS CLEAN-UPs & ETC-UPDATE
 # to-do: add logging!!!
-if [ "$eType" == 'INSTALL' ]; then
+if !(($AE_VCS)); then
 	# Clean-up VCS if not building
 	if [ "${AE_INSTALL[DO_VCS_CLEANUP]}" == "y" ]; then
 		# to-do: better locking
