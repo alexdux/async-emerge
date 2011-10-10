@@ -42,6 +42,12 @@
 #AE_VCS=${#AE_CHROOT_PS1}
 AE_VCS=${#AE_STATE_SKIP}
 
+# Get param (1)
+# -v	verbose (copy out to stdout), default for GRS
+# -q	quite (don't cope out to stdout) default for VCS
+AE_MW_VERBOSE=true
+[[ (($AE_VCS)) && "$1" != '-v' ]] || [[ !(($AE_VCS)) && "$1" == '-q' ]] && AE_MW_VERBOSE=false
+
 # set config key prefix
 (($AE_VCS)) && eType='COOK' || eType='INSTALL'
 # COOK = VCS
@@ -83,9 +89,9 @@ call_emerge() {
 	[[ $1 ]] && einfo "  $1 ..."
 	# pre-logging emerging
 	dt_mark | tee "$log_last" &> "$warn_last"
-	if [[ "$2" == *'1>&3'* ]]; then 
-		#echo '=== *1>&3* ==='
-		eval "$2"
+	# "((${AECMD[EMERGE]} 2>&1 1>&3 | tee \$warn_last) 3>&1 1>&2 | tee \$log_last) 2>&1"	
+	if $AE_MW_VERBOSE; then
+		eval "(($2 2>&1 1>&3 | tee -a $warn_last) 3>&1 1>&2 | tee -a $log_last) 2>&1"
 	else
 		eval "$2 >> $log_last 2>> $warn_last"
 	fi
@@ -110,7 +116,11 @@ call_cmd1() {
 	local log_last=$3 log=$4
 	[ "$1" ] && einfo "    $1 ..."
 	dt_mark &> "$log_last"
-	eval "$2" &>> "$log_last"
+	if $AE_MW_VERBOSE; then
+		eval "$2 2>&1 | tee -a $log_last"
+	else
+		eval "$2 &>> $log_last"
+	fi
 	cmdRet=$?
 	eend $cmdRet
 	echo "Retcode: $cmdRet" &>> "$log_last"
@@ -197,7 +207,12 @@ emerge_solver() {
 			}
 			
 			# run PM
-			eval "${AE_CMD[PM]} -$eCmd" &>> "$log_last"
+#			eval "${AE_CMD[PM]} -$eCmd" &>> "$log_last"
+			if $AE_MW_VERBOSE; then 
+				eval "${AE_CMD[PM]} -$eCmd 2>&1 | tee -a $log_last"
+			else
+				eval "${AE_CMD[PM]} -$eCmd &>> $log_last"
+			fi
 			cmdRet=$?
 			eend $cmdRet
 			echo "Retcode: $cmdRet" &>> "$log_last"
@@ -223,7 +238,11 @@ call_cmd1_with_emerge_solver() {
 	dt_mark &> "$log_last"
 	# eval
 	#$($2 >> "$log_last" 2>&1)
-	eval "$2" &>> "$log_last"
+	if $AE_MW_VERBOSE; then 
+		eval "$2 2>&1 | tee -a $log_last"
+	else
+		eval "$2 &>> $log_last"
+	fi
 	cmdRet=$?
 	eend $cmdRet
 	(($cmdRet>1)) && return $cmdRet
@@ -306,6 +325,8 @@ scan_for_sysvers() {
 							sysvers+="$iver"
 							if [[ "$dtc" == "-pre-eixc-" ]]; then
 								uver=$(eix '-I*' -e --format '<bestversion:VERSION>' $sens)
+								#uver=$(eix '-I*' -e --format '<bestslotupgradeversions:VERSION>' $sens)
+								#"$uver" || uver=$(eix '-I*' -e --format '<bestversion:VERSION>' $sens)
 								[[ "$iver" == "$uver" ]] || {
 									sysvers+=" -> $uver"
 									# set mark for world rebuild
@@ -416,6 +437,7 @@ fi
 
 
 # to-do: better reset 'last' log files
+# to-do: revise setting & clearing loop flags!
 # *** REBUILD & CO MAIN LOOP ***
 max_loop=${AE_REBUILD[REVDEPCO_MT]}
 # Control for loop iterations:
@@ -555,6 +577,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			einfo "    World already has been updated."; eend 0
 		fi
 	else
+		((loopLogic&=0xFE))
 		ewarn "    World updating is not configured."; eend 1
 	fi
 	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
@@ -662,8 +685,13 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												# --usepkg logic
 												!(($AE_VCS)) && cmd=${cmd/--usepkg n/--usepkg y}
 												#einfo "        Running shell command:"
-												einfo "        - '$cmd' ..."
-												eval "$cmd &>> \"$log_last\""
+												einfo "        - $k/${#Cmds[*]}. '$cmd' ..."
+#												eval "$cmd &>> \"$log_last\""
+												if $AE_MW_VERBOSE; then
+													eval "$cmd 2>&1 | tee -a $log_last"
+												else
+													eval "$cmd &>> $log_last"
+												fi
 												echo "Retcode $cmdRet" &>> "$log_last"
 												cmdRet=$?
 											else # PM
@@ -673,7 +701,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												if [ "$cmd" ]; then
 													#einfo "        Running PM:"
 													call_cmd1_with_emerge_solver \
-														"    - ${AECMD[SUBSET_UPDATE]} '$cmd'" \
+														"    - $k/${#Cmds[*]}. ${AECMD[SUBSET_UPDATE]} '$cmd'" \
 														"${AECMD[SUBSET_UPDATE]} $cmd" \
 														"$log_last" "$log"
 													cmdRet=$?
@@ -761,21 +789,21 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				ewarn "    Cleaning system is pending till the next cooking. "\
 					"(2-pass subset update behavior or subset update fail)"; eend 0
 			else
-				if [[ "${AECMD[DEPCLEAN]}" == *'-a'* ]]; then # interactively (GRS)
-					#call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
-					#			"&1" "/dev/null"
-					einfo "    Cleaning system from unused dependencies (interactively):"
-					# idiot. dt_mark > "${AELOG[DEPCLEAN_LAST]}" 2>&1
-					# to-do: add tee to log
-					eval "${AECMD[DEPCLEAN]}" # >> "${AELOG[DEPCLEAN_LAST]}" 2>&1
-					cmdRet=$?
-					eend $?
-					# cat "${AELOG[DEPCLEAN_LAST]}" >> "${AELOG[DEPCLEAN]}" 2>&1
-					# echo >> "${AELOG[DEPCLEAN]}" 2>&1
-				else # bash mode (GRS/VCS)
+#				if [[ "${AECMD[DEPCLEAN]}" == *'-a'* ]]; then # interactively (GRS)
+#					#call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
+#					#			"&1" "/dev/null"
+#					einfo "    Cleaning system from unused dependencies (interactively):"
+#					# idiot. dt_mark > "${AELOG[DEPCLEAN_LAST]}" 2>&1
+#					# to-do: add tee to log
+#					eval "${AECMD[DEPCLEAN]} 2>&1 | tee -a ${AELOG[DEPCLEAN_LAST]}" 
+#					cmdRet=$?
+#					eend $?
+#					# cat "${AELOG[DEPCLEAN_LAST]}" >> "${AELOG[DEPCLEAN]}" 2>&1
+#					# echo >> "${AELOG[DEPCLEAN]}" 2>&1
+#				else # bash mode (GRS/VCS)
 					call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
 								"${AELOG[DEPCLEAN_LAST]}" "${AELOG[DEPCLEAN]}"
-				fi
+#				fi
 				(($cmdRet)) || ((loopLogic&=0xFB))
 				# add revdep-rebuild pass
 				((loopLogic|=0x10))
@@ -842,7 +870,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
 	
 	# REVDEP system-wide
-	# to-do: add out for GRS
 	if [ "${AE_REBUILD[DO_REVDEP_REBUILD]}" == "y" ]; then
 		if (($loopLogic & 0x10)); then
 			# call global revdep
@@ -860,6 +887,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			einfo "    Rebuilding world with revdep-rebuild has been already done."; eend 0
 		fi
 	else 
+		((loopLogic&=0xEF))
 		ewarn "    Rebuilding world with revdep-rebuild is not configured."; eend 0
 	fi
 	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
@@ -891,7 +919,12 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							!(($AE_VCS)) && i=${i/--usepkg n/--usepkg y}
 							#einfo "      Running shell command: '$i' ..."
 							einfo "      - $countTasks/$totalTasks. '$i' ..."
-							eval "$i &>> \"${AELOG[TASKS_LAST]}\""
+#							eval "$i &>> \"${AELOG[TASKS_LAST]}\""
+							if $AE_MW_VERBOSE; then
+								eval "$i 2>&1 | tee -a \"${AELOG[TASKS_LAST]}\""
+							else
+								eval "$i &>> \"${AELOG[TASKS_LAST]}\""
+							fi
 							cmdRet=$?
 							echo "Retcode $cmdRet" &>> "${AELOG[TASKS_LAST]}"
 						else # PM
@@ -903,7 +936,12 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							fi
 							# check params for empty
 							if [ "$i" ]; then
-								eval "${AECMD[USER_TASKS]} $i &>> \"${AELOG[TASKS_LAST]}\""
+#								eval "${AECMD[USER_TASKS]} $i &>> \"${AELOG[TASKS_LAST]}\""
+								if $AE_MW_VERBOSE; then
+									eval "${AECMD[USER_TASKS]} $i 2>&1 | tee -a \"${AELOG[TASKS_LAST]}\""
+								else
+									eval "${AECMD[USER_TASKS]} $i &>> \"${AELOG[TASKS_LAST]}\""
+								fi
 								cmdRet=$?
 							else
 								einfo "        Not found any params for this task."
@@ -952,6 +990,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			einfo "    All scheduled tasks have been already done."; eend 0
 		fi
 	else 
+		((loopLogic&=0xDF))
 		ewarn "    Running scheduled tasks is not configured."; eend 0
 	fi
 	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
