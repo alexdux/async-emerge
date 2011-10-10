@@ -101,9 +101,9 @@ mnt_list() {
 redo_sln() { 
 	for i in $1; do 
 		# skip non-symlinks, existed fs objects and non-dirs
-		if [[ -L "$i" && ! -e "${AE_DIR[CHROOT]}$i" && -d "$(readlink \"$i\")" ]]; then 
+		if [[ -L "$i" && ! -e "${AE_DIR[CHROOT]}$i" && -d "$(readlink -f \"$i\")" ]]; then 
 			# recreate symlinks relative to ${AE_DIR[CHROOT]}
-			ln -vsn "$2$(readlink $i)" "${AE_DIR[CHROOT]}$i" &> /dev/null
+			ln -vsn "$2$(readlink -f \"$i\")" "${AE_DIR[CHROOT]}$i" &> /dev/null
 			if (($?)); then
 				ewarn "  Can't create symlink for $i." 
 				eend 1
