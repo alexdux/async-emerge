@@ -52,9 +52,8 @@ AE_VCS=${#AE_STATE_SKIP}
 }
 
 # set config key prefix
-(($AE_VCS)) && eType='COOK' || eType='INSTALL'
-# COOK = VCS
-# INSTALL = GRS
+(($AE_VCS)) && eType='COOK' || eType='INSTALL' # COOK = VCS, INSTALL = GRS
+(($AE_VCS)) && cPName='ae_chroot ' || cPName=''
 
 # Adjust CMD
 declare -A AECMD
@@ -421,9 +420,8 @@ if [ "${AECMD[TEST]}" ]; then
 		cmdRet=$?
 		eend $cmdRet
 		(($cmdRet)) && {
-			(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
 			eerror "  Oops, human is needed !!!"
-			eerror "  Test '${sVCS}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
+			eerror "  Test '${cPName}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
 			#eerror "  Use 'cat ${AELOG[CHECK_WARN_LAST]}' to see why ..."
 			eend 2
 			echo -e "\n\033[01;37m<<< Log file '${AELOG[CHECK_WARN_LAST]}' >>>\033[00;10m"
@@ -527,12 +525,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 															"${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
 															"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
 									cmdRet=$?
-
 									eend $cmdRet
 									(($cmdRet)) && {
-										(($AE_VCS)) && sVCS='ae_chroot ' || sVCS=''
 										eerror "    Oops, human is needed !!!"
-										eerror "    Test '${sVCS}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
+										eerror "    Test '${cPName}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
 										#eerror "    Use 'cat ${AELOG[CHECK_WARN_LAST]}' to see why ..."
 										eend 2
 										echo -e "\n\033[01;37m<<< Log file '${AELOG[CHECK_WARN_LAST]}' >>>\033[00;10m"
@@ -548,17 +544,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					ewarn "    Possibility of world rebuild is already tested, skipping it ..."; eend 0
 				fi
 			else
-				if (($AE_VCS)); then
-					call_emerge "  Updating world" "${AECMD[EMERGE]}" \
-						"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
-					# needed for ae_state
-					(($cmdRet)) && rm -v "${AE_SIGN[COOKED]}" &> /dev/null || touch "${AE_SIGN[COOKED]}" &> /dev/null
-				else
-			# ((/path/to/oraMon.pl 2>&1 1>&3 | tee /tmp/errors.log) 3>&1 1>&2 | tee /tmp/output.log) > /tmp/final.log 2>&1
-					call_emerge "  Updating world" \
-						"((${AECMD[EMERGE]} 2>&1 1>&3 | tee \$warn_last) 3>&1 1>&2 | tee \$log_last) 2>&1" \
-						"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
-				fi
+				call_emerge "  Updating world" "${AECMD[EMERGE]}" \
+					"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
 		
 				# if OK - reset 0x1
 				(($cmdRet)) || ((loopLogic&=0xFE))
@@ -654,8 +641,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 								# 2-pass logic:
 								if [ "${AE_SUPD[${i}_METHOD]}" == "2-pass" ]; then
 									# get opponent for 'two-pass' update
-									if [ "$eType" == "COOK" ]; then
-										osf="${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[SUBSET_UPDATES]}"
+									if (($AE_VCS)); then
+									 osf="${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[SUBSET_UPDATES]}"
 									else
 										osf="${AE_DIR[GATEWAY]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[SUBSET_UPDATES]}"
 									fi
@@ -683,7 +670,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 										cmd="${Cmds[$k]# ?}"
 										if [ "$cmd" ]; then
 											# choose caller
-											if [[ "$cmd" == \#* ]]; then # shell cmd
+											if [[ "$cmd" == '#'* ]]; then # shell cmd
 												cmd=${cmd:1}
 												# --usepkg logic
 												!(($AE_VCS)) && cmd=${cmd/--usepkg n/--usepkg y}
@@ -792,21 +779,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				ewarn "    Cleaning system is pending till the next cooking. "\
 					"(2-pass subset update behavior or subset update fail)"; eend 0
 			else
-#				if [[ "${AECMD[DEPCLEAN]}" == *'-a'* ]]; then # interactively (GRS)
-#					#call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
-#					#			"&1" "/dev/null"
-#					einfo "    Cleaning system from unused dependencies (interactively):"
-#					# idiot. dt_mark > "${AELOG[DEPCLEAN_LAST]}" 2>&1
-#					# to-do: add tee to log
-#					eval "${AECMD[DEPCLEAN]} 2>&1 | tee -a ${AELOG[DEPCLEAN_LAST]}" 
-#					cmdRet=$?
-#					eend $?
-#					# cat "${AELOG[DEPCLEAN_LAST]}" >> "${AELOG[DEPCLEAN]}" 2>&1
-#					# echo >> "${AELOG[DEPCLEAN]}" 2>&1
-#				else # bash mode (GRS/VCS)
-					call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
-								"${AELOG[DEPCLEAN_LAST]}" "${AELOG[DEPCLEAN]}"
-#				fi
+				call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
+							"${AELOG[DEPCLEAN_LAST]}" "${AELOG[DEPCLEAN]}"
 				(($cmdRet)) || ((loopLogic&=0xFB))
 				# add revdep-rebuild pass
 				((loopLogic|=0x10))
