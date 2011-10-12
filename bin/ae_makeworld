@@ -658,10 +658,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									einfo "        Adding ${#Cmds[*]} tasks to update the subset:"
 									addTasks=''
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
-										if [[ $(egrep "^${Cmds[$k]}$" \
+										if [[ $(egrep '^${Cmds[$k]}$' \
 												"${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}" \
-												&> /dev/null) ]]; then
-											ewarn "          - '${Cmds[$k]}' skipped: already scheduled"
+												) ]]; then
+											ewarn "          '${Cmds[$k]}' skipped: already scheduled"
 										else
 											einfo "          - '${Cmds[$k]}'"
 											[ "$addTasks" ] && addTasks+="\n"
