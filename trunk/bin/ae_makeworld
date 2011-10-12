@@ -516,6 +516,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					
 					# walk through critical changes
 					for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
+						# reset PENDED
+						AE_SUPD[${s}_PENDED]=''
 						if [ "${AE_SUPD[${s}_CRITICAL_CHANGE]}" ]; then
 							# get cmds for world rebuild
 							mapfile -t Cmds < <(echo -e "${AE_SUPD[${s}_CMD]}")
@@ -564,9 +566,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											# reset rebuild flag
 											((loopLogic&=0xFF))
 										fi
-									else
-										# reset PENDED
-										AE_SUPD[${s}_PENDED]=''
 									fi
 								fi
 							done
@@ -575,6 +574,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				else
 					ewarn "    Possibility of world rebuild is already tested, skipping it ..."; eend 0
 				fi
+				# skip depclean ?
 			fi
 			
 			# World update logic
@@ -657,16 +657,15 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									#mapfile -t Cmds <<< "${AE_SUPD[${i}_CMD]}"
 									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
 									einfo "        Adding ${#Cmds[*]} tasks to update the subset:"
-									mapfile -t Tasks < "${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
-#										echo "tasks: ${#Tasks[*]}"
+									# to-do: file not found?
+									mapfile -t Tasks < "${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}" \
+										&> /dev/null
 									addTasks=''
 									l=0
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
 										# search for scheduled task
 										for ((l1=l; l1 < ${#Tasks[*]}; l1++)); do
-#											echo "check task: ${Tasks[$l1]}"
 											if [ "${Cmds[$k]}" == "${Tasks[$l1]}" ]; then
-#											  echo "$l: cmd ${Cmds[$k]} exists @ $l1"
 												l=$l1
 												break
 											fi
