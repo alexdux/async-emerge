@@ -634,10 +634,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			fi
 
 			einfo "    Checking for various subsets updates:"
+			pended=''					
 			undetected=''		
 			notinstalled=''
 			for (( i=0; i<${AE_SUPD[TOTAL]}; i++ )); do
-				if [ "${AE_SUPD[${i}_UPDATED]}" ]; then
+				if [[ "${AE_SUPD[${i}_UPDATED]}" && ! "${AE_SUPD[${i}_PENDED]}" ]]; then
 					cmdRet=0
 					einfo "      ${AE_SUPD[${i}_TITLE]} update detected, update method is '${AE_SUPD[${i}_METHOD]}':"
 					einfo "        (${AE_SUPD[${i}_UPDATED]})"
@@ -788,6 +789,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						# failed - set the bit again!!!
 						((loopLogic|=0x02))
 					fi
+				elif [ "${AE_SUPD[${i}_PENDED]}" ]; then
+					[ "$pended" ] && pended+=', '
+					pended+=${AE_SUPD[${i}_TITLE]}
 				elif [ "${AE_SUPD[${i}_NOTINSTALLED]}" ]; then
 					[ "$notinstalled" ] && notinstalled+=', '
 					notinstalled+=${AE_SUPD[${i}_TITLE]}
@@ -796,6 +800,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					undetected+=${AE_SUPD[${i}_TITLE]}
 				fi
 			done
+			[ "$pended" ] && einfo "      $pended updates are pended till the next pass."; eend 0
 			[ "$undetected" ] && einfo "      $undetected updates were not detected."; eend 0
 			[ "$notinstalled" ] && einfo "      $notinstalled updates were skipped: not installed."; eend 0
 		else
