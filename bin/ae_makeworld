@@ -531,9 +531,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									eend $cmdRet
 									if (($cmdRet)); then
 										if [[ "${Cmds[$k]}" == *'@system'* ]]; then
-											ewarn "          Well... @system is uncompleted subset of @world/@update..."
-											ewarn "          So we can try some heuristic: step back to world update,"
-											ewarn "          then came back to the subset update..."
+											ewarn "          Well... '@system' is uncompleted subset of the world..."
+											ewarn "          So we can try some heuristic: step back to world update,"\
+													"then came back to the subset update:"
 											einfo "          - testing if world update is possible with"\
 													"'${AECMD[TEST_SYSTEM_ALT]}' ..."
 											check_if_emerge_possible "${AE_CMD[TEST]} ${AECMD[TEST_SYSTEM_ALT]}" \
