@@ -493,9 +493,12 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		echo &>> "${AELOG[SUBSET_UPDATE]}"
 	fi
 
+
 	# UPDATE WORLD with emerge
 	if [ "${AE_REBUILD[DO_EMERGE_WORLD]}" == "y" ]; then
 		if (($loopLogic & 0x01)); then
+			updateExclude='' # local, for pended critical updates
+			# Checking for rebuild
 			if (($loopLogic & 0x1000)) && [ "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" == "y" ]; then
 				echo -en "\033[01;37m"
 				echo "   *   ATTENTION!  Something important like GCC is going to been updated!   *" 
@@ -526,16 +529,43 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 															"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
 									cmdRet=$?
 									eend $cmdRet
-									(($cmdRet)) && {
-										eerror "    Oops, human is needed !!!"
-										eerror "    Test '${cPName}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
-										#eerror "    Use 'cat ${AELOG[CHECK_WARN_LAST]}' to see why ..."
-										eend 2
-										echo -e "\n\033[01;37m<<< Log file '${AELOG[CHECK_WARN_LAST]}' >>>\033[00;10m"
-										cat "${AELOG[CHECK_WARN_LAST]}"
-										echo
-										exit 8448
-									}
+									if (($cmdRet)); then
+										if [[ "${AECMD[TEST]}" == *'@system'* ]]; then
+											ewarn "        Well... @system is uncompleted subset of @world/@update..."
+											ewarn "        So we can try some heuristic: step back to world update,"
+											ewarn "        then came back to the subset update..."
+											einfo "        - testing if world update is possible ..."
+											check_if_emerge_possible "${AE_CMD[TEST]} ${AECMD[TEST_SYSTEM_ALT]}" \
+																	"${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
+																	"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
+											cmdRet=$?
+											eend $cmdRet
+										fi
+										if (($cmdRet)); then # even update is imposable
+											eerror "    Oops, human is needed !!!"
+											eerror "    Test '${cPName}${AE_CMD[TEST]} ${Cmds[$k]}' failed."
+											#eerror "    Use 'cat ${AELOG[CHECK_WARN_LAST]}' to see why ..."
+											eend 2
+											echo -e "\n\033[01;37m<<< Log file '${AELOG[CHECK_WARN_LAST]}' >>>\033[00;10m"
+											cat "${AELOG[CHECK_WARN_LAST]}"
+											echo
+											exit 8448
+										else # step back to world update
+											einfo "        Ok, world update is possible ...\
+													Pend '${AE_SUPD[${s}_TITLE]}' subset update till the next pass."
+											eend 0
+											# exclude critical updates
+											# to-do: add multisensos support
+											updateExclude+=" --exclude ${AE_SUPD[${s}_SENSOR]}"
+											# clean 'pre-eix'
+											AE_SUPD[${s}_PENDED]=1
+											# reset rebuild flag
+											((loopLogic&=0xFF))
+										fi
+									else
+										# reset PENDED
+										AE_SUPD[${s}_PENDED]=''
+									fi
 								fi
 							done
 						fi
@@ -543,8 +573,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				else
 					ewarn "    Possibility of world rebuild is already tested, skipping it ..."; eend 0
 				fi
-			else
-				call_emerge "  Updating world" "${AECMD[EMERGE]}" \
+			fi
+			
+			# World update logic
+			if [[ !(($loopLogic & 0x1000)) || "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" != "y" ]]; then
+				call_emerge "  Updating world" "${AECMD[EMERGE]}${updateExclude}" \
 					"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
 		
 				# if OK - reset 0x1
@@ -561,7 +594,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				# add depclean and revdep-rebuild pass
 				((loopLogic|=0x14))
 			fi
-			# reset 0x1000
+			
+			# reset 0x1000 anyway
 			((loopLogic&=0xFF))
 		else
 			einfo "    World already has been updated."; eend 0
