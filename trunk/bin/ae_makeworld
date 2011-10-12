@@ -674,6 +674,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 										if ((l1 != ${#Tasks[*]})); then
 											ewarn "          - skipped '${Cmds[$k]}': already scheduled"
 										else
+											l=$l1
 											einfo "          - '${Cmds[$k]}'"
 											[ "$addTasks" ] && addTasks+="\n"
 											addTasks+="${Cmds[$k]}"
@@ -681,7 +682,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 										# check for world rebuild
 										# [[ "$k" == *"-e @world"* ]] && ((loopLogic|=0x1000))
 									done
-									[ "${addTasks}" = ''] || ae_add_task "${addTasks}" &>> "$log_last" && \
+									[ "${addTasks}" = '' ] || ae_add_task "${addTasks}" &>> "$log_last" && \
 										true && updated=2
 									eend 0
 									#unset Cmds
