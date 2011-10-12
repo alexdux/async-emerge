@@ -531,10 +531,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									eend $cmdRet
 									if (($cmdRet)); then
 										if [[ "${Cmds[$k]}" == *'@system'* ]]; then
-											ewarn "        Well... @system is uncompleted subset of @world/@update..."
-											ewarn "        So we can try some heuristic: step back to world update,"
-											ewarn "        then came back to the subset update..."
-											einfo "        - testing if world update is possible ..."
+											ewarn "          Well... @system is uncompleted subset of @world/@update..."
+											ewarn "          So we can try some heuristic: step back to world update,"
+											ewarn "          then came back to the subset update..."
+											einfo "          - testing if world update is possible with"\
+													"'${AECMD[TEST_SYSTEM_ALT]}' ..."
 											check_if_emerge_possible "${AE_CMD[TEST]} ${AECMD[TEST_SYSTEM_ALT]}" \
 																	"${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
 																	"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
@@ -551,8 +552,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											echo
 											exit 8448
 										else # step back to world update
-											einfo "        Ok, world update is possible ...\
-													Pend '${AE_SUPD[${s}_TITLE]}' subset update till the next pass."
+											ewarn "          Ok, world update is possible ..."\
+													"Pend '${AE_SUPD[${s}_TITLE]}' subset update till the next pass."
 											eend 0
 											# exclude critical updates
 											# to-do: add multisensos support
