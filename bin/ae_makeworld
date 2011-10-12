@@ -576,7 +576,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			fi
 			
 			# World update logic
-			if [[ !(($loopLogic & 0x1000)) || "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" != "y" ]]; then
+			if [[ ! (($loopLogic & 0x1000)) || "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" != "y" ]]; then
 				call_emerge "  Updating world" "${AECMD[EMERGE]}${updateExclude}" \
 					"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
 		
