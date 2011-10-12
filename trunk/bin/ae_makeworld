@@ -369,7 +369,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 				uv=$(grep -m1 "$sens:" "$2")
 				if [ "$uv" ]; then 
 					uv=$(echo ${uv/*:}); uv=$(echo ${uv/->*})
-					uv=${${uv/*:}/->*}
+					#uv=${${uv/*:}/->*}
 					[ "$uv" ] && ov=$uv || uv='!'
 				fi
 			fi
@@ -704,6 +704,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
 										(($cmdRet)) && break
 										cmd="${Cmds[$k]# ?}"
+										((k1=$k+1))
 										if [ "$cmd" ]; then
 											# choose caller
 											if [[ "$cmd" == '#'* ]]; then # shell cmd
@@ -711,7 +712,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												# --usepkg logic
 												!(($AE_VCS)) && cmd=${cmd/--usepkg n/--usepkg y}
 												#einfo "        Running shell command:"
-												einfo "        - $k/${#Cmds[*]}. '$cmd' ..."
+												einfo "        - $k1/${#Cmds[*]}. '$cmd' ..."
 #												eval "$cmd &>> \"$log_last\""
 												if [ "$AE_MW_VERBOSE" ]; then
 													eval "$cmd 2>&1 | tee -a $log_last"
@@ -727,7 +728,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												if [ "$cmd" ]; then
 													#einfo "        Running PM:"
 													call_cmd1_with_emerge_solver \
-														"    - $k/${#Cmds[*]}. ${AECMD[SUBSET_UPDATE]} '$cmd'" \
+														"    - $k1/${#Cmds[*]}. ${AECMD[SUBSET_UPDATE]} '$cmd'" \
 														"${AECMD[SUBSET_UPDATE]} $cmd" \
 														"$log_last" "$log"
 													cmdRet=$?
