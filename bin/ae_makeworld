@@ -656,8 +656,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									#mapfile -t Cmds <<< "${AE_SUPD[${i}_CMD]}"
 									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
 									einfo "        Adding ${#Cmds[*]} tasks to update the subset:"
-									mapfile -t Tasks < <(echo -e \
-										"${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}")
+									mapfile -t Tasks <<< "${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
 										echo "tasks: ${#Tasks[*]}"
 									addTasks=''
 									l=0
