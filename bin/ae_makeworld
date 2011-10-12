@@ -662,7 +662,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									l=0
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
 										# search for scheduled task
-										for ((l1=l; l < ${#Tasks[*]}; l++)); do
+										for ((l1=l; l1 < ${#Tasks[*]}; l1++)); do
 											if [ "${Cmds[$k]}" == "${Tasks[$l1]}" ]; then
 											  echo "$l: cmd ${Cmds[$k]} exists @ $l1"
 												l=$l1
