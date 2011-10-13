@@ -333,7 +333,8 @@ scan_for_sysvers() {
 									sysvers+=" -> $uver"
 									# set mark for critical packages update (=> world rebuild)
 									((loopLogic|=0x1000)) 
-									AE_SUPD[${s}_CRITICAL_CHANGE]=1
+									AE_SUPD[${s}_CRITICAL_CHANGE]=1									
+									AE_SUPD[${s}_PENDED]=''
 								}
 							fi
 						else
@@ -518,7 +519,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					# walk through critical changes
 					for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
 						# reset PENDED
-						AE_SUPD[${s}_PENDED]=''
+						#AE_SUPD[${s}_PENDED]=''
 						if [ "${AE_SUPD[${s}_CRITICAL_CHANGE]}" ]; then
 							# get cmds for world rebuild
 							mapfile -t Cmds < <(echo -e "${AE_SUPD[${s}_CMD]}")
@@ -919,13 +920,13 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					true && rm -v "$f" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
 				else # FAIL
 					if [ "$dcPend2" ]; then
-						ewarn "      Save lost libs list for further rebuild."\
+						ewarn "      Save lost libs list for further operations."\
 								"(Critical system packages update behavior)"; eend 0
 					elif [ "$alcruPend" ]; then
-						ewarn "      Save lost libs list for further rebuild."\
+						ewarn "      Save lost libs list for further operations."\
 								"(Uncompleted world update)"; eend 0
 					else
-						ewarn "      Save lost libs list for further rebuild."; eend 0
+						ewarn "      Save lost libs list for further operations."; eend 0
 					fi
 					# set this again
 					((loopLogic|=0x08))
