@@ -497,8 +497,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	# UPDATE WORLD with emerge
 	if [ "${AE_REBUILD[DO_EMERGE_WORLD]}" == "y" ]; then
 		if (($loopLogic & 0x01)); then
-			# add depclean flag
-			((loopLogic|=0x04))
 			updateExclude='' # local, for pended critical updates
 			# Checking for rebuild
 			if (($loopLogic & 0x1000)) && [ "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" == "y" ]; then
@@ -565,8 +563,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											updateExclude+=" --exclude ${AE_SUPD[${s}_SENSOR]}"
 											# clean 'pre-eix'
 											AE_SUPD[${s}_PENDED]=1
-											# reset rebuild & depclean flag
-											((loopLogic&=0xFB))
+											# reset rebuild, depclean & adv.libs flag
+#											((loopLogic&=0xFB))
 										fi
 									fi
 								fi
@@ -576,7 +574,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				else
 					ewarn "    Possibility of world rebuild is already tested, skipping it ..."; eend 0
 				fi
-				# skip depclean ?
+				# skip depclean: set dcPend2
+				dcPend2=1
+			else
+				# reset depclean dcPend2
+				dcPend2=''
 			fi
 			
 			# World update logic
@@ -593,8 +595,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				scan_for_rdlibs "${AELOG[EMERGE_LAST]}"
 				scan_for_rdlibs "${AELOG[EMERGE_WARN_LAST]}"
 			#	eend 0
-				# check subset update after any world update + add revdep-rebuild flag
-				((loopLogic|=0x12))
+				# check subset update after any world update + add depclean, revdep-rebuild flag
+				((loopLogic|=0x16))
 			fi
 			
 			# reset 0x1000 anyway
@@ -635,6 +637,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			fi
 
 			einfo "    Checking for various subsets updates:"
+			# reset dcPend
+			dcPend=''
+			# reset local stat
 			pended=''					
 			undetected=''		
 			notinstalled=''
@@ -840,6 +845,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			if [ $dcPend ]; then
 				ewarn "    Cleaning system is pending till the next cooking. "\
 					"(2-pass subset update behavior or subset update fail)"; eend 0
+			elif [ $dcPend2 ]; then
+				ewarn "    Cleaning system is pending till the next cooking. "\
+					"(Critical system packages update behavior)"; eend 0
 			else
 				call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
 							"${AELOG[DEPCLEAN_LAST]}" "${AELOG[DEPCLEAN]}"
