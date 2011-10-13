@@ -586,8 +586,22 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				call_emerge "  Updating world" "${AECMD[EMERGE]}${updateExclude}" \
 					"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
 		
-				# if OK - reset 0x1
-				(($cmdRet)) || ((loopLogic&=0xFE))
+				# set subset update, revdep-rebuild
+				((loopLogic|=0x12))
+				# set flags
+				if (($cmdRet)); then # if OK
+					# reset this
+					((loopLogic&=0xFE))
+					# set depclean
+					((loopLogic|=0x04))
+					# rest adv. rebuild remove
+					alcruPend=''
+				else # if NOT OK
+					# reset depclean
+					((loopLogic&=0xFB))
+					# restrict adv. rebuild remove
+					alcruPend=1
+				fi
 		
 				# libs advised to rebuild consumers
 				# ... double is not good, but just to be sure (duplicates will skipped)
@@ -595,8 +609,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				scan_for_rdlibs "${AELOG[EMERGE_LAST]}"
 				scan_for_rdlibs "${AELOG[EMERGE_WARN_LAST]}"
 			#	eend 0
-				# check subset update after any world update + add depclean, revdep-rebuild flag
-				((loopLogic|=0x16))
 			fi
 			
 			# reset 0x1000 anyway
@@ -605,6 +617,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			einfo "    World already has been updated."; eend 0
 		fi
 	else
+		# reset this
 		((loopLogic&=0xFE))
 		ewarn "    World updating is not configured."; eend 1
 	fi
@@ -851,6 +864,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			else
 				call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
 							"${AELOG[DEPCLEAN_LAST]}" "${AELOG[DEPCLEAN]}"
+				# reset this
 				(($cmdRet)) || ((loopLogic&=0xFB))
 				# add revdep-rebuild pass
 				((loopLogic|=0x10))
@@ -859,6 +873,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			einfo "    System already has been cleaned."; eend 0
 		fi
 	else 
+		# reset this
+		((loopLogic&=0xFB))
 		ewarn "    Cleaning system is not configured."; eend 0
 	fi
 	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
@@ -867,6 +883,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	# REVDEP CONSUMERS for advised libs, revdep --libs
 	if [ "${AE_REBUILD[DO_OBSOLETED_LIBS]}" == "y" ]; then
 		if (($loopLogic & 0x08)); then
+			# reset this
 			((loopLogic&=0xF7))
 			# sign file
 			f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
@@ -875,13 +892,14 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				#echo "obslibs cmd: $cmd"
 				# call revdep
 				call_cmd1 "Rebuilding for "$(wc -l < "$f")" advised libs consumers" "$cmd" \
-						"${AELOG[OBSLLIBS_LAST]}" "${AELOG[OBSLLIBS]}"
-				# copy libs lit to logs
+				# copy libs list to logs
 				echo " * Copy of advised libs list:" | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
+						"${AELOG[OBSLLIBS_LAST]}" "${AELOG[OBSLLIBS]}"
 				tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}" < "$f"
+				
 				ol_ignore=''
-				# check the result
-				if !(($cmdRet)); then # OK
+				# check the result, skip unlinking if pended by NOT OK world update
+				if !(($cmdRet)) || [ "$alcruPend" ]; then # OK
 					# save list to avoid recursion
 					ol_ignore=$(<"$f")
 					einfo "      Unlinking advised obsoleted libs ..."
@@ -897,7 +915,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					eend 0
 					true && rm -v "$f" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
 				else # FAIL
-					ewarn "    Save lost libs list for further rebuild."; eend 0
+					ewarn "      Save lost libs list for further rebuild."; eend 0
 					((loopLogic|=0x08))
 				fi
 				# collect hints for libs comsumers rebuild
@@ -911,6 +929,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			einfo "    Consumers for advised libs have been already rebuilt. "; eend 0
 		fi
 	else 
+		# reset this
+		((loopLogic&=0xF7))
 		ewarn "    Rebuilding of consumers for advised libs is not configured."; eend 0
 	fi
 	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
@@ -923,6 +943,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			# checking: call_cmd0
 			call_cmd1 "Rebuilding world with revdep-rebuild" "${AECMD[REVDEP_REBUILD]}" \
 					"${AELOG[REVDEP_LAST]}" "${AELOG[REVDEP]}"
+			# if OK - reset revdep flag
 			(($cmdRet)) || ((loopLogic&=0xEF))
 			if (($AE_VCS)); then
 				# needed for ae_state
@@ -934,6 +955,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			einfo "    Rebuilding world with revdep-rebuild has been already done."; eend 0
 		fi
 	else 
+		# reset revdep flag
 		((loopLogic&=0xEF))
 		ewarn "    Rebuilding world with revdep-rebuild is not configured."; eend 0
 	fi
@@ -1037,6 +1059,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			einfo "    All scheduled tasks have been already done."; eend 0
 		fi
 	else 
+		# reset this
 		((loopLogic&=0xDF))
 		ewarn "    Running scheduled tasks is not configured."; eend 0
 	fi
