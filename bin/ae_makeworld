@@ -892,9 +892,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				#echo "obslibs cmd: $cmd"
 				# call revdep
 				call_cmd1 "Rebuilding for "$(wc -l < "$f")" advised libs consumers" "$cmd" \
+						"${AELOG[OBSLLIBS_LAST]}" "${AELOG[OBSLLIBS]}"
 				# copy libs list to logs
 				echo " * Copy of advised libs list:" | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
-						"${AELOG[OBSLLIBS_LAST]}" "${AELOG[OBSLLIBS]}"
 				tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}" < "$f"
 				
 				ol_ignore=''
