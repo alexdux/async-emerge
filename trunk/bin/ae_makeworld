@@ -899,7 +899,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				
 				ol_ignore=''
 				# check the result, skip unlinking if pended by NOT OK world update
-				if !(($cmdRet)) || [ "$alcruPend" ]; then # OK
+				if !(($cmdRet)) && ![ "$alcruPend" ]; then # OK
 					# save list to avoid recursion
 					ol_ignore=$(<"$f")
 					einfo "      Unlinking advised obsoleted libs ..."
