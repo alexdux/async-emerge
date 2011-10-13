@@ -331,7 +331,7 @@ scan_for_sysvers() {
 								#"$uver" || uver=$(eix '-I*' -e --format '<bestversion:VERSION>' $sens)
 								[[ "$iver" == "$uver" ]] || {
 									sysvers+=" -> $uver"
-									# set mark for world rebuild
+									# set mark for critical packages update (=> world rebuild)
 									((loopLogic|=0x1000)) 
 									AE_SUPD[${s}_CRITICAL_CHANGE]=1
 								}
@@ -449,7 +449,7 @@ max_loop=${AE_REBUILD[REVDEPCO_MT]}
 # 0x08 - rebuild obsoleted libs is needed
 # 0x10 - revdep-rebuild is needed
 # 0x20 - user task is scheduled
-# 0x1000 - world rebuild request - skip first world update (update of -pre-eixc-)
+# 0x1000 - critical packages update (=>world rebuild) - skip first world update (update of -pre-eixc-)
 subsetf="${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_SUBSET_SAVED]}"
 for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
@@ -511,7 +511,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				echo -en "\a"
 				#for (( i=0; i < 3; i++ )); do echo -en "\a"; sleep 1; done
 				
-				if [[ $loop == 1 && "${AECMD[TEST]}" != *'@system'* || "${AECMD[TEST]}" != *'@world'* ]]; then
+				# $loop == 1 && 
+				if [[ "${AECMD[TEST]}" != *'@system'* || "${AECMD[TEST]}" != *'@world'* ]]; then
 					einfo "    Testing possibility of world rebuild for critical system packages updates:"
 					
 					# walk through critical changes
@@ -563,7 +564,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											updateExclude+=" --exclude ${AE_SUPD[${s}_SENSOR]}"
 											# clean 'pre-eix'
 											AE_SUPD[${s}_PENDED]=1
-											# reset rebuild flag
+											# reset critical update flag
 											((loopLogic&=0xFF))
 										fi
 									fi
@@ -589,13 +590,13 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				# set subset update, revdep-rebuild
 				((loopLogic|=0x12))
 				# set flags
-				if (($cmdRet)); then # if OK
+				if !(($cmdRet)); then # if OK
 					# reset this
 					((loopLogic&=0xFE))
 					# set depclean
 					((loopLogic|=0x04))
 					# rest adv. rebuild remove
-					alcruPend=''
+					alcruPend='' # this pend is needed: 0x08 flag autoset in scan_for_rdlibs
 				else # if NOT OK
 					# reset depclean
 					((loopLogic&=0xFB))
@@ -783,7 +784,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												eend 0; updated=2
 											fi
 											# only for real update
-											# collect hints for libs comsumers rebuild
+											# collect hints for libs consumers rebuild
 											#scan_for_rdlibs "$log"
 											scan_for_rdlibs "$log_last"
 											# add depclean and revdep-rebuild pass
@@ -866,7 +867,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			else
 				call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
 							"${AELOG[DEPCLEAN_LAST]}" "${AELOG[DEPCLEAN]}"
-				# reset this
+				# reset this if OK
 				(($cmdRet)) || ((loopLogic&=0xFB))
 				# add revdep-rebuild pass
 				((loopLogic|=0x10))
@@ -901,7 +902,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				
 				ol_ignore=''
 				# check the result, skip unlinking if pended by NOT OK world update
-				if ! (($cmdRet)) && ! [ "$alcruPend" ]; then # OK
+				if ! (($cmdRet)) && ! [ "$dcPend2" ] && ! [ "$alcruPend" ]; then # OK
 					# save list to avoid recursion
 					ol_ignore=$(<"$f")
 					einfo "      Unlinking advised obsoleted libs ..."
@@ -917,7 +918,16 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					eend 0
 					true && rm -v "$f" 2>&1 | tee -a "${AELOG[OBSLLIBS_LAST]}" >> "${AELOG[OBSLLIBS]}"
 				else # FAIL
-					ewarn "      Save lost libs list for further rebuild."; eend 0
+					if [ "$dcPend2" ]; then
+						ewarn "      Save lost libs list for further rebuild."\
+								"(Critical system packages update behavior)"; eend 0
+					elif [ "$alcruPend" ]; then
+						ewarn "      Save lost libs list for further rebuild."\
+								"(Uncompleted world update)"; eend 0
+					else
+						ewarn "      Save lost libs list for further rebuild."; eend 0
+					fi
+					# set this again
 					((loopLogic|=0x08))
 				fi
 				# collect hints for libs comsumers rebuild
@@ -967,6 +977,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	# Proceed TASKS with cmd/emerge
 	if [ "${AE_REBUILD[DO_USER_TASKS]}" == "y" ]; then
 		if (($loopLogic & 0x20)); then
+			# reset this
 			((loopLogic&=0xDF))
 			f="${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
 			if [ -e "$f" ]; then 
@@ -1025,6 +1036,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						cat "${AELOG[TASKS_LAST]}" &>> "${AELOG[TASKS]}"
 						echo &>> "${AELOG[TASKS]}"
 						# add cmd to install to-do; skip duplicates. only if success 
+						# to-do: update it as above
 						if [[ $cmdRet && (($AE_VCS)) && \
 							'' == $(egrep "^${is}$" \
 								"${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}" \
@@ -1068,12 +1080,14 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
 done
 
+
 # Bye World
 if (($loopLogic)); then
 	eerror "  Can't recover system consistency! Will try again next time."; eend 1
 else
 	einfo "  Now the system is consistently."; eend 0
 fi
+
 
 # DO GRS CLEAN-UPs & ETC-UPDATE
 # to-do: add logging!!!
