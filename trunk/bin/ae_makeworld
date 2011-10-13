@@ -563,8 +563,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											updateExclude+=" --exclude ${AE_SUPD[${s}_SENSOR]}"
 											# clean 'pre-eix'
 											AE_SUPD[${s}_PENDED]=1
-											# reset rebuild, depclean & adv.libs flag
-#											((loopLogic&=0xFB))
+											# reset rebuild flag
+											((loopLogic&=0xFF))
 										fi
 									fi
 								fi
