@@ -265,8 +265,12 @@ scan_for_rdlibs() {
 	local ignore=''
 	[ "$2" ] && ignore=$2
 	# * Please run revdep-rebuild --library libnss3.so.12 ,
-	local f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
+	local f="${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}"
 	local i s
+	# to-do: fix:
+	#<<< /usr/lib64/libgmp.so.3
+	#<<< /usr/lib64/libgmp.so.3
+
 	# in order of appearance
 	for i in $(grep -E 'revdep-rebuild +\-\-library' "$1" | sed "s/.*library[ =]*\([^ ,]*\).*/\1/;s/['\"]//g" ); {
 		# avoid duplicates - it's safe and check ignore list
@@ -677,9 +681,12 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									#mapfile -t Cmds <<< "${AE_SUPD[${i}_CMD]}"
 									mapfile -t Cmds < <(echo -e "${AE_SUPD[${i}_CMD]}")
 									einfo "        Adding ${#Cmds[*]} tasks to update the subset:"
-									# to-do: file not found?
-									mapfile -t Tasks < "${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}" \
-										&> /dev/null
+									# to-do: aggregate all filenames at the top
+									if [ -e "${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}" ]; then
+										mapfile -t Tasks < "${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
+									else
+										declare Tasks
+									fi
 									addTasks=''
 									l=0
 									for ((k=0; k < ${#Cmds[*]}; k++)); do
