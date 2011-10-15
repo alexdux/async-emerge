@@ -338,7 +338,7 @@ scan_for_sysvers() {
 									# set mark for critical packages update (=> world rebuild)
 									((loopLogic|=0x1000)) 
 									AE_SUPD[${s}_CRITICAL_CHANGE]=1									
-									AE_SUPD[${s}_PENDED]=''
+									#AE_SUPD[${s}_PENDED]=''
 								}
 							fi
 						else
@@ -523,7 +523,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					# walk through critical changes
 					for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
 						# reset PENDED
-						#AE_SUPD[${s}_PENDED]=''
+						AE_SUPD[${s}_PENDED]=''
 						if [ "${AE_SUPD[${s}_CRITICAL_CHANGE]}" ]; then
 							# get cmds for world rebuild
 							mapfile -t Cmds < <(echo -e "${AE_SUPD[${s}_CMD]}")
@@ -664,7 +664,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			notinstalled=''
 			for (( i=0; i<${AE_SUPD[TOTAL]}; i++ )); do
 				if [[ "${AE_SUPD[${i}_UPDATED]}" && ! "${AE_SUPD[${i}_PENDED]}" ]]; then
-				echo "pend'${AE_SUPD[${i}_PENDED]}'"
 					cmdRet=0
 					einfo "      ${AE_SUPD[${i}_TITLE]} update detected, update method is '${AE_SUPD[${i}_METHOD]}':"
 					einfo "        (${AE_SUPD[${i}_UPDATED]})"
