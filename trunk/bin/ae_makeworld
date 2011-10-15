@@ -664,6 +664,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			notinstalled=''
 			for (( i=0; i<${AE_SUPD[TOTAL]}; i++ )); do
 				if [[ "${AE_SUPD[${i}_UPDATED]}" && ! "${AE_SUPD[${i}_PENDED]}" ]]; then
+				echo "pend'${AE_SUPD[${i}_PENDED]}'"
 					cmdRet=0
 					einfo "      ${AE_SUPD[${i}_TITLE]} update detected, update method is '${AE_SUPD[${i}_METHOD]}':"
 					einfo "        (${AE_SUPD[${i}_UPDATED]})"
