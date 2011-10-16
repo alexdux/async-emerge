@@ -381,7 +381,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 			# new version
 			nv=$(grep -m1 "$sens:" <(echo -e "$sysvers"))
 			nv=$(echo ${nv/*:})
-			[ "$nv" == *'->'* ] && nv=${nv/*->}
+			[ "$nv" == *'->'* ] && nv=${nv/*->} # check?
 			# cmp
 			if [[ "$ov" != "$nv" || "$ov" == *'->'* ]] ; then
 				vmrk="$sens: $ov"
@@ -762,7 +762,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												!(($AE_VCS)) && cmd=${cmd/--usepkg n/--usepkg y}
 												#einfo "        Running shell command:"
 												einfo "        - $k1/${#Cmds[*]}. '$cmd' ..."
-#												eval "$cmd &>> \"$log_last\""
+												echo "$cmd &>> \"$log_last\""
 												if [ "$AE_MW_VERBOSE" ]; then
 													eval "$cmd 2>&1 | tee -a \"$log_last\""
 												else
