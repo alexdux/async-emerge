@@ -501,7 +501,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
 	# UPDATE WORLD with emerge
 	if [ "${AE_REBUILD[DO_EMERGE_WORLD]}" == "y" ]; then
-		if (($loopLogic & 0x01)); then
+		if (($loopLogic & 0x1001)); then
 			updateExclude='' # local, for pended critical updates
 			# Checking for rebuild
 			if (($loopLogic & 0x1000)) && [ "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" == "y" ]; then
@@ -523,7 +523,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					# walk through critical changes
 					for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
 						# reset PENDED
-						AE_SUPD[${s}_PENDED]=''
+						#AE_SUPD[${s}_PENDED]=''
 						if [ "${AE_SUPD[${s}_CRITICAL_CHANGE]}" ]; then
 							# get cmds for world rebuild
 							mapfile -t Cmds < <(echo -e "${AE_SUPD[${s}_CMD]}")
