@@ -50,6 +50,8 @@ AE_VCS=${#AE_STATE_SKIP}
 	AE_MW_VERBOSE='verbose'
 	einfo "($PNAME: verbose mode is ON.)"
 }
+[ "$AE_MEMSIZE" ] || \
+	ewarn "($PNAME: skip to use 'temerge': not enough memory or disabled in the config.)"
 
 # set config key prefix
 (($AE_VCS)) && eType='COOK' || eType='INSTALL' # COOK = VCS, INSTALL = GRS
@@ -336,7 +338,7 @@ scan_for_sysvers() {
 								[[ "$iver" == "$uver" ]] || {
 									sysvers+=" -> $uver"
 									# set mark for critical packages update (=> world rebuild)
-									((loopLogic|=0x1002)) 
+									((loopLogic|=0x1000)) 
 									AE_SUPD[${s}_CRITICAL_CHANGE]=1									
 									#AE_SUPD[${s}_PENDED]=''
 								}
@@ -474,7 +476,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			eend 0
 			# but check for world rebuild is needed...
 			if [ "$(grep -m1 -e '->' "$subsetf")" ]; then
-				((loopLogic|=0x1002))
+				((loopLogic|=0x1000))
 				# get updating critical packages
 				mapfile -t Pkgs < <(grep -e '->' "$subsetf")
 				for ((k=0; k < ${#Pkgs[*]}; k++)); do
@@ -1046,7 +1048,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						echo &>> "${AELOG[TASKS]}"
 						# add cmd to install to-do; skip duplicates. only if success 
 						# to-do: update it as above
-						if [[ $cmdRet && (($AE_VCS)) && \
+						if [[ !(($cmdRet)) && (($AE_VCS)) && \
 							'' == $(egrep "^${is}$" \
 								"${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}" \
 								&> /dev/null) ]]; then
@@ -1056,7 +1058,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						echo "skip empty line in '$f'"
 					fi
 					# remove 1st line from to-do. only if success 
-					if [[ $cmdRet ]]; then
+					if !(($cmdRet)); then
 						c=$(tail -n+2 "$f")
 						if [ "$c" ]; then
 							echo -e "$c" > "$f"
