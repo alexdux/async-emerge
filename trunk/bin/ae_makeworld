@@ -771,11 +771,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												echo "Retcode $cmdRet" &>> "$log_last"
 												cmdRet=$?
 											else # PM
-												echo "$cmd"
 												if [[ "$cmd" == '$'* || "$cmd" == '`'* ]]; then
 													cmd=$(eval echo -n $cmd)
 												fi
-												echo "$cmd"
 												if [ "$cmd" ]; then
 													#einfo "        Running PM:"
 													call_cmd1_with_emerge_solver \
