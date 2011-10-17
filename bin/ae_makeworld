@@ -336,7 +336,7 @@ scan_for_sysvers() {
 								[[ "$iver" == "$uver" ]] || {
 									sysvers+=" -> $uver"
 									# set mark for critical packages update (=> world rebuild)
-									((loopLogic|=0x1000)) 
+									((loopLogic|=0x1002)) 
 									AE_SUPD[${s}_CRITICAL_CHANGE]=1									
 									#AE_SUPD[${s}_PENDED]=''
 								}
@@ -474,7 +474,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			eend 0
 			# but check for world rebuild is needed...
 			if [ "$(grep -m1 -e '->' "$subsetf")" ]; then
-				((loopLogic|=0x1000))
+				((loopLogic|=0x1002))
 				# get updating critical packages
 				mapfile -t Pkgs < <(grep -e '->' "$subsetf")
 				for ((k=0; k < ${#Pkgs[*]}; k++)); do
