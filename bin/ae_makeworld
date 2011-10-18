@@ -380,7 +380,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 			# new version
 			nv=$(grep -m1 "$sens:" <(echo -e "$sysvers"))
 			nv=$(echo ${nv/*:})
-			[[ "$nv" == *'->'* ]] && nv=${nv/*->} # check !!!
+			[[ "$nv" == *'->'* ]] && nv=${nv/*-> } # check !!!
 			# cmp
 			if [[ "$ov" != "$nv" || "$ov" == *'->'* ]] ; then
 				vmrk="$sens: $ov"

@@ -22,10 +22,10 @@
 
 
 lockFile="${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}"
+pN=$((ps -p $(<"$lockFile") -o comm= ) 2>/dev/null)
 
-# calling bakery
-if [ "$((ps -p $(<"$lockFile") -o comm= ) 2>/dev/null)" == "$PNAME" ]; then
-	echo -e "WARNING: 'ae_cook' already running, skip calling from CRON..." >> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+if [[ "$pN" == 'ae_chroot' || "$pN" == 'ae_vcs' || "$pN" == "$PNAME" ]]; then
+	echo -e "WARNING: 'ae_makewolrd' already running, skip calling from CRON..." >> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
 else
 	# make lock
 	rm -f "$lockFile" &> /dev/null
