@@ -566,8 +566,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											echo
 											exit 8448
 										else # step back to world update
-											ewarn "            Ok, world update is possible ..."\
-													"Pend '${AE_SUPD[${s}_TITLE]}' subset update till the next pass."
+											#ewarn "            Ok, world update is possible ..."\
+											#		"Pend '${AE_SUPD[${s}_TITLE]}' subset update till the next pass."
 											eend 0
 											# clean 'pre-eix'
 											AE_SUPD[${s}_PENDED]=1
@@ -575,11 +575,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											((loopLogic&=0xFF))
 										fi
 									fi
-									# exclude critical updates
-									# to-do: add multisensos support
-									updateExclude+=" --exclude ${AE_SUPD[${s}_SENSOR]}"
 								fi
 							done
+							# exclude critical updates
+							# to-do: add multisensos support
+							updateExclude+=" --exclude ${AE_SUPD[${s}_SENSOR]}"
 						fi
 					done
 				else
