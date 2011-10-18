@@ -569,14 +569,14 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											ewarn "          Ok, world update is possible ..."\
 													"Pend '${AE_SUPD[${s}_TITLE]}' subset update till the next pass."
 											eend 0
-											# exclude critical updates
-											# to-do: add multisensos support
-											updateExclude+=" --exclude ${AE_SUPD[${s}_SENSOR]}"
 											# clean 'pre-eix'
 											AE_SUPD[${s}_PENDED]=1
 											# reset critical update flag
 											((loopLogic&=0xFF))
 										fi
+										# exclude critical updates
+										# to-do: add multisensos support
+										updateExclude+=" --exclude ${AE_SUPD[${s}_SENSOR]}"
 									fi
 								fi
 							done
