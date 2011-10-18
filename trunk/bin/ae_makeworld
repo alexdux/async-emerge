@@ -269,16 +269,13 @@ scan_for_rdlibs() {
 	# * Please run revdep-rebuild --library libnss3.so.12 ,
 	local f="${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}"
 	local i s
-	# to-do: fix:
-	#<<< /usr/lib64/libgmp.so.3
-	#<<< /usr/lib64/libgmp.so.3
 
 	# in order of appearance
 	for i in $(grep -E 'revdep-rebuild +\-\-library' "$1" | sed "s/.*library[ =]*\([^ ,]*\).*/\1/;s/['\"]//g" ); {
 		# avoid duplicates - it's safe and check ignore list
 		#echo "ignore: -$ignore-"
-		[ "$(grep "^$i$" <(echo -e "$ignore") 2> /dev/null)" ] || {
-			[ "$(grep "^$i$" "$f" 2> /dev/null)" ] || echo "$i" >> "$f"
+		[ "$(egrep "^(<<< )?$i$" <(echo -e "$ignore") 2> /dev/null)" ] || {
+			[ "$(egrep "^(<<< )?$i$" "$f" 2> /dev/null)" ] || echo "$i" >> "$f"
 			# check for unlink advise
 			# *   # rm '/usr/lib64/libmpfr.so.1'
 			s=$(grep -m1 "rm .*$i" "$1" 2>/dev/null)
