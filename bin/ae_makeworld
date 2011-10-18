@@ -461,6 +461,11 @@ max_loop=${AE_REBUILD[REVDEPCO_MT]}
 subsetf="${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_SUBSET_SAVED]}"
 for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
+	# reset temp pending
+	$dcPend=''
+	$dcPend2=''
+	$alcruPend=''
+	
 	einfo "  Updating system with restoring of consistency, pass $loop of $max_loop:"
 	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
 	
@@ -585,9 +590,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				fi
 				# skip depclean: set dcPend2
 				dcPend2=1
-			else
-				# reset depclean dcPend2
-				dcPend2=''
+#			else
+#				# reset depclean dcPend2
+#				dcPend2=''
 			fi
 			
 			# World update logic
@@ -603,8 +608,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					((loopLogic&=0xFE))
 					# set depclean
 					((loopLogic|=0x04))
-					# rest adv. rebuild remove
-					alcruPend='' # this pend is needed: 0x08 flag autoset in scan_for_rdlibs
+#					# rest adv. rebuild remove
+#					alcruPend='' # this pend is needed: 0x08 flag autoset in scan_for_rdlibs
 				else # if NOT OK
 					# reset depclean
 					((loopLogic&=0xFB))
@@ -659,8 +664,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			fi
 
 			einfo "    Checking for various subsets updates:"
-			# reset dcPend
-			dcPend=''
+#			# reset dcPend
+#			dcPend=''
 			# reset local stat
 			pended=''					
 			undetected=''		
