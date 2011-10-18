@@ -566,8 +566,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											echo
 											exit 8448
 										else # step back to world update
-											#ewarn "            Ok, world update is possible ..."\
-											#		"Pend '${AE_SUPD[${s}_TITLE]}' subset update till the next pass."
+											ewarn "            Ok, world update is possible ..."\
+													"Pend '${AE_SUPD[${s}_TITLE]}' subset update till the next pass."
 											eend 0
 											# clean 'pre-eix'
 											AE_SUPD[${s}_PENDED]=1
@@ -766,7 +766,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												!(($AE_VCS)) && cmd=${cmd/--usepkg n/--usepkg y}
 												#einfo "        Running shell command:"
 												einfo "        - $k1/${#Cmds[*]}. '$cmd' ..."
-												echo "$cmd &>> \"$log_last\""
+												#echo "$cmd &>> \"$log_last\""
 												if [ "$AE_MW_VERBOSE" ]; then
 													eval "$cmd 2>&1 | tee -a \"$log_last\""
 												else
@@ -837,6 +837,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						# if update is done - remove sign of update
 						if (($updated-1)); then
 							unset AE_SUPD[${i}_UPDATED]
+							unset AE_SUPD[${i}_CRITICAL_CHANGE]
 						fi
 					else # pend depclean if collision occurred
 						dcPend=1
