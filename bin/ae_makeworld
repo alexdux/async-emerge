@@ -362,7 +362,6 @@ compare_sysvers() { # todo: change echo to sed/vars
 
 	# check versions
 	for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
-		unset AE_SUPD[${s}_UPDATED]
 		for sens in ${AE_SUPD[${s}_SENSOR]}; do # multisensor
 			# not installed
 			[ "${AE_SUPD[${s}_NOTINSTALLED]}" ] && continue
@@ -406,6 +405,8 @@ compare_sysvers() { # todo: change echo to sed/vars
 				fi
 				# (re)add item
 				echo "$vmrk" >> "$2" 
+			else # reset update sign
+				unset AE_SUPD[${s}_UPDATED]
 			fi
 		done
 	done
