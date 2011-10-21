@@ -356,6 +356,7 @@ scan_for_sysvers() {
 
 # compare and save to $2 $sysvers with saved in $1
 # compare_sysvers: $saved_sysvers_file $sysvers_delta_file
+# (new version taken from $sysvers var
 compare_sysvers() { # todo: change echo to sed/vars
 	local s s1 sens ov uv nv vmrk
 
@@ -373,7 +374,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 			if [ -e "$2" ]; then
 				uv=$(grep -m1 "$sens:" "$2")
 				if [ "$uv" ]; then 
-					uv=$(echo ${uv/*:}); uv=$(echo ${uv/->*})
+					uv=$(echo ${uv/*:}); uv=$(echo ${uv/ ->*})
 					#uv=${${uv/*:}/->*}
 					[ "$uv" ] && ov=$uv || uv='!'
 				fi
@@ -385,12 +386,14 @@ compare_sysvers() { # todo: change echo to sed/vars
 			# cmp
 			if [[ "$ov" != "$nv" || "$ov" == *'->'* ]] ; then
 				vmrk="$sens: $ov"
-				[[ "$ov" != *'->'* ]] && vmrk+=" -> $nv"
-				# save vers internally
-				#AE_SUPD[${s}_OLDVER]=$ov
-				#AE_SUPD[${s}_NEWVER]=$nv
-				[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+='; '
-				[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+="$vmrk"
+				if [[ "$ov" != *'->'* ]]; then
+					vmrk+=" -> $nv"
+					# save vers internally
+					#AE_SUPD[${s}_OLDVER]=$ov
+					#AE_SUPD[${s}_NEWVER]=$nv
+					[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+='; '
+					[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+="$vmrk"
+				fi
 
 				# remove old subset item
 				if [ "$uv" ]; then # update
