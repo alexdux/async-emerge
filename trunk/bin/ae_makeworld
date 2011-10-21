@@ -361,6 +361,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 
 	# check versions
 	for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
+		unset AE_SUPD[${s}_UPDATED]
 		for sens in ${AE_SUPD[${s}_SENSOR]}; do # multisensor
 			# not installed
 			[ "${AE_SUPD[${s}_NOTINSTALLED]}" ] && continue
@@ -389,7 +390,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 				#AE_SUPD[${s}_OLDVER]=$ov
 				#AE_SUPD[${s}_NEWVER]=$nv
 				[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+='; '
-				AE_SUPD[${s}_UPDATED]+="$vmrk"
+				[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+="$vmrk"
 
 				# remove old subset item
 				if [ "$uv" ]; then # update
@@ -587,9 +588,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				fi
 				# skip depclean: set dcPend2
 				dcPend2=1
-#			else
-#				# reset depclean dcPend2
-#				dcPend2=''
 			fi
 			
 			# World update logic
@@ -605,8 +603,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					((loopLogic&=0xFE))
 					# set depclean
 					((loopLogic|=0x04))
-#					# rest adv. rebuild remove
-#					alcruPend='' # this pend is needed: 0x08 flag autoset in scan_for_rdlibs
 				else # if NOT OK
 					# reset depclean
 					((loopLogic&=0xFB))
@@ -661,8 +657,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			fi
 
 			einfo "    Checking for various subsets updates:"
-#			# reset dcPend
-#			dcPend=''
 			# reset local stat
 			pended=''					
 			undetected=''		
@@ -838,6 +832,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						if (($updated-1)); then
 							unset AE_SUPD[${i}_UPDATED]
 							unset AE_SUPD[${i}_CRITICAL_CHANGE]
+							# do world update again (check)
+							((loopLogic|=0x01))
 						fi
 					else # pend depclean if collision occurred
 						dcPend=1

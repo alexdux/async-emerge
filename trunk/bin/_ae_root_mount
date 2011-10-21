@@ -70,7 +70,7 @@ mnt_list() {
 				#echo "check '$i'"
 				if [[ "$mnts" == *"$i"* ]]; then
 					for k in $mnts; do
-						if [[ "$k" == "$i\/"* ]]; then
+						if [[ "$k" == "$i"'/'* ]]; then
 							#echo "  found '$k'"
 							bind="${AE_DIR[BIND]}$k"; delta="${AE_DIR[DELTA]}$k"; chroot="${AE_DIR[CHROOT]}$k"
 							#echo "mount -vt aufs -o br=\"$delta\"=rw::\"$bind\"=ro $3 \"$chroot\" 2>/dev/null >&2"
