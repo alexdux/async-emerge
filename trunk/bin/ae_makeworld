@@ -365,11 +365,11 @@ compare_sysvers() { # todo: change echo to sed/vars
 		for sens in ${AE_SUPD[${s}_SENSOR]}; do # multisensor
 			# not installed
 			[ "${AE_SUPD[${s}_NOTINSTALLED]}" ] && continue
-			# old version
+			# get old version
 			ov=$(grep -m1 "$sens:" "$1")
 			ov=$(echo ${ov/*:})
 			uv=''
-			# check if update is going
+			# check if update is going, then update old version
 			if [ -e "$2" ]; then
 				uv=$(grep -m1 "$sens:" "$2")
 				if [ "$uv" ]; then 
@@ -378,17 +378,17 @@ compare_sysvers() { # todo: change echo to sed/vars
 					[ "$uv" ] && ov=$uv || uv='!'
 				fi
 			fi
-			# new version
+			# get new version
 			nv=$(grep -m1 "$sens:" <(echo -e "$sysvers"))
 			nv=$(echo ${nv/*:})
-			#[[ "$nv" == *'->'* ]] && nv=${nv/*-> } # check !!!
-			# cmp
-			if [[ "$ov" != "$nv" || "$ov" == *'->'* ]] ; then
+			[[ "$nv" == *'->'* ]] && nv=${nv/*-> } # check
+			# compare old & new versions
+			if [[ "$ov" != "$nv" || "$ov" == *'->'* ]]; then
 				vmrk="$sens: $ov"
 				if [[ "$ov" != *'->'* ]]; then
 					vmrk+=" -> $nv"
 					[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+='; '
-					[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+="$vmrk"
+					AE_SUPD[${s}_UPDATED]+="$vmrk"
 				fi
 
 				# remove old subset item
@@ -402,7 +402,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 				fi
 				# (re)add item
 				echo "$vmrk" >> "$2" 
-			else # reset update sign
+			else # reset update sign ???
 				unset AE_SUPD[${s}_UPDATED]
 			fi
 		done
@@ -525,7 +525,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				
 				# $loop == 1 && 
 				if [[ "${AECMD[TEST]}" != *'@system'* || "${AECMD[TEST]}" != *'@world'* ]]; then
-					einfo "    Testing possibility of world rebuild for critical system packages updates:"
+					einfo "    Testing for possibility of world rebuild for critical system packages updates:"
 					
 					# walk through critical changes
 					for ((s=0; s<${AE_SUPD[TOTAL]}; s++)); do
