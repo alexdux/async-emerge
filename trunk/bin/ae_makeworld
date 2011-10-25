@@ -385,11 +385,9 @@ compare_sysvers() { # todo: change echo to sed/vars
 			# compare old & new versions
 			if [[ "$ov" != "$nv" || "$ov" == *'->'* ]]; then
 				vmrk="$sens: $ov"
-				if [[ "$ov" != *'->'* ]]; then
-					vmrk+=" -> $nv"
-					[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+='; '
-					AE_SUPD[${s}_UPDATED]+="$vmrk"
-				fi
+				[[ "$ov" != *'->'* ]] && vmrk+=" -> $nv"
+				[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+='; '
+				AE_SUPD[${s}_UPDATED]+="$vmrk"
 
 				# remove old subset item
 				if [ "$uv" ]; then # update
