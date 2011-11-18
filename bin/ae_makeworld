@@ -356,7 +356,7 @@ scan_for_sysvers() {
 
 # compare and save to $2 $sysvers with saved in $1
 # compare_sysvers: $saved_sysvers_file $delta_sysvers_file
-# (new version taken from $sysvers var
+# (new version taken from $sysvers var)
 compare_sysvers() { # todo: change echo to sed/vars
 	local s s1 sens ov uv nv vmrk
 
