@@ -6,26 +6,24 @@
 # alexdu@forums.gentoo.org
 
 # Usage:
-# - install to (ana)cron (example) -
+# - install to cron (example) -
 # # crontab -e
 # 30 22 * * *	/usr/bin/ae_cron
 # ^D
 # - 'manual' use -
 # # ae_cron
 # - that is the same as -
-# # ae_chroot ae_makeworld
-# - or -
-# # ae_vcs ae_makeworld
+# # ae_chroot|ae_vcs ae_makeworld
 
 # get config
 . /etc/async.emerge.conf
 
 
-lockFile="${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}"
+lockFile="${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" # change!
 pN=$((ps -p $(<"$lockFile") -o comm= ) 2>/dev/null)
 
 if [[ "$pN" == 'ae_chroot' || "$pN" == 'ae_vcs' || "$pN" == "$PNAME" ]]; then
-	echo -e "WARNING: 'ae_makeworld' already running, skip calling from CRON..." >> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+	echo -e "WARNING: 'ae_makeworld' is already running, skip calling it from CRON..." >> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
 else
 	# make lock
 	rm -f "$lockFile" &> /dev/null
