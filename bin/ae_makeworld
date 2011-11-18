@@ -764,7 +764,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 										((k1=$k+1))
 										if [ "$cmd" ]; then
 											# log $cmd
-											echo "$cmd &>> \"$log_last\""
+											echo "$cmd" &>> "$log_last"
 											# choose caller
 											if [[ "$cmd" == '#'* ]]; then # shell cmd
 												cmd=${cmd:1}
