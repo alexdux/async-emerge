@@ -389,7 +389,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 			nv=$(echo ${nv/*:})
 			[[ "$nv" == *'->'* ]] && nv=${nv/*-> } # check
 			# compare old & new versions
-		echo "1. sens:$sens| ov:$ov| nv:$nv| uv:$uv| upd:${AE_SUPD[${s}_UPDATED]}"			
+		#echo "1. sens:$sens| ov:$ov| nv:$nv| uv:$uv| upd:${AE_SUPD[${s}_UPDATED]}"			
 			if [[ "$ov" != "$nv" || "$ov" == *'->'* ]]; then
 				vmrk="$sens: $ov"
 				[[ "$ov" != *'->'* ]] && vmrk+=" -> $nv"
@@ -413,7 +413,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 			else # reset update sign ???
 				unset AE_SUPD[${s}_UPDATED]
 			fi
-		echo "2. sens:$sens| ov:$ov| nv:$nv| uv:$uv| upd:${AE_SUPD[${s}_UPDATED]}"			
+		#echo "2. sens:$sens| ov:$ov| nv:$nv| uv:$uv| upd:${AE_SUPD[${s}_UPDATED]}"			
 		done
 	done
 }
