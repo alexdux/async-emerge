@@ -25,7 +25,7 @@ do_lock() {
 # check if VCS running, to-do: add MultiVCS support
 
 # date time
-dt_mark() { echo "*** $(date) ***"; }
+dt_mark() { echo -e "\033[7;37m\n*** $(date) ***\n\033[00;10m"; }
 
 # 
 begin_log() { :; }
