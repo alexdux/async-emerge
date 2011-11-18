@@ -239,7 +239,11 @@ emerge_solver() {
 call_cmd1_with_emerge_solver() {
 	local log_last=$3 log=$4
 	[ "$1" ] && einfo "    $1 ..."
-	dt_mark &> "$log_last"
+	if [ "$log" ]; then # reset last_log
+		dt_mark &> "$log_last"
+	else # append last_log
+		dt_mark &>> "$log_last"
+	fi		
 	# eval
 	#$($2 >> "$log_last" 2>&1)
 	if [ "$AE_MW_VERBOSE" ]; then 
@@ -249,10 +253,10 @@ call_cmd1_with_emerge_solver() {
 	fi
 	cmdRet=$?
 	eend $cmdRet
-	(($cmdRet>1)) && return $cmdRet
-	(($cmdRet)) && emerge_solver "$1" "$3" # "$4"
+	#(($cmdRet>1)) && return $cmdRet
+	(($cmdRet==1)) && emerge_solver "$1" "$3" # "$4"
 	echo "Retcode: $cmdRet" &>> "$log_last"
-	[ "$log" ] && {
+	[ "$log" ] && { # end last_log
 		cat "$log_last" &>> "$log"
 		echo &>> "$log"
 	}
@@ -385,11 +389,15 @@ compare_sysvers() { # todo: change echo to sed/vars
 			nv=$(echo ${nv/*:})
 			[[ "$nv" == *'->'* ]] && nv=${nv/*-> } # check
 			# compare old & new versions
+		echo "1. sens:$sens| ov:$ov| nv:$nv| uv:$uv| upd:${AE_SUPD[${s}_UPDATED]}"			
 			if [[ "$ov" != "$nv" || "$ov" == *'->'* ]]; then
 				vmrk="$sens: $ov"
 				[[ "$ov" != *'->'* ]] && vmrk+=" -> $nv"
-				[ "${AE_SUPD[${s}_UPDATED]}" ] && AE_SUPD[${s}_UPDATED]+='; '
-				AE_SUPD[${s}_UPDATED]+="$vmrk"
+				if [ "${AE_SUPD[${s}_UPDATED]}" ]; then
+					[[ "${AE_SUPD[${s}_UPDATED]}" != *"$vrmk"* ]] && AE_SUPD[${s}_UPDATED]+="; $vmrk"
+				else
+					AE_SUPD[${s}_UPDATED]+="$vmrk"
+				fi
 
 				# remove old subset item
 				if [ "$uv" ]; then # update
@@ -405,6 +413,7 @@ compare_sysvers() { # todo: change echo to sed/vars
 			else # reset update sign ???
 				unset AE_SUPD[${s}_UPDATED]
 			fi
+		echo "2. sens:$sens| ov:$ov| nv:$nv| uv:$uv| upd:${AE_SUPD[${s}_UPDATED]}"			
 		done
 	done
 }
@@ -754,6 +763,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 										cmd="${Cmds[$k]# ?}"
 										((k1=$k+1))
 										if [ "$cmd" ]; then
+											# log $cmd
+											echo "$cmd &>> \"$log_last\""
 											# choose caller
 											if [[ "$cmd" == '#'* ]]; then # shell cmd
 												cmd=${cmd:1}
@@ -761,7 +772,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 												!(($AE_VCS)) && cmd=${cmd/--usepkg n/--usepkg y}
 												#einfo "        Running shell command:"
 												einfo "        - $k1/${#Cmds[*]}. '$cmd' ..."
-												#echo "$cmd &>> \"$log_last\""
+												# mark last log
+												dt_mark &>> "$log_last"
 												if [ "$AE_MW_VERBOSE" ]; then
 													eval "$cmd 2>&1 | tee -a \"$log_last\""
 												else
@@ -806,7 +818,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						*) echo "Invalid update method: '${AE_SUPD[${s}_METHOD]}'!"
 					esac
 				
-					# copy last to logs
+					# end last_logs
 					cat "$log_last" &>> "$log"
 					echo &>> "$log"
 
