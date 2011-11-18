@@ -252,8 +252,10 @@ call_cmd1_with_emerge_solver() {
 	(($cmdRet>1)) && return $cmdRet
 	(($cmdRet)) && emerge_solver "$1" "$3" # "$4"
 	echo "Retcode: $cmdRet" &>> "$log_last"
-	cat "$log_last" &>> "$log"
-	echo &>> "$log"
+	[ "$log" ] && {
+		cat "$log_last" &>> "$log"
+		echo &>> "$log"
+	}
 	# exit on an error
 	(($cmdRet>1)) && { false && echo "Exit status: $cmdRet"; eend 1; exit 4; }
 	#einfo "    Solved. $1 (continue)"
@@ -776,7 +778,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 													call_cmd1_with_emerge_solver \
 														"    - $k1/${#Cmds[*]}. ${AECMD[SUBSET_UPDATE]} '$cmd'" \
 														"${AECMD[SUBSET_UPDATE]} $cmd" \
-														"$log_last" "$log"
+														"$log_last" # "$log"
 													cmdRet=$?
 												else
 													einfo "        Not found any dependencies for this subset."
