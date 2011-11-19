@@ -555,7 +555,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									eend $cmdRet
 									if (($cmdRet)); then
 										if [[ "${Cmds[$k]}" == *'@system'* ]]; then
-											ewarn "          Well... '@system' is uncompleted subset of the world..."
+											ewarn "          Well... '@system' is subset of the '@world'..."
 											ewarn "          So we can try to do some heuristic:"\
 													"step back to world update,"\
 													"then came back to the subset update:"
