@@ -47,7 +47,7 @@ AE_VCS=${#AE_STATE_SKIP}
 # -v	verbose (copy out to stdout), default for GRS
 # -q	quite (don't cope out to stdout) default for VCS
 #AE_MW_VERBOSE='verbose'
-[[ (($AE_VCS)) && "$1" == '-v' ]] || [[ (($AE_VCS==0)) && "$1" != '-q' ]] && {
+[[ "$AE_VCS" && "$1" == '-v' ]] || [[ "$AE_VCS" == "" && "$1" != '-q' ]] && {
 	AE_MW_VERBOSE='verbose'
 	einfo "($PNAME: verbose mode is ON.)"
 }
