@@ -32,11 +32,12 @@
 # get config
 . /etc/async.emerge.conf
 
-# check if AUFS is mounted, to-do: check if ae_chroot is running in the VCS
+# check if AUFS is mounted
 #if [[ "`mount | grep $AE_ROOT | grep aufs`" == "" ]]; then
 #	eerror "  AUFS is not mounted! $PNAME is not operational!!!"
 #	exit 1
 #fi
+# to-do: check if ae_chroot is running in the VCS ???
 
 # Detect VCS, set $AE_VCS
 #AE_VCS=${#AE_CHROOT_PS1}
@@ -46,7 +47,7 @@ AE_VCS=${#AE_STATE_SKIP}
 # -v	verbose (copy out to stdout), default for GRS
 # -q	quite (don't cope out to stdout) default for VCS
 #AE_MW_VERBOSE='verbose'
-[[ (($AE_VCS)) && "$1" == '-v' ]] || [[ !(($AE_VCS)) && "$1" != '-q' ]] && {
+[[ (($AE_VCS)) && "$1" == '-v' ]] || [[ (($AE_VCS==0)) && "$1" != '-q' ]] && {
 	AE_MW_VERBOSE='verbose'
 	einfo "($PNAME: verbose mode is ON.)"
 }
@@ -882,10 +883,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	if [ "${AE_REBUILD[DO_DEPCLEAN]}" == "y" ]; then
 		if (($loopLogic & 0x04)); then
 			if [ $dcPend ]; then
-				ewarn "    Cleaning system is pending till the next cooking. "\
+				ewarn "    Cleaning system is delayed till the next pass. "\
 					"(2-pass subset update behavior or subset update fail)"; eend 0
 			elif [ $dcPend2 ]; then
-				ewarn "    Cleaning system is pending till the next cooking. "\
+				ewarn "    Cleaning system is delayed till the next pass. "\
 					"(Critical system packages update behavior)"; eend 0
 			else
 				call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
@@ -896,7 +897,12 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				((loopLogic|=0x10))
 			fi
 		else
-			einfo "    System already has been cleaned."; eend 0
+			if (($loopLogic & 0x01)); then # check
+				einfo "    Cleaning system is delayed till the next pass."\
+					"(Uncompleted world update)"; eend 0
+			else
+				einfo "    System already has been cleaned."; eend 0
+			fi
 		fi
 	else 
 		# reset this
