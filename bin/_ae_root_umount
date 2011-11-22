@@ -46,7 +46,7 @@ if [ "${AE_VCS[UNMOUNT_KILL_BLOCKERS]}" == "y" ]; then
 			einfo "    try $i of $(($max_tries+2)) to signaling $signal to:"$to_kill_name
 			
 			# send signal
-			kill $signal $to_kill_pid &
+			kill $signal $to_kill_pid &> /dev/null &
 			# waiting for shutdown (in seconds)
 			sleep ${AE_VCS[UNMOUNT_KILL_BLOCKERS_TO]}
 			
