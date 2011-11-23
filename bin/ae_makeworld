@@ -46,11 +46,13 @@ AE_VCS=${#AE_STATE_SKIP}
 # Get param (1)
 # -v	verbose (copy out to stdout), default for GRS
 # -q	quite (don't cope out to stdout) default for VCS
-#AE_MW_VERBOSE='verbose'
-[[ "$AE_VCS" && "$1" == '-v' ]] || [[ "$AE_VCS" == "" && "$1" != '-q' ]] && {
-	AE_MW_VERBOSE='verbose'
-	einfo "($PNAME: verbose mode is ON.)"
-}
+if (($AE_VCS)); then
+    [[ "$1" == '-v' ]] && AE_MW_VERBOSE='verbose'
+else
+    [[ "$1" != '-q' ]] && AE_MW_VERBOSE='verbose'
+fi
+[ "$AE_MW_VERBOSE" ] && einfo "($PNAME: verbose mode is ON.)"
+
 [ "$AE_MEMSIZE" ] || \
 	ewarn "($PNAME: skip to use 'temerge': not enough memory or disabled in the config.)"
 
@@ -447,8 +449,10 @@ if [ "${AECMD[TEST]}" ]; then
 			exit 8447
 		}
 	done
+	AEUPDATETEST=${AECMD[TEST]}
 else
 	ewarn "  Testing for possibilities of various updates is not configured ..."; eend 0
+	AEUPDATETEST=''
 fi
 
 
@@ -560,13 +564,18 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											ewarn "          So we can try to do some heuristic:"\
 													"step back to world update,"\
 													"then came back to the subset update:"
-											einfo "          - testing if world update is possible with"\
-													"'${AECMD[TEST_SYSTEM_ALT]}' ..."
-											check_if_emerge_possible "${AE_CMD[TEST]} ${AECMD[TEST_SYSTEM_ALT]}" \
+											if [[ "${AEUPDATETEST}" == "${AECMD[TEST_SYSTEM_ALT]}" ]; then
+												einfo "          - possibility of world update is already tested"
+												eend 0
+											else
+												einfo "          - testing if world update is possible with"\
+														"'${AECMD[TEST_SYSTEM_ALT]}' ..."
+												check_if_emerge_possible "${AE_CMD[TEST]} ${AECMD[TEST_SYSTEM_ALT]}" \
 																	"${AELOG[CHECK_LAST]}" "${AELOG[CHECK_WARN_LAST]}" \
 																	"${AELOG[CHECK]}" "${AELOG[CHECK_WARN]}"
-											cmdRet=$?
-											eend $cmdRet
+												cmdRet=$?
+												eend $cmdRet
+											fi
 										fi
 										if (($cmdRet)); then # even update is imposable
 											eerror "    Oops, human is needed !!!"
