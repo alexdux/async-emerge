@@ -480,7 +480,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	alcruPend=''
 	
 	einfo "  Updating system with restoring of consistency, pass $loop of $max_loop:"
-	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+	echo $loopLogic > "${AESIGN[RBLOOPLOGIC]}"
 	
 	# to-do: restore after TERM? or incomplete in tasks
 	# SAVE CRITICAL PACKAGES VERSIONS (only if world update or subset update is scheduled - todo: is it OK?)
@@ -564,7 +564,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											ewarn "          So we can try to do some heuristic:"\
 													"step back to world update,"\
 													"then came back to the subset update:"
-											if [[ "${AEUPDATETEST}" == "${AECMD[TEST_SYSTEM_ALT]}" ]; then
+											if [[ "${AEUPDATETEST}" == "${AECMD[TEST_SYSTEM_ALT]}" ]]; then
 												einfo "          - possibility of world update is already tested"
 												eend 0
 											else
@@ -648,7 +648,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		((loopLogic&=0xFE))
 		ewarn "    World updating is not configured."; eend 1
 	fi
-	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+	echo $loopLogic > "${AESIGN[RBLOOPLOGIC]}"
 
 
 	# SUBSET UPDATES
@@ -885,7 +885,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	else 
 		ewarn "    Checking for various subsets updates is not configured."; eend 0
 	fi
-	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+	echo $loopLogic > "${AESIGN[RBLOOPLOGIC]}"
 
 	
 	# Cleanup all unneded (DEPCLEAN), emerge -ca
@@ -918,7 +918,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		((loopLogic&=0xFB))
 		ewarn "    Cleaning system is not configured."; eend 0
 	fi
-	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+	echo $loopLogic > "${AESIGN[RBLOOPLOGIC]}"
 
 	
 	# REVDEP CONSUMERS for advised libs, revdep --libs
@@ -983,7 +983,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		((loopLogic&=0xF7))
 		ewarn "    Rebuilding of consumers for advised libs is not configured."; eend 0
 	fi
-	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+	echo $loopLogic > "${AESIGN[RBLOOPLOGIC]}"
 
 	
 	# REVDEP system-wide
@@ -995,10 +995,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 					"${AELOG[REVDEP_LAST]}" "${AELOG[REVDEP]}"
 			# if OK - reset revdep flag
 			(($cmdRet)) || ((loopLogic&=0xEF))
-			if (($AE_VCS)); then
-				# needed for ae_state
-				(($cmdRet)) && rm -v "${AE_SIGN[REVDEPED]}" &> /dev/null || touch "${AE_SIGN[REVDEPED]}" &> /dev/null
-			fi
 			# collect hints for libs comsumers rebuild
 			scan_for_rdlibs "${AELOG[REVDEP_LAST]}"
 		else
@@ -1009,7 +1005,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		((loopLogic&=0xEF))
 		ewarn "    Rebuilding world with revdep-rebuild is not configured."; eend 0
 	fi
-	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+	echo $loopLogic > "${AESIGN[RBLOOPLOGIC]}"
 
 
 	# Proceed TASKS with cmd/emerge
@@ -1115,7 +1111,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		((loopLogic&=0xDF))
 		ewarn "    Running scheduled tasks is not configured."; eend 0
 	fi
-	echo $loopLogic > "${AE_SIGN[RBLOOPLOGIC]}"
+	echo $loopLogic > "${AESIGN[RBLOOPLOGIC]}"
 done
 
 
