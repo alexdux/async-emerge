@@ -29,7 +29,7 @@ IUSE="" # "eix layman"
 RESTRICT="mirror"
 #RESTRICT="fetch"
 
-RDEPEND="sys-fs/aufs2
+RDEPEND="|| ( sys-fs/aufs2 sys-fs/aufs3 )
 app-portage/gentoolkit
 app-shells/bash
 app-portage/eix
