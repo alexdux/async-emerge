@@ -1046,7 +1046,7 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							echo "Retcode $cmdRet" &>> "${AELOG[TASKS_LAST]}"
 						else # PM
 							#einfo "      Running PM: '${AECMD[USER_TASKS]} $i' ..."
-							einfo "      - $countTasks/$totalTasks. '${AECMD[USER_TASKS]} $i' ..."
+							einfo "      - $countTasks/$totalTasks. ${AECMD[USER_TASKS]} '$i' ..."
 							# eval params if started with $ or ` (shell cmd) 
 							if [[ "$i" == '$'* || "$i" == '`'* ]]; then
 								i=$(eval echo -n $i)
@@ -1071,12 +1071,12 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						cat "${AELOG[TASKS_LAST]}" &>> "${AELOG[TASKS]}"
 						echo &>> "${AELOG[TASKS]}"
 						# add cmd to install to-do; skip duplicates. only if success 
-						# to-do: update it as above
-						if [[ !(($cmdRet)) && (($AE_VCS)) && \
-							'' == $(egrep "^${is}$" \
-								"${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}" \
-								&> /dev/null) ]]; then
-							echo "$is" >> "${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
+						# to-do: update it as above ???
+						if ((! $cmdRet && $AE_VCS)); then
+							egrep "^${is}$" \
+								"${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}" &> /dev/null
+							(($?)) && echo "$is" >> \
+								"${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
 						fi
 					else
 						echo "skip empty line in '$f'"
