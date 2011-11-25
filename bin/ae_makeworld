@@ -1097,7 +1097,8 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				(($cmdRet)) && ((loopLogic|=0x20))
 
 				# add depclean and revdep-rebuild pass
-				((loopLogic|=0x14))
+				# and world update
+				((loopLogic|=0x15))
 
 				# check for rebuild advised libs
 				scan_for_rdlibs "${AELOG[TASKS_LAST]}"
