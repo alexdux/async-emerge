@@ -165,21 +165,25 @@ done
 echo -e " \033[00;32m$forupd\033[00;10m"
 
 # list last
-# synced
+# SYNCED
 #lsync=$(date -r "${AE_SIGN[SYNCED]}" 2>/dev/null)
 #[ "$lsync" ] || lsync=$(date -r "${AE_DIR[DELTA]}/usr/portage/metadata" 2>/dev/null)
 #[ "$lsync" ] || lsync=$(date -r "/usr/portage/metadata" 2>/dev/null)
 lsync=$(date -r "/usr/portage/metadata/timestamp.chk" 2>/dev/null)
 echo "  Last synced at    : $lsync."
-# cooked (revderped,tasked)
+
+# COOKED (revderped,tasked)
 (($ts_last!=$ts_from)) && lcook=$(date -d @$ts_last 2>/dev/null)
 [ "$lcook" ] || lcook=$(date -r "${AE_SIGN[TASKED]}" 2>/dev/null)
 [ "$lcook" ] || lcook=$(date -r "${AE_SIGN[REVDEPED]}" 2>/dev/null)
 [ "$lcook" ] || lcook=$(date -r "${AE_SIGN[COOKED]}" 2>/dev/null)
 [ "$lcook" ] || lcook='no binary packages is found'
 echo "  Last cooked at    : $lcook."
-# installed
-linst=$(date -r "/var/db/pkg" 2>/dev/null)
+
+# INSTALLED
+linst=$(date -r "${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null)
+#echo "${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]} $linst"
+[ "$linst" ] || linst=$(date -r "/var/db/pkg" 2>/dev/null)
 echo "  Last installed at : $linst."
 
 
