@@ -103,7 +103,8 @@ echo -n "  Cooked binary packages:"
 # to-do?: change to file1 -nt file2
 #ts_from=`stat -c %Y "$AE_MERGED_SIGN" 2>/dev/null` || ts_from=0
 #ts_from=`stat -c %Y "/usr/portage/metadata" 2>/dev/null` || ts_from=0
-ts_from=$(stat -c %Y "/var/db/pkg" 2> /dev/null) || ts_from=0
+ts_from=$(date -r "${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null)
+[ "$ts_from" ] || ts_from=$(stat -c %Y "/var/db/pkg" 2> /dev/null) || ts_from=0
 ts_last=$ts_from
 
 # to-do : fix:
