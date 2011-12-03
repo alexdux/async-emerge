@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # V.2.0-ald
-#   added support for redo emerge in case of out of ram-disk space. --keep-going should be set ON
+#   added support for redo emerge in case of out of ram-disk space. 
+#		'--keep-going' should be set ON
+#		unconditionally applying '--fail-clean n' for 1st try
 
 TE_VTP=/var/tmp/portage
 TE_DEFMEMSIZE=1250M # 1750M
@@ -47,14 +49,18 @@ eend $?
 
 # do emerge cmd
 eCmd="${*}"
-compile "$eCmd"
+compile "$eCmd" --fail-clean n
 
 # unmount tmp 
 [ "$mounted" ] && unmount
 
 # check for out of space
-if [[ "$(grep -m1 'No space left on device' $TE_TMPEOUT)" ]]; then
-	eerror "Detected 'No space left on device': trying to emerge without tmpfs..."
+memUse=`df $TE_VTP | tail -n1`
+memUse=${memUse/\%*}
+let "memUse=((${memUse/* }))"
+#if [[ "$(grep -m1 'No space left on device' $TE_TMPEOUT)" ]]; then
+if (($memUse>98)); then
+	eerror "Out of space on memdisk detected: trying to emerge without tmpfs..."
 	eend $retVal
 	compile "$eCmd"
 fi
