@@ -82,7 +82,7 @@ if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep 'aufs') ]]; then
 		chroot "${AE_DIR[CHROOT]}" start-stop-daemon -S -p /var/run/dbus.pid -x /usr/bin/dbus-daemon -- --system
 		eend 0
 	fi
-	
+
 	# touch autoMountedAUFS sign
 	touch "${AE_SIGN[VCSAM]}"
 fi
@@ -130,6 +130,7 @@ for i in ${AE_DIR[GATEWAY]}.*.vcs.lock.*; do
  	fi
  	i=''
 done
+
 # unmount AUFS if no one found above
 #echo "-$i-"
 if [[ ! "$i" ]]; then

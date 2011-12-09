@@ -181,6 +181,29 @@ bnd_trans "${AE_DIR[TRANSPARENT]}"
 # rebind '/dev/*' from system 'mount' (aufs feature)
 #bnd_trans "`mount | grep '^/dev/' | cut -d' ' -f3 | grep -v '^/$'`"
 
+# create temp swap file
+if [ "${AE_TMPFS[PC]}" ]; then # create 
+	# cacl swap size in Mb
+	swapSize=${AE_TMPFS[SIZE]}
+	if [[ "$swapSize" == *G* ]]; then
+		swapSize=${swapSize/G/}
+		let "swapSize=(($swapSize*1024*${AE_TMPFS[PC]}/100))"
+	elif [[ "$swapSize" == *M* ]]; then
+		swapSize=${swapSize/M/}
+		let "swapSize=(($swapSize*${AE_TMPFS[PC]}/100))"
+	fi
+	einfo "  Temporary adding ${swapSize} Mb extra swap file to the system:"
+	# add extra swap
+	# to-do: possible to add fallocate (fallocate system call is supported by the btrfs, ext4, ocfs2, and xfs)
+	einfo "    creating a file ..."
+	dd if=/dev/zero of="${AE_TMPFS[SWAP_FILE]}" bs=1048576 count=$swapSize &>/dev/null && \
+	einfo "    formating the file to swap ..." && \
+	mkswap "${AE_TMPFS[SWAP_FILE]}" >/dev/null && \
+	einfo "    adding the swap to the system ..." && \
+	swapon "${AE_TMPFS[SWAP_FILE]}" && \
+	eend 0 || eend 1
+fi
+	
 # out Readme.txt ?
 
 # out stat

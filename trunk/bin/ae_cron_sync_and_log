@@ -9,6 +9,10 @@
 # # crontab -e
 # 30 22 * * *	/usr/bin/ae_cron_sync_and_log root
 
+# get config
+. /etc/async.emerge.conf
+
+# to-do: add/redo to log
 
 ( \
 	echo "*** Layman ***"
@@ -19,5 +23,6 @@
 	/usr/bin/ae_cron
 	/usr/bin/ae_state -dwc
 ) 2>&1 | /usr/bin/ansi2html --bg=dark > /tmp/ae_state.html
+# emerge net-mail/email
 email -q -b -n root -f root -s "Async Emerge" -a /tmp/ae_state.html $1
 
