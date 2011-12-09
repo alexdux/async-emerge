@@ -77,6 +77,14 @@ umnt_path_type(){
 }
 
 
+# remove temp swap file
+if [ "${AE_TMPFS[PC]}" ]; then # create 
+	einfo "  Unlinking temporary extra swap file ..."
+	swapoff "${AE_TMPFS[SWAP_FILE]}" && \
+	rm -v "${AE_TMPFS[SWAP_FILE]}" >/dev/null && \
+	eend 0 || eend 1
+fi
+
 # unmount everything
 umnt_path_type "${AE_DIR[CHROOT]}" '(proc|sysfs|tmpfs)' 'lost' # unmount special
 umnt_path_type "${AE_DIR[CHROOT]}" 'rw,bind' 'nonmerged' # unmount transparent

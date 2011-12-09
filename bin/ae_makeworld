@@ -53,7 +53,7 @@ else
 fi
 [ "$AE_MW_VERBOSE" ] && einfo "($PNAME: verbose mode is ON.)"
 
-[ "$AE_MEMSIZE" ] || \
+[ "$AE_TMPFS[SIZE]" ] || \
 	ewarn "($PNAME: skip to use 'temerge': not enough memory or disabled in the config.)"
 
 # set config key prefix

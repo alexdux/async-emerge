@@ -6,9 +6,10 @@
 #		unconditionally applying '--fail-clean n' for 1st try
 
 TE_VTP=/var/tmp/portage
-TE_DEFMEMSIZE=1250M # 1750M
-TE_TMPEOUT=$(mktemp --tmpdir=/tmp temerge.XXXXXXXX.tmp)
+TE_DEFMEMSIZE=1750M
+#TE_TMPEOUT=$(mktemp --tmpdir=/tmp temerge.XXXXXXXX.tmp)
 
+# to-do: swapd, mkdir /var/tmp/swap
 
 if [ ! "$MEMSIZE" ]; then
 	MEMSIZE=$TE_DEFMEMSIZE
@@ -30,7 +31,7 @@ unmount() {
 
 compile() {
 	einfo "emerge ${*}"
-	emerge ${*} | tee "$TE_TMPEOUT"
+	emerge ${*} #| tee "$TE_TMPEOUT"
 	retVal=$?
 	return $?
 }
@@ -49,21 +50,21 @@ eend $?
 
 # do emerge cmd
 eCmd="${*}"
-compile "$eCmd" --fail-clean n
+compile "$eCmd" #--fail-clean n
 
 # unmount tmp 
 [ "$mounted" ] && unmount
 
-# check for out of space
-memUse=`df $TE_VTP | tail -n1`
-memUse=${memUse/\%*}
-let "memUse=((${memUse/* }))"
-#if [[ "$(grep -m1 'No space left on device' $TE_TMPEOUT)" ]]; then
-if (($memUse>98)); then
-	eerror "Out of space on memdisk detected: trying to emerge without tmpfs..."
-	eend $retVal
-	compile "$eCmd"
-fi
+## check for out of space
+#memUse=`df $TE_VTP | tail -n1`
+#memUse=${memUse/\%*}
+#let "memUse=((${memUse/* }))"
+##if [[ "$(grep -m1 'No space left on device' $TE_TMPEOUT)" ]]; then
+#if (($memUse>98)); then
+#	eerror "Out of space on memdisk detected: trying to emerge without tmpfs..."
+#	eend $retVal
+#	compile "$eCmd"
+#fi
 
 # bye-bye
 exit $retVal
