@@ -14,16 +14,18 @@
 . /etc/async.emerge.conf
 
 # compose to-do filenames
-fileI="${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
-fileC="${AE_DIR[GATEWAY]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
+fileI="${AE_DIR[REBUILD_VAR]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
+fileC="${AE_DIR[REBUILD_VAR]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
 
 # check alone key
 if [ "$1" == "-grs" ]; then
 	addTo="$fileI"
 	addToGRS=1
 	shift
+	fileLL="${AE_DIR[REBUILD_VAR]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}"
 else
 	addTo="$fileC"
+	fileLL="${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}"
 fi
 
 # check if params exist
@@ -55,6 +57,11 @@ if [[ (( ${#} )) && "$1" != "--help" ]]; then
 	[ -e "$fileC" ] && cat "$fileC"
 	einfo "  Total tasks to do in GRS $cntI:"
 	[ -e "$fileI" ] && cat "$fileI"
+	
+	einfo "  Set 'user task bit' in loopLogic file."
+	echo $(($(cat "$fileLL" 2>/dev/null && echo '|' )0x20)) > "$fileLL"
+	eend $?
+
 else
 	echo "Help: $PNAME [-grs] [\"]cmd[ params...][\"] ..."
 	echo "  -grs   add tasks to install phase only (to GRS)"
@@ -62,3 +69,4 @@ fi
 
 # bye
 exit 0
+

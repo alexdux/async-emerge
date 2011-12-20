@@ -24,15 +24,31 @@ do_lock() {
 
 # check if VCS running, to-do: add MultiVCS support
 
+
+# bitwise helpers
+# set bit(s) at flag: $flag $bit(s)
+bitflag_set() { (($1|=$2)); }
+
+# reset bit(s) at flag: $flag $bit(s)
+bitflag_reset() { (($1&=$1^$2)); }
+
+# reset bits at flag other than given: $flag $bit(s)
+#bitflag_mask() { (($1&=$2)); }
+
+# test the flag against the bit(s): $flag $bit(s)
+#bitflag_test() { return (($1 & $2)); }
+
+
 # date time
 dt_mark() { echo "*** $(date) ***"; }
 
-# 
+# ???
 begin_log() { :; }
 
-# 
+# ???
 end_log() { :; }
 
+# to remove!
 # get state: -> $st
 collect_signes() { # to-do: correct build lock
 	for i in "${AE_PID[AE_COOK]}" "${AE_SIGN[SYNCED]}" "${AE_SIGN[COOKED]}" "${AE_SIGN[REVDEPED]}"; do 

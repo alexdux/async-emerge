@@ -174,72 +174,121 @@ lsync=$(date -r "/usr/portage/metadata/timestamp.chk" 2>/dev/null)
 echo "  Last synced at    : $lsync."
 
 # COOKED (revderped,tasked)
-(($ts_last!=$ts_from)) && lcook=$(date -d @$ts_last 2>/dev/null)
-[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[TASKED]}" 2>/dev/null)
-[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[REVDEPED]}" 2>/dev/null)
-[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[COOKED]}" 2>/dev/null)
+lcook=$((($ts_last!=$ts_from)) && date -d @$ts_last 2>/dev/null || \
+date -r "${AE_DIR[GATEWAY]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null)
+#[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[TASKED]}" 2>/dev/null)
+#[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[REVDEPED]}" 2>/dev/null)
+#[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[COOKED]}" 2>/dev/null)
 [ "$lcook" ] || lcook='no binary packages is found'
 echo "  Last cooked at    : $lcook."
 
 # INSTALLED
-linst=$(date -r "${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null)
-#echo "${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]} $linst"
-[ "$linst" ] || linst=$(date -r "/var/db/pkg" 2>/dev/null)
+linst=$(date -r "${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null || \
+		date -r "/var/db/pkg" 2>/dev/null)
 echo "  Last installed at : $linst."
 
+# State
+get_ll_state() { 
+	if ((loopLogic & ${AE_RBLL[$3]})); then
+		[ "$2" ] && echo -ne "$1 \033[01;33mrunning\033[00;10m" || \
+					echo -ne "$1 \033[01;31mfailed \033[00;10m"
+	else
+		echo -ne "$1 \033[00;32m done  \033[00;10m"
+	fi
+#		echo -ne "\033[01;34m[\033[01;33m failed \033[01;34m]\033[00;10m" || 
+#		echo -ne "\033[01;34m[\033[01;32m  done  \033[01;34m]\033[00;10m"
+}
+get_all_states() {
+	local inProgress
+	loopLogic=$(cat "$1" 2>/dev/null || echo '0')
+	echo -n "$2 "
+	# check if it is in progress
+	[ "$((ps -p $(<"$3") -o comm= ) 2>/dev/null)" == "$4" ] && inProgress='1'
+	if [ "$5" ]; then
+		if [ "$inProgress" ]; then
+			echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m"
+		else
+			((loopLogic)) && echo -e "\033[01;31mCOOK IS UNCOMPLETED !\033[00;10m" || \
+				echo -e "\033[01;32mOK, READY TO INSTALL ...\033[00;10m"
+		fi
+	else
+		if [ "$inProgress" ]; then
+			echo -e "\033[01;33mINSTALLATION IS IN PROGRESS, please come back later ...\033[00;10m"
+		else
+			((loopLogic)) && echo -e "\033[01;31mWARNING: INSTALL IS UNCOMPLETED !\033[00;10m" || \
+				echo -e "\033[01;32mOK, READY TO INSTALL ...\033[00;10m"
+		fi
+	fi
+	get_ll_state "    World Update          :" "$inProgress" WORLD_UPDATE
+	get_ll_state "    Subset Update         :" "$inProgress" SUBSET_UPDATE
+	echo
+	get_ll_state "    World Depclean        :" "$inProgress" WORLD_DEPCLEAN
+	get_ll_state "    Obsoleted Libs Revdep :" "$inProgress" OBSOLETED_LIBS_REVDEP
+	echo
+	get_ll_state "    World Revdep          :" "$inProgress" WORLD_REVDEP
+	get_ll_state "    User Tasks            :" "$inProgress" USER_TASKS
+	echo
+}
+# state from cook.loopLogic
+get_all_states "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" "  Last cook state:" \
+	"${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" "ae_makeworld" "1"
+get_all_states "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" "  Last install state:" \
+	"${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" "ae_makeworld" ""
 
 # status and guide
-echo -n "  State: "
-# check state
-collect_signes
-case $st in
-	Y*) echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m"
-		(($forupd)) && echo "  Hint: installation at this phase is possible but not recommended." || \
-						echo "  Hint: nothing to install yet, please wait." 
-		;;
-	NN*) echo -e "\033[01;31mSYNC IS FAILED !!!\033[00;10m"
-		echo "  Hint: check and fix Internet connection, proxy, mirrors and other settings at GRS."
-		echo "	Then recheck syncing at VCS with 'ping', 'emerge --sync' or 'eix-sync' and so on..."
-		echo "	After repaire run 'ae_cron' or leave it for a cron service."
-		# add cron log
-		((opt|=0x100))
-		;;
-	NYNN) echo -e "\033[01;31mCOOK IS FAILED !!!\033[00;10m"
-		echo -e "  Hint: run 'ae_vcs' to enter into VCS to check if cooking is Ok." 
-		# add cron log
-		((opt|=0x100))
-		# add emerge warn
-		((opt|=0x20))
-		;;
-	NYNY) echo -e "\033[01;33mCOOK IS UNCOMPLETED !\033[00;10m"
-		echo -e "  Hint: some packages weren't built." \
-				"Run 'emerge -uDNkvtp world' in VCS or 'ae_vcs temerge -uDNkvtp world' in GRS for details..."
-				# bug with emerge
-		# add emerge warn
-		((opt|=0x20))
-		;;
-	NYYN) echo -e "\033[01;33mCOOK IS OK, BUT REVDEP-REBUILD IS FAILED !\033[00;10m"
-		echo -e "  Hint: run 'ae_vcs' to enter into VCS and check revdep-cooking." #\
-#			"\n\tLearn logs like: $AE_LOG_DIR*emerge.*last.log."\
-#			"\n\tFix configs and check building with 'emerge --pretend'."\
-#			"\n\t( With next 'ae_install' new configs will be copied to your real system.)"\
-#			"\n\tRun 'ae_build' or leave it for (ana)cron if success, else try to repair again (if it possible)."\
-#			"\n\t(*) also you can try to fix the problem in your real system. (please read documentation first)"
-		# add emerge warn
-		((opt|=0x20))
-		;;
+if false; then
+	echo -n "  State: "
+	# check state
+	collect_signes
+	case $st in
+		Y*) echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m"
+			(($forupd)) && echo "  Hint: installation at this phase is possible but not recommended." || \
+							echo "  Hint: nothing to install yet, please wait." 
+			;;
+		NN*) echo -e "\033[01;31mSYNC IS FAILED !!!\033[00;10m"
+			echo "  Hint: check and fix Internet connection, proxy, mirrors and other settings at GRS."
+			echo "	Then recheck syncing at VCS with 'ping', 'emerge --sync' or 'eix-sync' and so on..."
+			echo "	After repaire run 'ae_cron' or leave it for a cron service."
+			# add cron log
+			((opt|=0x100))
+			;;
+		NYNN) echo -e "\033[01;31mCOOK IS FAILED !!!\033[00;10m"
+			echo -e "  Hint: run 'ae_vcs' to enter into VCS to check if cooking is Ok." 
+			# add cron log
+			((opt|=0x100))
+			# add emerge warn
+			((opt|=0x20))
+			;;
+		NYNY) echo -e "\033[01;33mCOOK IS UNCOMPLETED !\033[00;10m"
+			echo -e "  Hint: some packages weren't built." \
+					"Run 'emerge -uDNkvtp world' in VCS or 'ae_vcs temerge -uDNkvtp world' in GRS for details..."
+					# bug with emerge
+			# add emerge warn
+			((opt|=0x20))
+			;;
+		NYYN) echo -e "\033[01;33mCOOK IS OK, BUT REVDEP-REBUILD IS FAILED !\033[00;10m"
+			echo -e "  Hint: run 'ae_vcs' to enter into VCS and check revdep-cooking." #\
+	#			"\n\tLearn logs like: $AE_LOG_DIR*emerge.*last.log."\
+	#			"\n\tFix configs and check building with 'emerge --pretend'."\
+	#			"\n\t( With next 'ae_install' new configs will be copied to your real system.)"\
+	#			"\n\tRun 'ae_build' or leave it for (ana)cron if success, else try to repair again (if it possible)."\
+	#			"\n\t(*) also you can try to fix the problem in your real system. (please read documentation first)"
+			# add emerge warn
+			((opt|=0x20))
+			;;
 		
-	# to-do: add NYYY? (ae_install.pid) "INSTALL IS IN PROGRESS, please wait..."
-	NYYY) if (($forupd)); then
-				echo -e "\033[01;32mOK, READY TO INSTALL ...\033[00;10m"
-				echo "  Hint: run 'ae_install' to install cooked binaries to your real system."
-			else
-				echo -e "\033[01;32mSYSTEM IS UP TO DATE.\033[00;10m"
-				echo "  Hint: your system is up to date - no more actions is needed ;)"
-			fi
-		;;
-	*) echo "state is undefined (this is a bug.)"
-esac	
+		# to-do: add NYYY? (ae_install.pid) "INSTALL IS IN PROGRESS, please wait..."
+		NYYY) if (($forupd)); then
+					echo -e "\033[01;32mOK, READY TO INSTALL ...\033[00;10m"
+					echo "  Hint: run 'ae_install' to install cooked binaries to your real system."
+				else
+					echo -e "\033[01;32mSYSTEM IS UP TO DATE.\033[00;10m"
+					echo "  Hint: your system is up to date - no more actions is needed ;)"
+				fi
+			;;
+		*) echo "state is undefined (this is a bug.)"
+	esac	
+fi
 
 # show last cron log
 if (($opt & 0x100)); then
