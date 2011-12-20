@@ -165,18 +165,19 @@ done
 (($opt & 0x2)) || { (($forupd)) && (($opt & 0x80)) && echo; echo -n "    total:"; }
 echo -e " \033[00;32m$forupd\033[00;10m"
 
+# kernel updates
+echo -ne "  Linux kernel: "
+#eix -cI2 sys-kernel/* &>/dev/null
+(eselect kernel list | egrep "\[.+\]" | tail -n1 | grep '*') &>/dev/null
+!(($?)) && echo -e "\033[00;32mis up to date.\033[00;10m" ||\
+	echo -e "\033[00;32mnew slot for manual switch is available ...\033[00;10m"
+
 # scheduled user tasks
 usertasks=$(grep ".*" "${AE_DIR[GATEWAY]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_TASK[FILE_LIST]}" 2>/dev/null | \
 			wc -l || echo '0')
 ((usertasks+=$(grep ".*" "${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}" 2>/dev/null | \
 			wc -l || echo '0')))
 echo -e "  Scheduled user tasks: \033[00;32m$usertasks\033[00;10m"
-
-# kernel updates
-echo -ne "  Linux kernel: "
-eix -cU sys-kernel/* &>/dev/null
-(($?)) && echo -e "\033[00;32mis up to date.\033[00;10m" ||\
-	echo -e "\033[00;32mnew version for manual update is available ...\033[00;10m"
 
 # list last
 # SYNCED
