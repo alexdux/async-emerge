@@ -216,7 +216,7 @@ get_all_states() {
 			echo -e "\033[01;33mINSTALLATION IS IN PROGRESS, please come back later ...\033[00;10m"
 		else
 			((loopLogic)) && echo -e "\033[01;31mWARNING: INSTALL IS UNCOMPLETED !\033[00;10m" || \
-				echo -e "\033[01;32mOK, READY TO INSTALL ...\033[00;10m"
+				echo -e "\033[01;32mTHE SYSTEM IS UP TO DATE:-)\033[00;10m"
 		fi
 	fi
 	get_ll_state "    World Update          :" "$inProgress" WORLD_UPDATE
