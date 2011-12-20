@@ -250,6 +250,8 @@ get_all_states() {
 	if !(($opt & 0x2)) && ((loopLogic & ${AE_RBLL[_CRON_FAIL]})); then
 		get_ll_state "    CRON                  :" "$inProgress" _CRON_FAIL
 		echo
+		# add cron log
+		((opt|=0x100))
 	fi
 }
 # state from cook.loopLogic
