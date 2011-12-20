@@ -43,7 +43,7 @@ if [ "$1" == "--help" ]; then
 	echo "    -v        to-do?: only with -e/eix: use VCS to list packages" # bitmask 0x40
 	echo "    -w        show emerge Warning from last cook" # bitmask 0x20
 	echo "    --help    print Help"
-	echo "NB: In order to reduce noise is only one instance of '$PNAME' can work simultaneously."
+	echo "NB: In order to reduce terminal noise is only one instance of '$PNAME' allowed run at once."
 	exit 0
 fi
 
@@ -161,7 +161,7 @@ for i in $(ls -t$ls_sort */*bz2 2>/dev/null); do
 	fi
 done
 
-# total
+# total cooked binaries
 (($opt & 0x2)) || { (($forupd)) && (($opt & 0x80)) && echo; echo -n "    total:"; }
 echo -e " \033[00;32m$forupd\033[00;10m"
 
@@ -171,6 +171,12 @@ usertasks=$(grep ".*" "${AE_DIR[GATEWAY]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_TASK[F
 ((usertasks+=$(grep ".*" "${AE_DIR[GATEWAY]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}" 2>/dev/null | \
 			wc -l || echo '0')))
 echo -e "  Scheduled user tasks: \033[00;32m$usertasks\033[00;10m"
+
+# kernel updates
+echo -ne "  Linux kernel: "
+eix -cU sys-kernel/* &>/dev/null
+(($?)) && echo -e "\033[00;32mis up to date.\033[00;10m" ||\
+	echo -e "\033[00;32mnew version for manual update is available ...\033[00;10m"
 
 # list last
 # SYNCED
