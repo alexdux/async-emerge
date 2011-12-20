@@ -427,6 +427,17 @@ compare_sysvers() { # todo: change echo to sed/vars
 
 # Msg 'World update (Rebuild)'
 einfo "Starting Gentoo Update:"
+# Control for loop iterations:
+loopLogic_set() { bitflag_set loopLogic ${AE_RBLL[$1]}; }
+loopLogic_reset() { bitflag_reset loopLogic ${AE_RBLL[$1]}; }
+loopLogicLog () { 
+	# to-do: add global var where save prev call of it, then xor and take other bits from file
+	#echo $(($(cat "${AESIGN[RBLOOP_LOGIC]}" 2>/dev/null || echo '0')|$loopLogic)) > "${AESIGN[RBLOOP_LOGIC]}"
+	echo $loopLogic > "${AESIGN[RBLOOP_LOGIC]}"
+}
+loopLogic_set _LOOP_START
+loopLogicLog
+
 
 # Check for possibility of update|rebuild world - stop if impossible
 if [ "${AECMD[TEST]}" ]; then
@@ -458,17 +469,12 @@ else
 fi
 
 
-
-
+#
+#
 # to-do: better reset 'last' log files
 # to-do: revise setting & clearing loop flags! ???
 # *** REBUILD & CO MAIN LOOP ***
 max_loop=${AE_REBUILD[REVDEPCO_MT]}
-# Control for loop iterations:
-loopLogic_set() { bitflag_set loopLogic ${AE_RBLL[$1]}; }
-loopLogic_reset() { bitflag_reset loopLogic ${AE_RBLL[$1]}; }
-loopLogicLog () { echo $loopLogic > "${AESIGN[RBLOOP_LOGIC]}"; }
-loopLogic_set _LOOP_START
 subsetf="${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_SUBSET_SAVED]}"
 #
 #
