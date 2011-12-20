@@ -233,10 +233,10 @@ get_all_states() {
 			((loopLogic)) && \
 				echo -e "\033[01;31mINSTALL IS UNCOMPLETED ! POSSIBLY SYSTEM INCONSISTENCY !\033[00;10m" || \
 				( (($forupd+$usertasks)) && echo -e "\033[01;33mREADY FOR UPDATE ...\033[00;10m" || \
-					echo -e "\033[01;32mTHE SYSTEM IS UP TO DATE :-)\033[00;10m" )
+					echo -e "\033[01;32mTHE SYSTEM IS UP TO DATE :)\033[00;10m" )
 		fi
 	fi
-	if !(($opt & 0x2)) && ((loopLogic)); then
+	if !(($opt & 0x2)) && ((loopLogic & ${AE_RBLL[_LOOP_START]})); then
 		get_ll_state "    World Update          :" "$inProgress" WORLD_UPDATE
 		get_ll_state "    Subset Update         :" "$inProgress" SUBSET_UPDATE
 		echo
@@ -245,6 +245,10 @@ get_all_states() {
 		echo
 		get_ll_state "    World Revdep          :" "$inProgress" WORLD_REVDEP
 		get_ll_state "    User Tasks            :" "$inProgress" USER_TASKS
+		echo
+	fi
+	if !(($opt & 0x2)) && ((loopLogic & ${AE_RBLL[_CRON_FAIL]})); then
+		get_ll_state "    CRON                  :" "$inProgress" _CRON_FAIL
 		echo
 	fi
 }

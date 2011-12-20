@@ -29,6 +29,10 @@ else
 	# make lock
 	rm -f "$lockFile" &> /dev/null
 	trap "cat \"${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}\" >> \"${AE_LOG[DIR_SAVE]}${AE_LOG[FILE_CRON]}\"" INT TERM EXIT
-	(echo '--- '$(date)' ---'; time ae_chroot ae_makeworld; echo) &> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+	(echo '--- '$(date)' ---' && time ae_chroot ae_makeworld && echo) &> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+	(($?)) && \
+		echo $(($(cat "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null || \
+			echo '0')|${AE_RBLL[_CRON_FAIL]})) > \
+				"${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}"  
 fi
 
