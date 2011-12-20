@@ -182,7 +182,7 @@ bnd_trans "${AE_DIR[TRANSPARENT]}"
 #bnd_trans "`mount | grep '^/dev/' | cut -d' ' -f3 | grep -v '^/$'`"
 
 # create temp swap file
-if [ "${AE_TMPFS[PC]}" ]; then # create 
+if [[ "${AE_TMPFS[SIZE]}" && "${AE_TMPFS[PC]}" ]]; then # create 
 	# cacl swap size in Mb
 	swapSize=${AE_TMPFS[SIZE]}
 	if [[ "$swapSize" == *G* ]]; then

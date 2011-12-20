@@ -1,25 +1,18 @@
 #!/bin/bash
 
-# V.2.0-ald
-#   added support for redo emerge in case of out of ram-disk space. 
-#		'--keep-going' should be set ON
-#		unconditionally applying '--fail-clean n' for 1st try
+# V.2.1-ald
 
 TE_VTP=/var/tmp/portage
 TE_DEFMEMSIZE=1750M
-#TE_TMPEOUT=$(mktemp --tmpdir=/tmp temerge.XXXXXXXX.tmp)
 
-# to-do: swapd, mkdir /var/tmp/swap
-
-if [ ! "$MEMSIZE" ]; then
-	MEMSIZE=$TE_DEFMEMSIZE
-fi
+[ "${AE_TMPFS[SIZE]}" ] && TE_MEMSIZE=${AE_TMPFS[SIZE]}
+[ "$TE_MEMSIZE" ] || TE_MEMSIZE=$TE_DEFMEMSIZE
  
-. /etc/init.d/functions.sh
+[ "$RC_GOT_FUNCTIONS" ] || . /etc/init.d/functions.sh
 
  
 mounttmpfs() {
-	mount -t tmpfs tmpfs -o size=$MEMSIZE $TE_VTP
+	mount -t tmpfs tmpfs -o size=$TE_MEMSIZE $TE_VTP
 	mounted="true"
 }
 
@@ -31,40 +24,24 @@ unmount() {
 
 compile() {
 	einfo "emerge ${*}"
-	emerge ${*} #| tee "$TE_TMPEOUT"
+	emerge ${*}
 	retVal=$?
 	return $?
 }
 
 
 # begin
-ebegin "Mounting $MEMSIZE of memory to $TE_VTP"
+ebegin "Mounting $TE_MEMSIZE of memory to $TE_VTP"
 
 # mount tmp if not mounted
-if [ -z "$(mount | grep $TE_VTP)" ]; then
-     mounttmpfs
-else
-     ewarn "tmpfs already mounted!"
-fi
+[ "$(mount | grep $TE_VTP)" ] && ewarn "tmpfs already mounted!" || mounttmpfs
 eend $?
 
 # do emerge cmd
-eCmd="${*}"
-compile "$eCmd" #--fail-clean n
+compile "${*}"
 
 # unmount tmp 
 [ "$mounted" ] && unmount
-
-## check for out of space
-#memUse=`df $TE_VTP | tail -n1`
-#memUse=${memUse/\%*}
-#let "memUse=((${memUse/* }))"
-##if [[ "$(grep -m1 'No space left on device' $TE_TMPEOUT)" ]]; then
-#if (($memUse>98)); then
-#	eerror "Out of space on memdisk detected: trying to emerge without tmpfs..."
-#	eend $retVal
-#	compile "$eCmd"
-#fi
 
 # bye-bye
 exit $retVal

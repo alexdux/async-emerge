@@ -23,7 +23,8 @@ lockFile="${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBU
 pN=$((ps -p $(<"$lockFile") -o comm= ) 2>/dev/null)
 
 if [[ "$pN" == 'ae_chroot' || "$pN" == 'ae_vcs' || "$pN" == "$PNAME" ]]; then
-	echo -e "WARNING: 'ae_makeworld' is already running, skip calling it from CRON..." >> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+	echo -e "WARNING: 'ae_makeworld' is already running, skip calling it from CRON..." >> \
+		"${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
 else
 	# make lock
 	rm -f "$lockFile" &> /dev/null
