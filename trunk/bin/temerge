@@ -5,7 +5,8 @@
 TE_VTP=/var/tmp/portage
 TE_DEFMEMSIZE=1750M
 
-[ "${AE_TMPFS[SIZE]}" ] && TE_MEMSIZE=${AE_TMPFS[SIZE]}
+#[ "${AE_TMPFS[SIZE]}" ] && TE_MEMSIZE=${AE_TMPFS[SIZE]}
+[ "$MEMSIZE" ] && TE_MEMSIZE=$MEMSIZE
 [ "$TE_MEMSIZE" ] || TE_MEMSIZE=$TE_DEFMEMSIZE
  
 [ "$RC_GOT_FUNCTIONS" ] || . /etc/init.d/functions.sh
