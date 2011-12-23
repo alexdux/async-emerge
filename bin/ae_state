@@ -233,7 +233,7 @@ get_all_states() {
 			((loopLogic)) && \
 				echo -e "\033[01;31mINSTALL IS UNCOMPLETED ! POSSIBLY SYSTEM INCONSISTENCY !\033[00;10m" || \
 				( (($forupd+$usertasks)) && \
-					( [ "$?" ] && echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m" || \
+					( (($6)) && echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m" || \
 						echo -e "\033[01;33mREADY FOR UPDATE ...\033[00;10m") || \
 					echo -e "\033[01;32mTHE SYSTEM IS UP TO DATE :)\033[00;10m" )
 		fi
