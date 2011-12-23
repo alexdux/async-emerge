@@ -232,7 +232,9 @@ get_all_states() {
 		else
 			((loopLogic)) && \
 				echo -e "\033[01;31mINSTALL IS UNCOMPLETED ! POSSIBLY SYSTEM INCONSISTENCY !\033[00;10m" || \
-				( (($forupd+$usertasks)) && echo -e "\033[01;33mREADY FOR UPDATE ...\033[00;10m" || \
+				( (($forupd+$usertasks)) && \
+					( [ "$?" ] && echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m" || \
+						echo -e "\033[01;33mREADY FOR UPDATE ...\033[00;10m") || \
 					echo -e "\033[01;32mTHE SYSTEM IS UP TO DATE :)\033[00;10m" )
 		fi
 	fi
@@ -253,12 +255,14 @@ get_all_states() {
 		# add cron log
 		((opt|=0x100))
 	fi
+	
+	return $inProgress
 }
 # state from cook.loopLogic
 get_all_states "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" "  Last cook state:" \
-	"${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" "ae_makeworld" "1"
+	"${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" "ae_makeworld" "1" ""
 get_all_states "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" "  Last install state:" \
-	"${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" "ae_makeworld" ""
+	"${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" "ae_makeworld" "" "$?"
 
 # status and guide
 if false; then
