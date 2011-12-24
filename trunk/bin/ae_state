@@ -31,7 +31,6 @@ if [ "$1" == "--help" ]; then
 	echo "USE: $PNAME [OPTIONS]"
 	echo "  Where valid OPTIONS are:"
 	echo "    -a        list All packages, including older (probably merged)'" # bitmask 0x1
-	echo "    -c        show last Cron log" # bitmask 0x100
 	echo "    -d        group by cooking Date" # bitmask 0x10
 	echo "    -e        force to use Eix (else use configs value)" # AE_STATE[USE_EIX]='y'
 	echo "    -f        don't search for description, just list cooked Filenames" # bitmask 0x8
@@ -41,7 +40,14 @@ if [ "$1" == "--help" ]; then
 	echo "    -q        Quiet: skip package listing and 'makeworld' details" # bitmask 0x2
 	echo "    -r        Reverse listing: last cooked - list first" # ls_sort=''
 	echo "    -v        to-do?: only with -e/eix: use VCS to list packages" # bitmask 0x40
-	echo "    -w        show emerge Warning from last cook" # bitmask 0x20
+	echo "    Show last log options:"
+	echo "      -b        Obsoleted Libs Revdep log from last cook" # bitmask 0x400
+	echo "      -c        CRON log" # bitmask 0x100
+	echo "      -l        World Revdep log from last cook" # bitmask 0x2000
+	echo "      -n        World Depclean log from last cook" # bitmask 0x1000
+	echo "      -s        Subset Update log from last cook" # bitmask 0x800
+	echo "      -u        User Task log from last cook" # bitmask 0x200
+	echo "      -w        World Update Warning from last cook" # bitmask 0x20
 	echo "    --help    print Help"
 	echo "NB: In order to reduce terminal noise is only one instance of '$PNAME' allowed run at once."
 	exit 0
@@ -56,15 +62,20 @@ for o in $*; do
 		-*) while eval 'o=${o:1}' && [ $o ]; do
 				case ${o:0:1} in
 					a) ((opt|=0x1));;
+					b) ((opt|=0x400));;
 					c) ((opt|=0x100));;
 					d) ((opt|=0x10));;
 					e) AE_STATE[USE_EIX]='y';;
 					f) ((opt|=0x8));;
 					F) ((opt|=0x88));;
+					l) ((opt|=0x2000));;
 					m) AE_STATE[USE_EIX]='n';;
+					n) ((opt|=0x1000));;
 					o) ((opt|=0x4));;
 					q) ((opt|=0x2));;
+					s) ((opt|=0x800));;
 					r) ls_sort='';;
+					u) ((opt|=0x200));;
 					v) ((opt|=0x40));;
 					w) ((opt|=0x20));;
 					*) echo "ignore invalid option: '-${o:0:1}'"
@@ -202,15 +213,14 @@ linst=$(date -r "${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBL
 echo "  Last installed at : $linst."
 
 # State
-get_ll_state() { 
+get_ll_state() { # to-do: add flag to set
 	if ((loopLogic & ${AE_RBLL[$3]})); then
 		[ "$2" ] && echo -ne "$1 \033[01;33mrunning\033[00;10m" || \
 					echo -ne "$1 \033[01;31mfailed \033[00;10m"
+		[ "$4" ] && ((opt|=$4))
 	else
 		echo -ne "$1 \033[00;32m done  \033[00;10m"
 	fi
-#		echo -ne "\033[01;34m[\033[01;33m failed \033[01;34m]\033[00;10m" || 
-#		echo -ne "\033[01;34m[\033[01;32m  done  \033[01;34m]\033[00;10m"
 }
 cook_state=0
 get_all_states() {
@@ -232,32 +242,30 @@ get_all_states() {
 		if [ "$inProgress" ]; then
 			echo -e "\033[01;33mINSTALLATION IS IN PROGRESS, please come back later ...\033[00;10m"
 		else
-			((loopLogic)) && \
-				echo -e "\033[01;31mINSTALL IS UNCOMPLETED ! POSSIBLY SYSTEM INCONSISTENCY !\033[00;10m" || \
-				( (($forupd+$usertasks)) && \
-					( (($6)) && echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m" || \
-						echo -e "\033[01;33mREADY FOR UPDATE ...\033[00;10m" ) || \
-					( (($cook_state)) && echo -e "\033[01;33mTHE SYSTEM IS UP TO DATE, BUT INCONSISTENCY.\033[00;10m" || \
+			(($cook_state)) && \
+				( (($6)) && echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m" || \
+						echo -e "\033[01;33mCOOK IS FAILED, SYSTEM INCONSISTENCY AHEAD.\033[00;10m" ) || \
+				( ((loopLogic)) && \
+					echo -e "\033[01;31mINSTALL IS UNCOMPLETED ! POSSIBLY SYSTEM INCONSISTENCY !\033[00;10m" || \
+					( (($forupd+$usertasks)) && echo -e "\033[01;33mREADY FOR UPDATE ...\033[00;10m" || \
 						echo -e "\033[01;32mTHE SYSTEM IS UP TO DATE :)\033[00;10m" ) \
 				)
 		fi
 	fi
 	if !(($opt & 0x2)) && ((loopLogic & ${AE_RBLL[_LOOP_START]})); then
-		get_ll_state "    World Update          :" "$inProgress" WORLD_UPDATE
-		get_ll_state "    Subset Update         :" "$inProgress" SUBSET_UPDATE
+		get_ll_state "    World Update          :" "$inProgress" WORLD_UPDATE 0x20
+		get_ll_state "    Subset Update         :" "$inProgress" SUBSET_UPDATE 0x0800
 		echo
-		get_ll_state "    World Depclean        :" "$inProgress" WORLD_DEPCLEAN
-		get_ll_state "    Obsoleted Libs Revdep :" "$inProgress" OBSOLETED_LIBS_REVDEP
+		get_ll_state "    World Depclean        :" "$inProgress" WORLD_DEPCLEAN 0x1000
+		get_ll_state "    Obsoleted Libs Revdep :" "$inProgress" OBSOLETED_LIBS_REVDEP 0x0400
 		echo
-		get_ll_state "    World Revdep          :" "$inProgress" WORLD_REVDEP
-		get_ll_state "    User Tasks            :" "$inProgress" USER_TASKS
+		get_ll_state "    World Revdep          :" "$inProgress" WORLD_REVDEP 0x2000
+		get_ll_state "    User Tasks            :" "$inProgress" USER_TASKS 0x0200
 		echo
 	fi
 	if !(($opt & 0x2)) && ((loopLogic & ${AE_RBLL[_CRON_FAIL]})); then
-		get_ll_state "    CRON                  :" "$inProgress" _CRON_FAIL
+		get_ll_state "    CRON                  :" "$inProgress" _CRON_FAIL 0x100
 		echo
-		# add cron log
-		((opt|=0x100))
 	fi
 	
 	return $inProgress
@@ -323,22 +331,24 @@ if false; then
 	esac	
 fi
 
-# show last cron log
-if (($opt & 0x100)); then
-	echo -n '  Last cron message:'
-	f="${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
-	(($(wc -l < "$f" 2>/dev/null) > 1)) && \
-		echo -e "\n$(<"$f")" || \
-		echo -e ' \033[00;32mnone\033[00;10m.'
-fi
-# show last emerge Warn
-if (($opt & 0x20)); then
-	echo -n '  Last emerge warning:'
-	f="${AE_LOG[DIR_LAST]}${AE_LOG[DIR_COOK]}${AE_LOG[FILE_EMERGE_WARN]}${AE_LOG[EXT_COOK]}"
-	(($(wc -l < "$f" 2>/dev/null) > 1)) && \
-		echo -e "\n$(<"$f")" || \
-		echo -e ' \033[00;32mnone\033[00;10m.'
-fi
+# show last log
+show_log() {
+	if (($opt & $1)); then
+		echo -ne "  \033[01;37mLast $2 message:\033[00;10m"
+		(($(wc -l < "$3" 2>/dev/null) > 1)) && \
+			echo -e "\n$(<"$3")" || \
+			echo -e ' \033[00;32mnone\033[00;10m.'
+	fi
+}
+
+show_log 0x0100 'CRON' "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+lcdp="${AE_LOG[DIR_LAST]}${AE_LOG[DIR_COOK]}"
+show_log 0x0020 'World Update Warning' "$lcdp${AE_LOG[FILE_EMERGE_WARN]}${AE_LOG[EXT_COOK]}"
+show_log 0x0800 'Subset Update' "$lcdp${AE_LOG[FILE_SUBSET_UPDATE]}${AE_LOG[EXT_COOK]}"
+show_log 0x1000 'World Depclean' "$lcdp${AE_LOG[FILE_DEPCLEAN]}${AE_LOG[EXT_COOK]}"
+show_log 0x0400 'Obsoleted Libs Revdep' "$lcdp${AE_LOG[FILE_OBSLLIBS]}${AE_LOG[EXT_COOK]}"
+show_log 0x2000 'World Revdep' "$lcdp${AE_LOG[FILE_REVDEP]}${AE_LOG[EXT_COOK]}"
+show_log 0x0200 'User Task' "$lcdp${AE_LOG[FILE_TASKS]}${AE_LOG[EXT_COOK]}"
 
 exit 0
 
