@@ -165,7 +165,7 @@ done
 (($opt & 0x2)) || { (($forupd)) && (($opt & 0x80)) && echo; echo -n "    total:"; }
 echo -e " \033[00;32m$forupd\033[00;10m"
 
-# kernel updates
+# kernel updates (available only after install phase)
 echo -ne "  Linux kernel: "
 #eix -cI2 sys-kernel/* &>/dev/null
 (eselect kernel list | egrep "\[.+\]" | tail -n1 | grep '*') &>/dev/null
@@ -212,6 +212,7 @@ get_ll_state() {
 #		echo -ne "\033[01;34m[\033[01;33m failed \033[01;34m]\033[00;10m" || 
 #		echo -ne "\033[01;34m[\033[01;32m  done  \033[01;34m]\033[00;10m"
 }
+cook_state=0
 get_all_states() {
 	local inProgress
 	loopLogic=$(cat "$1" 2>/dev/null || echo '0')
@@ -226,6 +227,7 @@ get_all_states() {
 				( (($forupd+$usertasks)) && echo -e "\033[01;32mOK, READY TO INSTALL ...\033[00;10m" || \
 						echo -e "\033[01;32mEVERYTHING IS DONE.\033[00;10m" )
 		fi
+		((cook_state=loopLogic))
 	else
 		if [ "$inProgress" ]; then
 			echo -e "\033[01;33mINSTALLATION IS IN PROGRESS, please come back later ...\033[00;10m"
@@ -234,8 +236,10 @@ get_all_states() {
 				echo -e "\033[01;31mINSTALL IS UNCOMPLETED ! POSSIBLY SYSTEM INCONSISTENCY !\033[00;10m" || \
 				( (($forupd+$usertasks)) && \
 					( (($6)) && echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m" || \
-						echo -e "\033[01;33mREADY FOR UPDATE ...\033[00;10m") || \
-					echo -e "\033[01;32mTHE SYSTEM IS UP TO DATE :)\033[00;10m" )
+						echo -e "\033[01;33mREADY FOR UPDATE ...\033[00;10m" ) || \
+					( (($cook_state)) && echo -e "\033[01;33mTHE SYSTEM IS UP TO DATE, BUT INCONSISTENCY.\033[00;10m" || \
+						echo -e "\033[01;32mTHE SYSTEM IS UP TO DATE :)\033[00;10m" ) \
+				)
 		fi
 	fi
 	if !(($opt & 0x2)) && ((loopLogic & ${AE_RBLL[_LOOP_START]})); then
