@@ -335,7 +335,7 @@ fi
 show_log() {
 	if (($opt & $1)); then
 		echo -ne "  \033[01;37mLast $2 message:\033[00;10m"
-		(($(wc -l < "$3" 2>/dev/null) > 1)) && \
+		[ -e "$3" ] && (($(wc -l < "$3" 2>/dev/null) > 1)) && \
 			echo -e "\n$(<"$3")" || \
 			echo -e ' \033[00;32mnone\033[00;10m.'
 	fi
