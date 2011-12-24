@@ -19,10 +19,10 @@
 . /etc/async.emerge.conf
 
 
-lockFile="${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" # change!
+lockFile="${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" # change?
 pN=$((ps -p $(<"$lockFile") -o comm= ) 2>/dev/null)
 
-if [[ "$pN" == 'ae_chroot' || "$pN" == 'ae_vcs' || "$pN" == "$PNAME" ]]; then
+if [[ "$pN" == 'ae_makeworld' || "$pN" == 'ae_chroot' || "$pN" == 'ae_vcs' || "$pN" == "$PNAME" ]]; then
 	echo -e "WARNING: 'ae_makeworld' is already running, skip calling it from CRON..." >> \
 		"${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
 else

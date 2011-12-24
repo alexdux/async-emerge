@@ -147,7 +147,7 @@ call_cmd0() {
 }
 
 # emerge solver: msg log_file_last -> $cmdRet
-# Features:
+# Features:~4.2_p20
 #	- for 'python-updater' and 'perl-cleaner' ONLY !!!
 # To-do:
 #	- this is awful --> emerge --ignore-invalid-atoms
@@ -301,7 +301,6 @@ scan_for_rdlibs() {
 	# return true if file exists (there is libs to rebuilt in it)
 	[ -e "$f" ]
 	# set request for obsoleted libs update, the var is described below
-#	(($?)) || ((loopLogic|=0x08))
 	(($?)) || loopLogic_set OBSOLETED_LIBS_REVDEP
 	return $?
 }
@@ -345,7 +344,6 @@ scan_for_sysvers() {
 								[[ "$iver" == "$uver" ]] || {
 									sysvers+=" -> $uver"
 									# set mark for critical packages update (=> world rebuild)
-#									((loopLogic|=0x1000)) 
 									loopLogic_set _CRITICAL_UPDATE
 									AE_SUPD[${s}_CRITICAL_CHANGE]=1									
 									#AE_SUPD[${s}_PENDED]=''
@@ -486,12 +484,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	alcruPend=''
 	
 	einfo "  Updating system with restoring of consistency, pass $loop of $max_loop:"
-#	echo $loopLogic > "${AESIGN[RBLOOP_LOGIC]}"
 	loopLogicLog
 	
 	# to-do: restore after TERM? or incomplete in tasks
 	# SAVE CRITICAL PACKAGES VERSIONS (only if world update or subset update is scheduled - todo: is it OK?)
-#	if (($loopLogic & 0x03)); then
 	if (($loopLogic & (${AE_RBLL[WORLD_UPDATE]}|${AE_RBLL[SUBSET_UPDATE]}) )); then
 		# start logs subsets updates
 		dt_mark &> "${AELOG[SUBSET_UPDATE_LAST]}"
@@ -502,7 +498,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			eend 0
 			# but check for world rebuild is needed...
 			if [ "$(grep -m1 -e '->' "$subsetf")" ]; then
-				#((loopLogic|=0x1000))
 				loopLogic_set _CRITICAL_UPDATE
 				# get updating critical packages
 				mapfile -t Pkgs < <(grep -e '->' "$subsetf")
@@ -531,11 +526,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 
 	# UPDATE WORLD with emerge
 	if [ "${AE_REBUILD[DO_EMERGE_WORLD]}" == "y" ]; then
-#		if (($loopLogic & 0x1001)); then
 		if (($loopLogic & (${AE_RBLL[WORLD_UPDATE]}|${AE_RBLL[_CRITICAL_UPDATE]}) )); then
 			updateExclude='' # local, for pended critical updates
 			# Checking for rebuild
-#			if (($loopLogic & 0x1000)) && [ "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" == "y" ]; then
 			if (($loopLogic & ${AE_RBLL[_CRITICAL_UPDATE]})) && [ "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" == "y" ]; then
 				echo -en "\033[01;37m"
 				echo "   *   ATTENTION!  Something important like GCC is going to been updated!   *" 
@@ -605,7 +598,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											# clean 'pre-eix'
 											AE_SUPD[${s}_PENDED]=1
 											# reset critical update flag
-#											((loopLogic&=0xFF))
 											loopLogic_reset _CRITICAL_UPDATE
 										fi
 									fi
@@ -624,26 +616,21 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			fi
 			
 			# World update logic
-#			if !(($loopLogic & 0x1000)) || [ "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" != "y" ]; then
 			if !(($loopLogic & ${AE_RBLL[_CRITICAL_UPDATE]})) || [ "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" != "y" ]; then
 				call_emerge "  Updating world" "${AECMD[EMERGE]}${updateExclude}" \
 					"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
 		
 				# set subset update, revdep-rebuild
-#				((loopLogic|=0x12))
 				loopLogic_set SUBSET_UPDATE
 				loopLogic_set WORLD_REVDEP
 				# set flags
 				if !(($cmdRet)); then # if OK
 					# reset this
-#					((loopLogic&=0xFE))
 					loopLogic_reset WORLD_UPDATE
 					# set depclean
-#					((loopLogic|=0x04))
 					loopLogic_set WORLD_DEPCLEAN
 				else # if NOT OK
 					# reset depclean
-#					((loopLogic&=0xFB))
 					loopLogic_reset WORLD_DEPCLEAN
 					# restrict adv. rebuild remove
 					alcruPend=1
@@ -658,27 +645,22 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 			fi
 			
 			# reset 0x1000 anyway
-#			((loopLogic&=0xFF))
 			loopLogic_reset _CRITICAL_UPDATE
 		else
 			einfo "    World already has been updated."; eend 0
 		fi
 	else
 		# reset this
-#		((loopLogic&=0xFE))
 		loopLogic_reset WORLD_UPDATE
 		ewarn "    World updating is not configured."; eend 1
 	fi
-#	echo $loopLogic > "${AESIGN[RBLOOP_LOGIC]}"
 	loopLogicLog
 
 
 	# SUBSET UPDATES
 	if [ "${AE_REBUILD[DO_SUBSET_UPDATES]}" == "y" ]; then
-#		if (($loopLogic & 0x02)); then
 		if (($loopLogic & ${AE_RBLL[SUBSET_UPDATE]})); then
 			# stop next try of subset updates (if fail any update - set flag again...)
-#			((loopLogic&=0xFD))
 			loopLogic_reset SUBSET_UPDATE
 			# check sysvers
 			if [ -e "$subsetf" ]; then 
@@ -757,7 +739,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 									eend 0
 									#unset Cmds
 									# add user task pass
-#									((loopLogic|=0x20))
 									loopLogic_set USER_TASKS
 								else
 									echo "Using tasks from VCS." >> "$log_last"
@@ -843,7 +824,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 											#scan_for_rdlibs "$log"
 											scan_for_rdlibs "$log_last"
 											# add depclean and revdep-rebuild pass
-#											((loopLogic|=0x14))
 											loopLogic_set WORLD_DEPCLEAN
 											loopLogic_set WORLD_REVDEP
 										else
@@ -883,20 +863,17 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 							unset AE_SUPD[${i}_UPDATED]
 							unset AE_SUPD[${i}_CRITICAL_CHANGE]
 							# do world update again (check)
-#							((loopLogic|=0x01))
 							loopLogic_set WORLD_UPDATE
 						fi
 					else # pend depclean if collision occurred
 						dcPend=1
 						# failed - set the bit again!!!
-#						((loopLogic|=0x02))
 						loopLogic_set SUBSET_UPDATE
 					fi
 				elif [ "${AE_SUPD[${i}_PENDED]}" ]; then
 					[ "$pended" ] && pended+=', '
 					pended+=${AE_SUPD[${i}_TITLE]}
 					# set the bit again for pended subsets
-#					((loopLogic|=0x02))
 					loopLogic_set SUBSET_UPDATE
 				elif [ "${AE_SUPD[${i}_NOTINSTALLED]}" ]; then
 					[ "$notinstalled" ] && notinstalled+=', '
@@ -915,13 +892,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	else 
 		ewarn "    Checking for various subsets updates is not configured."; eend 0
 	fi
-#	echo $loopLogic > "${AESIGN[RBLOOP_LOGIC]}"
 	loopLogicLog
 
 	
 	# Cleanup all unneded (DEPCLEAN), emerge -ca
 	if [ "${AE_REBUILD[DO_DEPCLEAN]}" == "y" ]; then
-#		if (($loopLogic & 0x04)); then
 		if (($loopLogic & ${AE_RBLL[WORLD_DEPCLEAN]})); then
 			if [ $dcPend ]; then
 				ewarn "    Cleaning system is delayed till the next pass. "\
@@ -933,14 +908,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				call_cmd1 "Cleaning system from unused dependencies" "${AECMD[DEPCLEAN]}" \
 							"${AELOG[DEPCLEAN_LAST]}" "${AELOG[DEPCLEAN]}"
 				# reset this if OK
-#				(($cmdRet)) || ((loopLogic&=0xFB))
 				(($cmdRet)) || loopLogic_reset WORLD_DEPCLEAN
 				# add revdep-rebuild pass
-#				((loopLogic|=0x10))
 				loopLogic_set WORLD_REVDEP
 			fi
 		else
-#			if (($loopLogic & 0x01)); then # check
 			if (($loopLogic & ${AE_RBLL[WORLD_UPDATE]})); then # check
 				einfo "    Cleaning system is delayed till the next pass."\
 					"(Uncompleted world update)"; eend 0
@@ -950,20 +922,16 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		fi
 	else 
 		# reset this
-#		((loopLogic&=0xFB))
 		loopLogic_reset WORLD_DEPCLEAN
 		ewarn "    Cleaning system is not configured."; eend 0
 	fi
-#	echo $loopLogic > "${AESIGN[RBLOOP_LOGIC]}"
 	loopLogicLog
 
 	
 	# REVDEP CONSUMERS for advised libs, revdep --libs
 	if [ "${AE_REBUILD[DO_OBSOLETED_LIBS]}" == "y" ]; then
-#		if (($loopLogic & 0x08)); then
 		if (($loopLogic & ${AE_RBLL[OBSOLETED_LIBS_REVDEP]})); then
 			# reset this
-#			((loopLogic&=0xF7))
 			loopLogic_reset OBSOLETED_LIBS_REVDEP
 			# sign file
 			f=${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}
@@ -1005,13 +973,11 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 						ewarn "      Save lost libs list for further operations."; eend 0
 					fi
 					# set this again
-#					((loopLogic|=0x08))
 					loopLogic_set OBSOLETED_LIBS_REVDEP
 				fi
 				# collect hints for libs comsumers rebuild
 				scan_for_rdlibs "${AELOG[OBSLLIBS_LAST]}" "$ol_ignore"
 				# add revdep-rebuild pass
-#				((loopLogic|=0x10))
 				loopLogic_set WORLD_REVDEP
 			else
 				einfo "    Not found any libs advised for consumers rebuilding."; eend 0
@@ -1021,24 +987,20 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		fi
 	else 
 		# reset this
-#		((loopLogic&=0xF7))
 		loopLogic_reset OBSOLETED_LIBS_REVDEP
 		ewarn "    Rebuilding of consumers for advised libs is not configured."; eend 0
 	fi
-#	echo $loopLogic > "${AESIGN[RBLOOP_LOGIC]}"
 	loopLogicLog
 
 	
 	# REVDEP system-wide
 	if [ "${AE_REBUILD[DO_REVDEP_REBUILD]}" == "y" ]; then
-#		if (($loopLogic & 0x10)); then
 		if (($loopLogic & ${AE_RBLL[WORLD_REVDEP]})); then
 			# call global revdep
 			# checking: call_cmd0
 			call_cmd1 "Rebuilding world with revdep-rebuild" "${AECMD[REVDEP_REBUILD]}" \
 					"${AELOG[REVDEP_LAST]}" "${AELOG[REVDEP]}"
 			# if OK - reset revdep flag
-#			(($cmdRet)) || ((loopLogic&=0xEF))
 			(($cmdRet)) || loopLogic_reset WORLD_REVDEP
 			# collect hints for libs comsumers rebuild
 			scan_for_rdlibs "${AELOG[REVDEP_LAST]}"
@@ -1047,20 +1009,16 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		fi
 	else 
 		# reset revdep flag
-#		((loopLogic&=0xEF))
 		loopLogic_reset WORLD_REVDEP
 		ewarn "    Rebuilding world with revdep-rebuild is not configured."; eend 0
 	fi
-#	echo $loopLogic > "${AESIGN[RBLOOP_LOGIC]}"
 	loopLogicLog
 
 
 	# Proceed TASKS with cmd/emerge
 	if [ "${AE_REBUILD[DO_USER_TASKS]}" == "y" ]; then
-#		if (($loopLogic & 0x20)); then
 		if (($loopLogic & ${AE_RBLL[USER_TASKS]})); then
 			# reset this
-			#((loopLogic&=0xDF))
 			loopLogic_reset USER_TASKS
 			f="${AE_DIR[GATEWAY]}${AECMD[FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
 			if [ -e "$f" ]; then 
@@ -1142,12 +1100,10 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 				done
 
 				# if failed - set the flag again
-#				(($cmdRet)) && ((loopLogic|=0x20))
 				(($cmdRet)) && loopLogic_set USER_TASKS
 
 				# add depclean and revdep-rebuild pass
 				# and world update
-#				((loopLogic|=0x15))
 				loopLogic_set WORLD_UPDATE
 				loopLogic_set WORLD_DEPCLEAN
 				loopLogic_set WORLD_REVDEP
@@ -1162,11 +1118,9 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 		fi
 	else 
 		# reset this
-#		((loopLogic&=0xDF))
 		loopLogic_reset USER_TASKS
 		ewarn "    Running scheduled tasks is not configured."; eend 0
 	fi
-#	echo $loopLogic > "${AESIGN[RBLOOP_LOGIC]}"
 	loopLogicLog
 done
 
