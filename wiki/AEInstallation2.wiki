@@ -4,42 +4,49 @@
 
 = AE Installation =
 
-There are 3 simple steps to install async-emerge (AE). Fourth step is just the test if it is working. Fifth step is lead to be a top-level configuration task. Finer configuration will be described in "Configuration" section...
-
-= 1. Check Dependencies =
-
-Install some staff are needed to run AE.
-<code># emerge -av aufs2 gentoolkit</code>
-Then rebuild kernel (better - twice) and do reboot. 
+There are 3 simple steps to install async-emerge (AE). Fourth step is just the test if it is working. Fifth step is the cron configuration task. Finer configuration will be described in "Configuration" section...
  
+ 
+= 1. Optional: for really old Gentoo box =
+
+Sync the portage and update your package manager (portage by default).
+
 
 = 2. Add Overlay to Portage =
 
 Add AE repo:
   * With layman (recommended way). Install layman if not installed yet:
 <code># emerge -av layman</code>
+(Make sure 'source /you/layman/overlay/dir' is included and uncommented in your /etc/make.conf.)
 
 Edit layman's config, add ae-repo to layman:
-<code>nano /etc/layman/layman.cfg
+<code># nano /etc/layman/layman.cfg
   overlays  : http://www.gentoo.org/proj/en/overlays/repositories.xml 
 +             https://async-emerge.googlecode.com/svn/distfiles/layman/ae-overlay.xml
 </code>
 
+Sync the layman overlays list:
+<code># layman -l</code>
+
 Add AE overlay:
-<code>layman -a async-emerge</code>
+<code># layman -a async-emerge</code>
+
+Check if it available:
+<code># <eix|emerge -s> async-emerge</code>
+
 
 = 3. Unmask & install AE =
 
-If you want to use the last development version add:
+If you want to use the lastest development version do:
 <code># echo "app-portage/async-emerge" > /etc/portage/package.keywords/async-emerge</code>
-If you want to use the last SVN version add:
+If you want to use the lastest SVN version do:
 <code># echo "app-portage/async-emerge `**`" > /etc/portage/package.keywords/async-emerge</code>
 
 *Finally, install AE.*
 <code># emerge -av -j1 app-portage/async-emerge</code>
 
 
-= 4. Testing =
+= 4. Optional: testing =
 
 Try to start VCS with "df -h" command:
 <code># ae_vcs df -h </code>
@@ -99,9 +106,9 @@ df: `/var/async.emerge/chroot/var/www': No such file or directory
 #</pre>
 
 
-= 5. Add to cron/anacron =
+= 5. Add AE to cron =
 
-In order to build (cook) binaries of packages updates in background you have to schedule `ae_cron` task:
+In order to build (cook) in background binaries of packages updates you have to schedule `ae_cron` task:
   * Edit cron table:
 one example:
 <code># crontab -e
@@ -112,4 +119,4 @@ another example:
 
   * ...or edit anacron table:
 <code># nano /etc/anacrontab</code>
-Recommended frequency of running is from 1 to 7 days. Anacron is suggested for rare used Gentoo boxes.
+Recommended frequency of running: once at 1-7 days. Anacron is suggested for rare used Gentoo boxes.
