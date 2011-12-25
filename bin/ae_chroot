@@ -100,7 +100,7 @@ mnt_special ${AE_VCS[CHROOT_MOUNT_SYSFS]} 'sys' 'sysfs'
 
 # DO CHROOT
 # todo: remove --rcfile ?
-chr_cmd="AE_STATE_SKIP=1 chroot \"${AE_DIR[CHROOT]}\" /bin/bash"
+chr_cmd="AE_STATE_SKIP=1 chroot \"${AE_DIR[CHROOT]}\" /bin/bash "
 ##chr_cmd="AE_STATE_SKIP=1 AE_CHROOT_PS1=\"\[\033[01;33m\]$PNAME\" \
 ##  chroot \"${AE_DIR[CHROOT]}\" /bin/bash --rcfile /etc/async.emerge.chroot.bashrc"
 #TempBashRC=$(mktemp --tmpdir="${AE_DIR[GATEWAY]}")
@@ -109,16 +109,17 @@ TempBashRC="${AE_DIR[GATEWAY]}.$PNAME.vcs.lock.$$"
 if [ "$1" ]; then
 	touch "$TempBashRC"
 	einfo "Starting Virtually Chrooted System with: '$*' ..."
-	chr_cmd+=" -c \"$*\""
+	chr_cmd+="-i -O checkwinsize -c \"$*\""
 else	
 	cat "${AE_SIGN[BASHRC]}" > "$TempBashRC"
 	echo "PS1=\"\[\033[01;33m\]$PNAME \$PS1\";cd" >> "$TempBashRC"
 	einfo "Welcome to Virtually Chrooted System !"
-	chr_cmd+=" --rcfile \"$TempBashRC\""
+	chr_cmd+="--rcfile \"$TempBashRC\" -i -O checkwinsize"
 fi
 eend 0
 
 
+#echo "$chr_cmd"
 eval $chr_cmd
 #[ "$1" ] || 
 rm -v "$TempBashRC" &> /dev/null
