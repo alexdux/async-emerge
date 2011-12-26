@@ -30,7 +30,6 @@ compile() {
 	return $?
 }
 
-
 # begin
 ebegin "Mounting $TE_MEMSIZE of memory to $TE_VTP"
 
