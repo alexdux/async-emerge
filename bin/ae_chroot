@@ -114,10 +114,9 @@ else
 	cat "${AE_SIGN[BASHRC]}" > "$TempBashRC"
 	echo "PS1=\"\[\033[01;33m\]$PNAME \$PS1\";cd" >> "$TempBashRC"
 	einfo "Welcome to Virtually Chrooted System !"
-	chr_cmd+="--rcfile \"$TempBashRC\""
+	chr_cmd+="--rcfile \"$TempBashRC\" -i"
 fi
 eend 0
-
 
 #echo "$chr_cmd"
 eval $chr_cmd
