@@ -476,15 +476,29 @@ max_loop=${AE_REBUILD[REVDEPCO_MT]}
 subsetf="${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_SUBSET_SAVED]}"
 #
 #
-for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
+for (( loop=1; $loop < $max_loop && $loopLogic; loop++ )); do
 
 	# reset temp pending
 	dcPend=''
 	dcPend2=''
 	alcruPend=''
 	
-	einfo "  Updating system with restoring of consistency, pass $loop of $max_loop:"
+	einfo "  Updating system with restoring of consistency, pass "(($loop+1))" of $max_loop:"
 	loopLogicLog
+	
+	if (($loop)); then
+		# Reload ENV
+		if [ "${AE_REBUILD[DO_RELOAD_ENV]}" == "y" ]; then
+			einfo "    Reloading ENV ..."
+			. /etc/profile && \
+			echo -n '      ' && env-update && \
+			hash -r
+			eend $?
+		else
+			ewarn "    Reloading ENV is not configured."; eend 0
+		fi
+#	else
+	fi
 	
 	# to-do: restore after TERM? or incomplete in tasks
 	# SAVE CRITICAL PACKAGES VERSIONS (only if world update or subset update is scheduled - todo: is it OK?)
@@ -1123,16 +1137,6 @@ for (( loop=1; $loop <= $max_loop && $loopLogic; loop++ )); do
 	fi
 	loopLogicLog
 	
-	# Reload ENV
-	if [ "${AE_REBUILD[DO_RELOAD_ENV]}" == "y" ]; then
-		einfo "    Reloading ENV ..."
-		. /etc/profile && \
-		echo -n '      ' && env-update && \
-		hash -r
-		eend $?
-	else
-		ewarn "    Reloading ENV is not configured."; eend 0
-	fi
 done
 
 
