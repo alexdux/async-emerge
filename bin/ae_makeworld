@@ -476,14 +476,14 @@ max_loop=${AE_REBUILD[REVDEPCO_MT]}
 subsetf="${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_SUBSET_SAVED]}"
 #
 #
-for (( loop=1; $loop < $max_loop && $loopLogic; loop++ )); do
+for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 
 	# reset temp pending
 	dcPend=''
 	dcPend2=''
 	alcruPend=''
 	
-	einfo "  Updating system with restoring of consistency, pass "(($loop+1))" of $max_loop:"
+	einfo "  Updating system with restoring of consistency, pass "$((loop+1))" of $max_loop:"
 	loopLogicLog
 	
 	if (($loop)); then
