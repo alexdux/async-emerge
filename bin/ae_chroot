@@ -109,12 +109,12 @@ TempBashRC="${AE_DIR[GATEWAY]}.$PNAME.vcs.lock.$$"
 if [ "$1" ]; then
 	touch "$TempBashRC"
 	einfo "Starting Virtually Chrooted System with: '$*' ..."
-	chr_cmd+="-O checkwinsize -c \"$*\""
+	chr_cmd+="-c \"$*\""
 else	
 	cat "${AE_SIGN[BASHRC]}" > "$TempBashRC"
 	echo "PS1=\"\[\033[01;33m\]$PNAME \$PS1\";cd" >> "$TempBashRC"
 	einfo "Welcome to Virtually Chrooted System !"
-	chr_cmd+="--rcfile \"$TempBashRC\" -i"
+	chr_cmd+="--rcfile \"$TempBashRC\""
 fi
 eend 0
 
