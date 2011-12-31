@@ -1008,24 +1008,45 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 	loopLogicLog
 
 	
+	# PRESERVED REBUILD
+	if [ "${AE_REBUILD[DO_PRESERVED_REBUILD]}" == "y" ]; then
+		if (($loopLogic & ${AE_RBLL[PRESERVED_REBUILD]})); then
+			# 
+			call_cmd1 "Stabilizing world with @preserved-rebuild" "${AECMD[PRESERVED_REBUILD]}" \
+					"${AELOG[PRESERVED_LAST]}" "${AELOG[PRESERVED]}"
+			# if OK - reset flag
+			(($cmdRet)) || loopLogic_reset PRESERVED_REBUILD
+			# collect hints for libs comsumers rebuild
+			scan_for_rdlibs "${AELOG[PRESERVED_LAST]}"
+		else
+			einfo 0 "    Stabilizing world with @preserved-rebuild has been already done." #; eend 0
+		fi
+	else 
+		# reset revdep flag
+		loopLogic_reset PRESERVED_REBUILD
+		ewarn 0 "    Stabilizing world with @preserved-rebuild is not configured." #; eend 0
+	fi
+	loopLogicLog
+
+
 	# REVDEP system-wide
 	if [ "${AE_REBUILD[DO_REVDEP_REBUILD]}" == "y" ]; then
 		if (($loopLogic & ${AE_RBLL[WORLD_REVDEP]})); then
 			# call global revdep
 			# checking: call_cmd0
-			call_cmd1 "Rebuilding world with revdep-rebuild" "${AECMD[REVDEP_REBUILD]}" \
+			call_cmd1 "Stabilizing world with revdep-rebuild" "${AECMD[REVDEP_REBUILD]}" \
 					"${AELOG[REVDEP_LAST]}" "${AELOG[REVDEP]}"
 			# if OK - reset revdep flag
 			(($cmdRet)) || loopLogic_reset WORLD_REVDEP
 			# collect hints for libs comsumers rebuild
 			scan_for_rdlibs "${AELOG[REVDEP_LAST]}"
 		else
-			einfo "    Rebuilding world with revdep-rebuild has been already done."; eend 0
+			einfo "    Stabilizing world with revdep-rebuild has been already done."; eend 0
 		fi
 	else 
 		# reset revdep flag
 		loopLogic_reset WORLD_REVDEP
-		ewarn "    Rebuilding world with revdep-rebuild is not configured."; eend 0
+		ewarn "    Stabilizing world with revdep-rebuild is not configured."; eend 0
 	fi
 	loopLogicLog
 
