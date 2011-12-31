@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ae_root_umount - AUFS unmounter for 'async emerge'
+# _ae_root_umount - AUFS unmounter for 'async emerge'
 # GPL ver. 2
 # version: 1.1
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
