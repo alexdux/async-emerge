@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ae_root_mount - AUFS mounter for 'aync emerge'
+# _ae_root_mount - AUFS mounter for 'aync emerge'
 # GPL ver. 2
 #	*some code was tacken from 'auroot' by Junjiro R. Okajima from 'aufs2' distribution
 # version: 1.1
@@ -43,6 +43,9 @@ fi
 # bind+mount a set of dirs 
 # mnt_list: list of dirs, exclusion list, type-fs mark
 mnt_list() {
+	# ... nested AUFS mounting is not supported (temp) curently with AUFS
+	# local mnts=$(mount | grep -e '^/dev/' -e '^aufs' -i | cut -f3 -d' ' | tr '\n' ' ')
+	#
 	local mnts=$(mount | grep '^/dev/' | cut -f3 -d' ' | tr '\n' ' ')
 	# also bind ?
 	#echo "mounts: $mnts"
@@ -63,7 +66,7 @@ mnt_list() {
 				eerror "  Error binding or mounting $i!" 
 				eend 1
 				ewarn "Cleanup:"
-				ae_root_umount
+				_ae_root_umount
 				exit 1
 			else
 				# a bug. make transparent for second+ level rbind submounts
@@ -73,17 +76,17 @@ mnt_list() {
 						if [[ "$k" == "$i"'/'* ]]; then
 							#echo "  found '$k'"
 							bind="${AE_DIR[BIND]}$k"; delta="${AE_DIR[DELTA]}$k"; chroot="${AE_DIR[CHROOT]}$k"
-							#echo "mount -vt aufs -o br=\"$delta\"=rw::\"$bind\"=ro $3 \"$chroot\" 2>/dev/null >&2"
+							#echo "mount -vt aufs -o br=\"$delta\"=rw:\"$bind\"=ro $3 \"$chroot\" 2>/dev/null >&2"
 							(mkdir -vp "$bind" "$delta" "$chroot" && \
 							mount -vB "$k" "$bind" && \
 							mount -vo remount,ro "$bind" && \
 							mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) &> /dev/null
 							#
 							if (($?)); then
-								eerror "  Error binding or mounting (rbind) $i!" 
+								eerror "  Error binding or mounting (rbind) $k!" 
 								eend 1
 								ewarn "Cleanup:"
-								ae_root_umount
+								_ae_root_umount
 								exit 1
 							fi
 							((mounted++))
@@ -134,7 +137,7 @@ bnd_trans() {
 				eerror "  Can't bind transparent (non-merged) $i!" 
 				eend 1
 				ewarn "Cleanup:"
-				ae_root_umount
+				_ae_root_umount
 				exit 3
 			fi
 			((nonmerged++))
