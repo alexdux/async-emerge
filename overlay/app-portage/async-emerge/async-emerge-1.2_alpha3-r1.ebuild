@@ -52,7 +52,8 @@ src_configure() {
 			sed -i -e "s@\`${str_todo}\`@`${str_todo}`@" "${AE_CONF}"; 
 		done # "
 	# disable ccache if not installed
-	echo "ccache: $CCACHE_DIR"
+	[ "$CCACHE_DIR" ] || \
+		sed -i -e "s/^(AE_DIR[TRANSPARENT]+=\" $CCACHE_DIR\")/#\\1/" "${AE_CONF}"
 }
 
 src_install() {
