@@ -43,6 +43,7 @@ if [ "$1" == "--help" ]; then
 	echo "    Show last log options:"
 	echo "      -b        Obsoleted Libs Revdep log from last cook" # bitmask 0x400
 	echo "      -c        CRON log" # bitmask 0x100
+	echo "      -p        World Preserved Rebuild log from last cook" # bitmask 0x4000
 	echo "      -l        World Revdep log from last cook" # bitmask 0x2000
 	echo "      -n        World Depclean log from last cook" # bitmask 0x1000
 	echo "      -s        Subset Update log from last cook" # bitmask 0x800
@@ -72,6 +73,7 @@ for o in $*; do
 					m) AE_STATE[USE_EIX]='n';;
 					n) ((opt|=0x1000));;
 					o) ((opt|=0x4));;
+					p) ((opt|=0x4000));;
 					q) ((opt|=0x2));;
 					s) ((opt|=0x800));;
 					r) ls_sort='';;
@@ -214,12 +216,17 @@ echo "  Last installed at : $linst."
 
 # State
 get_ll_state() { # to-do: add flag to set
-	if ((loopLogic & ${AE_RBLL[$3]})); then
-		[ "$2" ] && echo -ne "$1 \033[01;33mrunning\033[00;10m" || \
-					echo -ne "$1 \033[01;31mfailed \033[00;10m"
-		[ "$4" ] && ((opt|=$4))
+	if ((${AE_RBLL[_LOOP_START]} & ${AE_RBLL[$3]})); then
+		if ((loopLogic & ${AE_RBLL[$3]})); then
+			[ "$2" ] && echo -ne "$1 \033[01;33mrunning \033[00;10m" || \
+						echo -ne "$1 \033[01;31m failed \033[00;10m"
+			[ "$4" ] && ((opt|=$4))
+		else
+			echo -ne "$1 \033[00;32m  done  \033[00;10m"
+		fi
 	else
-		echo -ne "$1 \033[00;32m done  \033[00;10m"
+		#echo -ne "$1 \033[00;33mdisabled\033[00;10m"
+		echo -ne "$1 disabled"
 	fi
 }
 cook_state=0
@@ -253,14 +260,16 @@ get_all_states() {
 		fi
 	fi
 	if !(($opt & 0x2)) && ((loopLogic & ${AE_RBLL[_LOOP_START]})); then
-		get_ll_state "    World Update          :" "$inProgress" WORLD_UPDATE 0x20
-		get_ll_state "    Subset Update         :" "$inProgress" SUBSET_UPDATE 0x0800
+		get_ll_state "    World Update            :" "$inProgress" WORLD_UPDATE 0x20
+		get_ll_state "    Subset Update           :" "$inProgress" SUBSET_UPDATE 0x0800
 		echo
-		get_ll_state "    World Depclean        :" "$inProgress" WORLD_DEPCLEAN 0x1000
-		get_ll_state "    Obsoleted Libs Revdep :" "$inProgress" OBSOLETED_LIBS_REVDEP 0x0400
+		get_ll_state "    World Depclean          :" "$inProgress" WORLD_DEPCLEAN 0x1000
+		get_ll_state "    Obsoleted Libs Revdep   :" "$inProgress" OBSOLETED_LIBS_REVDEP 0x0400
 		echo
-		get_ll_state "    World Revdep          :" "$inProgress" WORLD_REVDEP 0x2000
-		get_ll_state "    User Tasks            :" "$inProgress" USER_TASKS 0x0200
+		get_ll_state "    World Preserved Rebuild :" "$inProgress" PRESERVED_REBUILD 0x4000
+		get_ll_state "    World Revdep            :" "$inProgress" WORLD_REVDEP 0x2000
+		echo
+		get_ll_state "    User Tasks              :" "$inProgress" USER_TASKS 0x0200
 		echo
 	fi
 	if !(($opt & 0x2)) && ((loopLogic & ${AE_RBLL[_CRON_FAIL]})); then
@@ -347,6 +356,7 @@ show_log 0x0020 'World Update Warning' "$lcdp${AE_LOG[FILE_EMERGE_WARN]}${AE_LOG
 show_log 0x0800 'Subset Update' "$lcdp${AE_LOG[FILE_SUBSET_UPDATE]}${AE_LOG[EXT_COOK]}"
 show_log 0x1000 'World Depclean' "$lcdp${AE_LOG[FILE_DEPCLEAN]}${AE_LOG[EXT_COOK]}"
 show_log 0x0400 'Obsoleted Libs Revdep' "$lcdp${AE_LOG[FILE_OBSLLIBS]}${AE_LOG[EXT_COOK]}"
+show_log 0x4000 'World Preserved Rebuild' "$lcdp${AE_LOG[FILE_PRESERVED]}${AE_LOG[EXT_COOK]}"
 show_log 0x2000 'World Revdep' "$lcdp${AE_LOG[FILE_REVDEP]}${AE_LOG[EXT_COOK]}"
 show_log 0x0200 'User Task' "$lcdp${AE_LOG[FILE_TASKS]}${AE_LOG[EXT_COOK]}"
 
