@@ -47,10 +47,14 @@ src_configure() {
 		sed -i -e "s/AE_REBUILD\[DO_PRESERVED_REBUILD\]='y'/AE_REBUILD\[DO_PRESERVED_REBUILD\]='n'/" "${AE_CONF}"
 	fi
 	# get some portage vars
-	for $str_to_do in $(grep -e '`portageq .*`' /etc/async.emerge.conf | cut -f2 -d'`'); do
-		str_to_subst=$(${str_to_do})
-		sed -i -e "s/\`${str_to_do}\`/${str_to_subst}/" "${AE_CONF}"
-	done
+	grep -o '`portageq .*`' "${AE_CONF}" | cut -f2 -d'`' | \
+		while read str_todo; do 
+			sed -e "s@\`${str_todo}\`@`${str_todo}`@" "${AE_CONF}"; 
+		done # "
+#	for $str_to_do in $(grep -e '`portageq .*`' /etc/async.emerge.conf | cut -f2 -d'`'); do
+#		str_to_subst=$(${str_to_do})
+#		sed -i -e "s/\`${str_to_do}\`/${str_to_subst}/" "${AE_CONF}"
+#	done
 }
 
 src_install() {
