@@ -51,10 +51,8 @@ src_configure() {
 		while read str_todo; do 
 			sed -i -e "s@\`${str_todo}\`@`${str_todo}`@" "${AE_CONF}"; 
 		done # "
-#	for $str_to_do in $(grep -e '`portageq .*`' /etc/async.emerge.conf | cut -f2 -d'`'); do
-#		str_to_subst=$(${str_to_do})
-#		sed -i -e "s/\`${str_to_do}\`/${str_to_subst}/" "${AE_CONF}"
-#	done
+	# disable ccache if not installed
+	echo "ccache: $CCACHE_DIR"
 }
 
 src_install() {
