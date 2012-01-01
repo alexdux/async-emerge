@@ -5,7 +5,8 @@
 EAPI=4
 inherit eutils
 
-DESCRIPTION="Periodically sync portage and prebuild binary updates for Gentoo."
+DESCRIPTION="Asynchronous binary Gentoo's updater."
+#DESCRIPTION="Periodically sync portage and prebuild binary updates for Gentoo."
 #DESCRIPTION="Asynchronous multiple binaries cooker for Gentoo"
 HOMEPAGE="http://code.google.com/p/async-emerge/"
 
@@ -36,6 +37,21 @@ app-portage/eix
 sys-process/lsof"
 #DEPEND="${RDEPEND}"
 
+src_configure() {
+	AE_CONF="${S}/etc/async.emerge.conf"
+	# portage ver adjust
+	P_VER=$(emerge --info | grep 'portage ' -i | cut -f2 -d'.')
+	if ((P_VER>1)); then # new portage-2.2 +
+		sed -i -e "s/AE_REBUILD\[DO_REVDEP_REBUILD\]='y'/AE_REBUILD\[DO_REVDEP_REBUILD\]='n'/" "${AE_CONF}"
+	else # old portage-2.2 -
+		sed -i -e "s/AE_REBUILD\[DO_PRESERVED_REBUILD\]='y'/AE_REBUILD\[DO_PRESERVED_REBUILD\]='n'/" "${AE_CONF}"
+	fi
+	# get some portage vars
+	for $str_to_do in $(grep -e '`portageq .*`' /etc/async.emerge.conf | cut -f2 -d'`'); do
+		str_to_subst=$(${str_to_do})
+		sed -i -e "s/\`${str_to_do}\`/${str_to_subst}/" "${AE_CONF}"
+	done
+}
 
 src_install() {
 #	dobin "${S}"/bin/ae_[^v]* || die
