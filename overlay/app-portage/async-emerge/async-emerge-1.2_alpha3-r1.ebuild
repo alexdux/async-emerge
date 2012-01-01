@@ -49,7 +49,7 @@ src_configure() {
 	# get some portage vars
 	grep -o '`portageq .*`' "${AE_CONF}" | cut -f2 -d'`' | \
 		while read str_todo; do 
-			sed -e "s@\`${str_todo}\`@`${str_todo}`@" "${AE_CONF}"; 
+			sed -i -e "s@\`${str_todo}\`@`${str_todo}`@" "${AE_CONF}"; 
 		done # "
 #	for $str_to_do in $(grep -e '`portageq .*`' /etc/async.emerge.conf | cut -f2 -d'`'); do
 #		str_to_subst=$(${str_to_do})
