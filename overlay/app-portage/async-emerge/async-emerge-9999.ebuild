@@ -5,7 +5,8 @@
 EAPI=4
 inherit eutils
 
-DESCRIPTION="Asynchronous binary Gentoo's updater."
+DESCRIPTION="Prebuild ready-to-intall binary updates for Gentoo."
+#DESCRIPTION="Asynchronous binary Gentoo's updater."
 #DESCRIPTION="Periodically sync portage and prebuild binary updates for Gentoo."
 #DESCRIPTION="Asynchronous multiple binaries cooker for Gentoo"
 HOMEPAGE="http://code.google.com/p/async-emerge/"
@@ -51,22 +52,19 @@ src_configure() {
 		while read str_todo; do 
 			sed -i -e "s@\`${str_todo}\`@`${str_todo}`@" "${AE_CONF}"; 
 		done # "
-	# disable ccache if not installed
+	# disable ccache if not installed (not tested)
 	[ "$CCACHE_DIR" ] || \
 		sed -i -e "s/^(AE_DIR[TRANSPARENT]+=\" $CCACHE_DIR\")/#\\1/" "${AE_CONF}"
 }
 
 src_install() {
-#	dobin "${S}"/bin/ae_[^v]* || die
-#	for f in "${S}"/bin/; do
-#	    if [ -x "$f" ]; do
-#		dobin "$f" || die
-#	    fi
-#	done
+	# bin
 	dodir /usr/bin
 	cp -R ${S}/bin/* ${D}/usr/bin/ || die
+	# conf
 	insinto /etc
 	doins "${S}"/etc/* || die
+	# log
 	keepdir /var/log/async.emerge
 }
 

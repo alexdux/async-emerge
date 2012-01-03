@@ -1019,12 +1019,12 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 			# collect hints for libs comsumers rebuild
 			scan_for_rdlibs "${AELOG[PRESERVED_LAST]}"
 		else
-			einfo 0 "    Rebuilding world with @preserved-rebuild has been already done." #; eend 0
+			einfo "    Rebuilding world with @preserved-rebuild has been already done."; eend 0
 		fi
 	else 
 		# reset revdep flag
 		loopLogic_reset PRESERVED_REBUILD
-		ewarn 0 "    Rebuilding world with @preserved-rebuild is not configured." #; eend 0
+		ewarn "    Rebuilding world with @preserved-rebuild is not configured."; eend 0
 	fi
 	loopLogicLog
 
