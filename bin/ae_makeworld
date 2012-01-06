@@ -495,8 +495,8 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 			echo -n '         ' && env-update && \
 			hash -r
 			eend $?
-		else
-			ewarn "    Reloading ENV is not configured."; eend 0
+#		else
+#			ewarn "    Reloading ENV is not configured."; eend 0
 		fi
 #	else
 	fi

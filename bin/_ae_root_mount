@@ -61,7 +61,7 @@ mnt_list() {
 				# mount --make-rslave "$bind" && \
 			mount -vo remount,ro "$bind" && \
 			# mount with AUFS
-			mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) &> /dev/null
+			mount -vt aufs -o async,trunc_xino,br="$delta"=rw:"$bind"=ro $3 "$chroot" ) &> /dev/null
 			if (($?)); then
 				eerror "  Error binding or mounting $i!" 
 				eend 1
@@ -80,7 +80,7 @@ mnt_list() {
 							(mkdir -vp "$bind" "$delta" "$chroot" && \
 							mount -vB "$k" "$bind" && \
 							mount -vo remount,ro "$bind" && \
-							mount -vt aufs -o br="$delta"=rw:"$bind"=ro $3 "$chroot" ) &> /dev/null
+							mount -vt aufs -o async,trunc_xino,br="$delta"=rw:"$bind"=ro $3 "$chroot" ) &> /dev/null
 							#
 							if (($?)); then
 								eerror "  Error binding or mounting (rbind) $k!" 
