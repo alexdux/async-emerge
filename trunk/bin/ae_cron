@@ -1,5 +1,4 @@
-#!/bin/bash
-# -l - ???
+#!/bin/bash -l # - ???
 
 # ae_cron - 'ae_chroot ae_makeworld' shortcut for cron
 # GPL-2
