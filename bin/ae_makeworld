@@ -51,7 +51,7 @@ if (($AE_VCS)); then
 else
     [[ "$1" != '-q' ]] && AE_MW_VERBOSE='verbose'
 fi
-[ "$AE_MW_VERBOSE" ] && einfo "($PNAME: verbose mode is ON.)"
+[ "$AE_MW_VERBOSE" ] && einfo "($PNAME: verbose mode is ON)"
 
 [ "$AE_TMPFS[SIZE]" ] || \
 	ewarn "($PNAME: skip to use 'temerge': not enough memory or disabled in the config.)"
@@ -1219,6 +1219,7 @@ if !(($AE_VCS)); then
 	# to-do: print out install.emerge.warn.log
 
 	einfo "Binary packages installation is finished!"
+	eend 0
 fi
 
 #times
