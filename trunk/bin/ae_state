@@ -30,7 +30,7 @@ if [ "$1" == "--help" ]; then
 	echo -e "\033[01;33mAsync Emerge\033[00;10m state report."
 	echo "USE: $PNAME [OPTIONS]"
 	echo "  Where valid OPTIONS are:"
-	echo "    -a        list All packages, including older (probably merged)'" # bitmask 0x1
+	echo "    -a        list All packages, including older (probably merged)" # bitmask 0x1
 	echo "    -d        group by cooking Date" # bitmask 0x10
 	echo "    -e        force to use Eix (else use configs value)" # AE_STATE[USE_EIX]='y'
 	echo "    -f        don't search for description, just list cooked Filenames" # bitmask 0x8
@@ -40,7 +40,7 @@ if [ "$1" == "--help" ]; then
 	echo "    -q        Quiet: skip package listing and 'makeworld' details" # bitmask 0x2
 	echo "    -r        Reverse listing: last cooked - list first" # ls_sort=''
 	echo "    -v        to-do?: only with -e/eix: use VCS to list packages" # bitmask 0x40
-	echo "    Show last log options:"
+	echo "    Show 'last.*.log' options:"
 	echo "      -b        Obsoleted Libs Revdep log from last cook" # bitmask 0x400
 	echo "      -c        CRON log" # bitmask 0x100
 	echo "      -p        World Preserved Rebuild log from last cook" # bitmask 0x4000

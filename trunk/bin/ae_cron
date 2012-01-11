@@ -1,8 +1,9 @@
-#!/bin/bash -l
+#!/bin/bash
+# -l - ???
 
 # ae_cron - 'ae_chroot ae_makeworld' shortcut for cron
 # GPL-2
-# version: 2.0
+# version: 2.1
 # alexdu@forums.gentoo.org
 
 # Usage:
@@ -12,27 +13,77 @@
 # ^D
 # - 'manual' use -
 # # ae_cron
-# - that is the same as -
+# - what is the same as -
 # # ae_chroot|ae_vcs ae_makeworld
 
 # get config
 . /etc/async.emerge.conf
 
+# help out
+if [ "$1" == "--help" ]; then
+#	echo -e "\033[01;33mAsync Emerge\033[00;10m state report."
+	echo "SYNOPSYS: $PNAME is shortcut for building packages binaries (in background) by cron."
+	echo "USE: $PNAME [OPTIONS]"
+	echo "  Where valid OPTIONS are:"
+	echo "    -m <email> Send out to email address (with 'sendmail' cmd)." # bitmask 0x01
+	echo "    -s         Sync portage with configured cmd before build." # bitmask 0x02
+	exit 0
+fi
 
 lockFile="${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" # change?
 pN=$((ps -p $(<"$lockFile") -o comm= ) 2>/dev/null)
 
+# parse command line options
+opt=0
+for o in $*; do
+	((p_no++))
+	case $o in
+		-*) while eval 'o=${o:1}' && [ $o ]; do
+				case ${o:0:1} in
+					m) ((opt|=0x101));; # 0x100 - temp bit for $mail_to scanning in params
+					s) ((opt|=0x02));;
+					*) echo "ignore invalid option: '-${o:0:1}'"
+
+				esac
+			done;;
+		*) if (($opt&0x100)); then
+				((opt&=0xFF))
+				mail_to="$o"
+		   else
+				echo "ignore invalid option: '$o'"
+		   fi
+	esac
+done
+#echo $opt
+#echo $mail_to
+
+#exit 0
+
 if [[ "$pN" == 'ae_makeworld' || "$pN" == 'ae_chroot' || "$pN" == 'ae_vcs' || "$pN" == "$PNAME" ]]; then
 	echo -e "WARNING: 'ae_makeworld' is already running, skip calling it from CRON..." >> \
 		"${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
-else
-	# make lock
-	rm -f "$lockFile" &> /dev/null
-	trap "cat \"${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}\" >> \"${AE_LOG[DIR_SAVE]}${AE_LOG[FILE_CRON]}\"" INT TERM EXIT
-	(echo '--- '$(date)' ---' && time ae_chroot ae_makeworld && echo) &> "${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
-	(($?)) && \
-		echo $(($(cat "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null || \
-			echo '0')|${AE_RBLL[_CRON_FAIL]})) > \
-				"${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}"  
+	exit 0
 fi
+
+
+# Build binaries
+# make lock
+rm -f "$lockFile" &> /dev/null
+# trap interrupt
+trap "cat \"${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}\" >> \"${AE_LOG[DIR_SAVE]}${AE_LOG[FILE_CRON]}\"" INT TERM EXIT
+last_log="${AE_LOG[DIR_LAST]}${AE_LOG[FILE_CRON]}"
+echo -n > "$last_log" 2> /dev/null
+# Sync portage if asked
+if (($opt&0x02)); then
+	eval "echo '--- '$(date)' ---'; ${AE_CMD[SYNC]}; echo" &>> "$last_log"
+fi
+# build binaries
+(echo '--- '$(date)' ---' && time ae_chroot ae_makeworld && echo) &>> "$last_log"
+# if error - set _CRON_FAIL in loopLogic
+(($?)) && echo $(($(cat "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null || \
+		echo '0')|${AE_RBLL[_CRON_FAIL]})) > \
+			"${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}"  
+
+# Mail the log if asked, or just echo
+(($opt&0x01)) && eval "${AE_CMD[SYNC_LOG_MAIL]}" || eval "${AE_CMD[SYNC_LOG_ECHO]}"
 
