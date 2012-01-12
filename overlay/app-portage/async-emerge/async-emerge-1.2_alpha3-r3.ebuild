@@ -35,7 +35,8 @@ RDEPEND="|| ( sys-fs/aufs2 sys-fs/aufs3 )
 app-portage/gentoolkit
 app-shells/bash
 app-portage/eix
-sys-process/lsof"
+sys-process/lsof
+net-mail/email"
 #DEPEND="${RDEPEND}"
 
 src_configure() {
