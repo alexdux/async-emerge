@@ -7,9 +7,10 @@
 There are 3 simple steps to install async-emerge (AE). Fourth step is just the test if it is working. Fifth step is the cron configuration task. Finer configuration will be described in "Configuration" section...
  
  
-= 1. Optional: for really old Gentoo box =
+= 1. ...for really old Gentoo box =
 
-Sync the portage and update your package manager (portage by default).
+  * Sync the portage and update your package manager (portage by default).
+  * Check with 'emerge -uDNvp world' (or similar) if all keywords/USE/mask is OK. Correct if necessary.
 
 
 = 2. Add Overlay to Portage =
