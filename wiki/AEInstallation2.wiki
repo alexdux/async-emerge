@@ -12,8 +12,7 @@ There are 3 simple steps to install async-emerge (AE). Fourth step is just the t
   * Sync the portage and update your package manager (portage by default).
   * Check with 'emerge -uDNvp world' (or similar) if all keywords/USE/mask is OK. Correct if necessary.
 
-
-= 2. Add Overlay to Portage =
+= 2. Add AE Overlay to Portage =
 
 Add AE repo:
   * With layman (recommended way). Install layman if not installed yet:
@@ -33,8 +32,8 @@ Add AE overlay:
 <code># layman -a async-emerge</code>
 
 Check if it available:
-<code># <eix|emerge -s> async-emerge</code>
-
+<code># eix async-emerge</code>
+ 
 
 = 3. Unmask & install AE =
 
@@ -45,7 +44,7 @@ If you want to use the lastest SVN version do:
 
 *Finally, install AE.*
 <code># emerge -av -j1 app-portage/async-emerge</code>
-
+ 
 
 = 4. Optional: testing =
 
@@ -111,12 +110,8 @@ df: `/var/async.emerge/chroot/var/www': No such file or directory
 
 In order to build (cook) in background binaries of packages updates you have to schedule `ae_cron` task:
   * Edit cron table:
-one example:
 <code># crontab -e
-`30 22 * * *	/usr/bin/ae_cron`</code>
-another example:
-<code># async emerge
-`30 01 * * *    /usr/bin/ae_cron; /usr/bin/ae_state -dwc | /bin/mail -s "Async Emerge" root`</code>
+`30 22 * * *	/usr/bin/ae_cron -sm root@mymail.com`</code>
 
   * ...or edit anacron table:
 <code># nano /etc/anacrontab</code>
