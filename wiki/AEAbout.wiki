@@ -52,7 +52,7 @@ Boils down to `ae_vcs ae_makeworld` shortcut.
 
 VCS chroot. Call _ae_root_mount and `_ae_root_umount` if not called before, then chroot to new virtual FS environment.
 Could be started manually in interactive mode or used by a script in batch mode (with params).<br>
-(Could be used for other tasks like crossdev or testing, but alghouth it was made with this possibility 
+(Could be used for other tasks like crossdev or testing, but although it was made with this possibility 
 in mind it was not tested for this porpoise at all.)
 
 
@@ -97,8 +97,9 @@ The configuration file.
   * Check config (it's OTB by default).
   * Add to (ana)cron `ae_cron [-s] [-m address@sld.tld]` (feel free to start it manually if needed, see logs)
   * check periodically update availability with ae_state (or add it to shell rc script, like `~/.bashrc`; it's recommended)
-  * when you are in good_mood/have_time/needed, update your Gentoo using prebuit binaries with `ae_install`, read the output, 
-follow a package manager extra instructions (skip 'please revdep-rebuild --liblary' - AE wiil do it for you)
+  * when you are in good_mood/have_time/needed, update your Gentoo using prebuit binaries with `ae_install`, 
+read the output, follow a package manager extra instructions (skip 'please revdep-rebuild --liblary' - AE will 
+do it for you)
 
 Feel free to still use package manager manually (if needed): AE doesn't mean to stop you using `emerge` at all!
 
