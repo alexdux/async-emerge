@@ -23,17 +23,20 @@ After all, this scripts save about 90% of Gentoo admin time. The exact digit is 
 the hardware and the logic of the update.
 
 =Features=
+  * package manager friendly
   * sync portage with overlays (both optional)
   * build binaries for all updated or changed packages, for all dependencies
+  * update really old Gentoo boxes
   * use tmpfs for packages building (could be switched off if the RAM is not enough)
   * update world with new packages and rebuild packages against changed USE flags
-  * detects changes in subsets (like Python, Perl and so on) and rebuild dependencies (do another needed action)
+  * detects changes in subsets (like Python, Perl and so on) and rebuild dependencies (or do another action is needed)
   * remove obsoleted/unneeded packages with 'portage depclean'
   * rebuild libs consumers for advised packages (disabled by default for portage-2.2+)
   * rebuild system-wide libs dependencies: make '@preserved-rebuild' for portage-2.2+ users or 'revdep-rebuild' for others
   * schedule and do extra 'user' task (like add, remove or rebuild something)
-  * has flexible config allowing to enable or disable any features, adjust various portage command, dirs, logs and etc.
+  * has flexible config allowing to enable or disable any features, adjust various portage commands, dirs, logs and etc.
   * can send mail by result of binary packages building
+  * re-enterable after stop/error
 
 =Internals=
 ==Set of scripts==
