@@ -44,9 +44,10 @@ src_configure() {
 	# portage ver adjust
 	P_VER=$(emerge --info | grep 'portage ' -i | cut -f2 -d'.')
 	if ((P_VER>1)); then # new portage-2.2 +
-		sed -i -e "s/AE_REBUILD\[DO_REVDEP_REBUILD\]='y'/AE_REBUILD\[DO_REVDEP_REBUILD\]='n'/" "${AE_CONF}"
+		sed -i -e "s/^\(AE_REBUILD\[DO_OBSOLETED_LIBS\]='\)y/\1n/" "${AE_CONF}"
+		sed -i -e "s/^\(AE_REBUILD\[DO_REVDEP_REBUILD\]='\)y/\1n/" "${AE_CONF}"
 	else # old portage-2.2 -
-		sed -i -e "s/AE_REBUILD\[DO_PRESERVED_REBUILD\]='y'/AE_REBUILD\[DO_PRESERVED_REBUILD\]='n'/" "${AE_CONF}"
+		sed -i -e "s/^\(AE_REBUILD\[DO_PRESERVED_REBUILD\]='\)y/\1n/" "${AE_CONF}"
 	fi
 	# get some portage vars
 	grep -o '`portageq .*`' "${AE_CONF}" | cut -f2 -d'`' | \
@@ -55,7 +56,7 @@ src_configure() {
 		done # "
 	# disable ccache if not installed (not tested)
 	[ "$CCACHE_DIR" ] || \
-		sed -i -e "s/^(AE_DIR[TRANSPARENT]+=\" $CCACHE_DIR\")/#\\1/" "${AE_CONF}"
+		sed -i -e "s/^\(AE_DIR[TRANSPARENT]+=\" $CCACHE_DIR\"\)/#\1/" "${AE_CONF}"
 }
 
 src_install() {
