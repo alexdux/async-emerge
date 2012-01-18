@@ -142,7 +142,7 @@ for i in $(ls -t$ls_sort */*bz2 2>/dev/null); do
 		i_dg=$(date -d @$i_ts +%x 2>/dev/null)
 		if [ "$i_dg" != "$dg_last" ]; then
 		    dg_last=$i_dg
-		    out="--- cooked at \033[00;32m$i_dg\033[00;10m ---\n"$out
+		    out="--- cooked at\033[00;32m $i_dg\033[00;10m ---\n"$out
 		    (($opt & 0x80)) && (($forupd)) && out="\n"$out
 		fi
 	fi
