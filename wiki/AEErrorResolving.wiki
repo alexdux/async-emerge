@@ -1,0 +1,7 @@
+#What to do in case of error.
+
+=AE fails to build something=
+
+Ones AE fails to build something (it will). In this case you will have to check if it general Gentoo or AE specific issue.<br>
+To sort out issues you need to check the log file for the package failed to build.<br><br>
+*For example:*
