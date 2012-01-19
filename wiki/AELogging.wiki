@@ -6,36 +6,43 @@ All paths are given for default configuration!
 
 Nothing new - just reminders that could help someone ;) 
 
+=Logs naming and location=
+By default all AE logs are stored in one dir `/var/log/async.emerge`.<br>
+By default all log files have 1 or 2 prefixes indicating different stages of AE:
+  * `last.` - logs from last calling a tool
+  * `cook.` - logs from last calling `ae_makeworld` in VCS environment
+  * `install.` - same for GRS
+By default all log files have `.log` 'extension'.
 
-= 1. Useful tools. =
+=Useful tools=
 
 It is recomended to install `xtail`:
 <code># emerge -av xtail</code>
 
 
-= 2. Top-level logging of cronned activity of AE. =
+=Top-level logging of cronned activity of AE=
 
 <code># tailf /var/log/async.emerge/last.cron.log</code>
 
-(Ctrl+C to stop.)
+(`Ctrl+C` to stop.)
 
 
-= 3. Middle-level logging of AE tools activity. = 
+=Middle-level logging of AE tools activity= 
 
 <code># xtail /var/log/async.emerge/last.`*`</code> 
-(Ctrl+\ to stop.)
+(`Ctrl+\` to stop.)
 
 
-= 4. Low-level logging of portage activity. = 
+=Low-level logging of portage activity= 
 
 <code># xtail /var/log/portage/ /var/async.emerge/delta/var/log/portage/</code> 
-(Ctrl+\ to stop.) 
+(`Ctrl+\` to stop.) 
 
 First path is for GRS, second - for VCS.
 
 
-= 5. View many logs with colors. =
+=View many logs with colors=
 
 For example:
 <code># less -r last.co`*`</code>
-(:n - next file, :p - prev file, -S - warp/unwarp long lines.)
+(in `less` type `:n` - next file, `:p` - prev file, `-S` - warp/unwarp long lines.)
