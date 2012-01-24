@@ -24,7 +24,7 @@ fi
 LICENSE="GPL-2"
 SLOT="0"
 
-IUSE="" # "eix layman"
+IUSE="notmpfs" # "eix layman"
 
 # A space delimited list of portage features to restrict. man 5 ebuild for details.  Usually not needed.
 #RESTRICT="strip"
@@ -41,22 +41,34 @@ net-mail/email"
 
 src_configure() {
 	AE_CONF="${S}/etc/async.emerge.conf"
-	# portage ver adjust
+	# configure USE
+	if use notmpfs ; then
+		sed -i -e "s/\([ \"$AE_NOTMPFS\" ]\)/#\1/" "${AE_CONF}" || \
+			die "Can't adjust AE_NOTMPFS! Stop."
+		sed -i -e "s/#\([ \"$AE_USETMPFS\" ]\)/\1/" "${AE_CONF}" || \
+			die "Can't adjust AE_USETMPFS! Stop."
+	fi
+	# portage version adjust
 	P_VER=$(emerge --info | grep 'portage ' -i | cut -f2 -d'.')
 	if ((P_VER>1)); then # new portage-2.2 +
-		sed -i -e "s/^\(AE_REBUILD\[DO_OBSOLETED_LIBS\]='\)y/\1n/" "${AE_CONF}"
-		sed -i -e "s/^\(AE_REBUILD\[DO_REVDEP_REBUILD\]='\)y/\1n/" "${AE_CONF}"
+		sed -i -e "s/^\(AE_REBUILD\[DO_OBSOLETED_LIBS\]='\)y/\1n/" "${AE_CONF}" || \
+			die "Can't adjust AE_REBUILD[DO_OBSOLETED_LIBS]! Stop."
+		sed -i -e "s/^\(AE_REBUILD\[DO_REVDEP_REBUILD\]='\)y/\1n/" "${AE_CONF}" || \
+			die "Can't adjust AE_REBUILD[DO_REVDEP_REBUILD]! Stop."
 	else # old portage-2.2 -
-		sed -i -e "s/^\(AE_REBUILD\[DO_PRESERVED_REBUILD\]='\)y/\1n/" "${AE_CONF}"
+		sed -i -e "s/^\(AE_REBUILD\[DO_PRESERVED_REBUILD\]='\)y/\1n/" "${AE_CONF}" || \
+			die "Can't adjust AE_REBUILD[DO_PRESERVED_REBUILD]! Stop."
 	fi
 	# get some portage vars
 	grep -o '`portageq .*`' "${AE_CONF}" | cut -f2 -d'`' | \
 		while read str_todo; do 
-			sed -i -e "s@\`${str_todo}\`@`${str_todo}`@" "${AE_CONF}"; 
-		done # "
+			sed -i -e "s@\`${str_todo}\`@`${str_todo}`@" "${AE_CONF}" || \
+				die "Can't exec '${str_todo}'! Stop." # '
+		done
 	# disable ccache if not installed (not tested)
 	[ "$CCACHE_DIR" ] || \
-		sed -i -e "s/^\(AE_DIR[TRANSPARENT]+=\" $CCACHE_DIR\"\)/#\1/" "${AE_CONF}"
+		sed -i -e "s/^\(AE_DIR\[TRANSPARENT\]+=\" $CCACHE_DIR\"\)/#\1/" "${AE_CONF}" || \
+			die "Can't adjust AE_DIR[TRANSPARENT]! Stop."
 }
 
 src_install() {
