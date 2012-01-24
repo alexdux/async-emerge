@@ -282,6 +282,7 @@ get_all_states() {
 # state from cook.loopLogic
 get_all_states "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" "  Last cook state:" \
 	"${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" "ae_makeworld" "1" ""
+# to-do: (ae_makeworld|ae_install)
 get_all_states "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" "  Last install state:" \
 	"${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" "ae_makeworld" "" "$?"
 
