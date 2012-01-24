@@ -43,11 +43,10 @@ src_configure() {
 	AE_CONF="${S}/etc/async.emerge.conf"
 	# configure USE
 	if use notmpfs ; then
-		sed -i -e "s/\([[ \"$AE_NOTMPFS\" ]\)/\#\1/" "${AE_CONF}" || \
+		sed -i -e 's/\([[] \"$AE_NOTMPFS\" []]\)/#\1/' "${AE_CONF}" || \
 			die "Can't adjust AE_NOTMPFS! Stop."
-		sed -i -e "s/\(\#[[ \"$AE_USETMPFS\" ]\)/\1/" "${AE_CONF}" || \
+		sed -i -e 's/#\([[] \"$AE_USETMPFS\" []]\)/\1/' "${AE_CONF}" || \
 			die "Can't adjust AE_USETMPFS! Stop."
-		echo "# notmpfs" >> "${AE_CONF}" 
 	fi
 	# portage version adjust
 	P_VER=$(emerge --info | grep 'portage ' -i | cut -f2 -d'.')
