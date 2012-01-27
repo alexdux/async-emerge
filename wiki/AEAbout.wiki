@@ -113,7 +113,7 @@ Sooner or earlier AE stop to build binaries anyway. Everybody has a different co
   * Add to (ana)cron `ae_cron [-s] [-m address@sld.tld]` (feel free to start it manually if needed. [AELogging check logs for result])
   * check periodically update availability with ae_state (or add it to shell rc script, like `~/.bashrc`; it's recommended)
   * when you are in good_mood/have_time/need to, update your Gentoo with prebuit binaries using `ae_install`, 
-read the output, follow a package manager extra instructions (skip 'please revdep-rebuild --liblary' - AE will 
+read the output, follow a package manager extra instructions (skip `please revdep-rebuild --library` - AE will 
 do it for you)
 
 Feel free to still use package manager manually (if needed): AE doesn't mean to stop you using `emerge` at all!
@@ -127,5 +127,5 @@ if you edit it in VCS. This is feature. Remove this file in VCS(!) or clean-up V
 =If you need to uninstall AE=
 Just:
   * `ae_delta_cleanup && ae_chroot_cleanup`
-  * `emerge -C async-emerge`
-  * comment out ae_cron in crontab
+  * `emerge -Ca async-emerge`
+  * comment out `ae_cron` in `crontab`
