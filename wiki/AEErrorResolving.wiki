@@ -1,4 +1,4 @@
-#What to do in case of error.
+#summary What to do in case of error.
 
 =AE fails to build something=
 
