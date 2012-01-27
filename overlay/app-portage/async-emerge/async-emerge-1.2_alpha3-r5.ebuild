@@ -5,12 +5,6 @@
 EAPI=4
 inherit eutils
 
-DESCRIPTION="Prebuild ready-to-intall binary updates for Gentoo."
-#DESCRIPTION="Asynchronous binary Gentoo's updater."
-#DESCRIPTION="Periodically sync portage and prebuild binary updates for Gentoo."
-#DESCRIPTION="Asynchronous multiple binaries cooker for Gentoo"
-HOMEPAGE="http://code.google.com/p/async-emerge/"
-
 if [ "$PV" == "9999" ]; then
     inherit subversion
     SRC_URI=""
@@ -21,10 +15,15 @@ else
     KEYWORDS="~amd64 ~x86"
 fi
 
+HOMEPAGE="http://code.google.com/p/async-emerge/"
+DESCRIPTION="Prebuild ready-to-intall binary updates for Gentoo."
+#DESCRIPTION="Asynchronous binary Gentoo's updater."
+#DESCRIPTION="Periodically sync portage and prebuild binary updates for Gentoo."
+#DESCRIPTION="Asynchronous multiple binaries cooker for Gentoo"
 LICENSE="GPL-2"
 SLOT="0"
 
-IUSE="notmpfs" # "eix layman"
+IUSE="noemail notmpfs" # "eix layman"
 
 # A space delimited list of portage features to restrict. man 5 ebuild for details.  Usually not needed.
 #RESTRICT="strip"
@@ -32,15 +31,16 @@ RESTRICT="mirror"
 #RESTRICT="fetch"
 
 RDEPEND="|| ( sys-fs/aufs2 sys-fs/aufs3 )
-app-portage/gentoolkit
-app-shells/bash
-app-portage/eix
-sys-process/lsof
-net-mail/email"
+			app-portage/gentoolkit
+			app-shells/bash
+			app-portage/eix
+			sys-process/lsof
+			!noemail? ( net-mail/email )"
 #DEPEND="${RDEPEND}"
 
 src_configure() {
 	AE_CONF="${S}/etc/async.emerge.conf"
+	# to-do: add checking FEATURES & EMERGE_DEFAULT_OPTS
 	# configure USE
 	if use notmpfs ; then
 		sed -i -e 's/\([[] \"$AE_NOTMPFS\" []]\)/#\1/' "${AE_CONF}" || \
