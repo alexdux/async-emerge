@@ -18,7 +18,7 @@ fi
 HOMEPAGE="http://code.google.com/p/async-emerge/"
 #DESCRIPTION="Prebuild ready-to-intall binary updates for Gentoo."
 #DESCRIPTION="Asynchronous binary Gentoo's updater."
-DESCRIPTION="Periodically sync portage and prebuild binary packages for Gentoo updates."
+DESCRIPTION="Periodically sync portage and build binary packages for Gentoo updates."
 #DESCRIPTION="Asynchronous multiple binaries cooker for Gentoo"
 LICENSE="GPL-2"
 SLOT="0"
