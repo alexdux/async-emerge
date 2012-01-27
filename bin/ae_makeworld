@@ -73,6 +73,8 @@ for i in ${!AE_LOG[*]}; do
 	[[ "$i" != 'FILE_'* ]] && continue
 	AELOG[${i:5}]=${AE_LOG[DIR_SAVE]}${AE_LOG[DIR_$eType]}${AE_LOG[$i]}${AE_LOG[EXT_$eType]}
 	AELOG[${i:5}_LAST]=${AE_LOG[DIR_LAST]}${AE_LOG[DIR_$eType]}${AE_LOG[$i]}${AE_LOG[EXT_$eType]}
+	# trim last logs
+	[[ "$i" != 'FILE_CRON' ]] && echo > ${AELOG[${i:5}_LAST]}
 done
 
 # Adjust SIGNS
