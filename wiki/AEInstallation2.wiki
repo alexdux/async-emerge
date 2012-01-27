@@ -33,6 +33,12 @@ Add AE overlay:
 
 Check if it available:
 <code># eix async-emerge</code>
+
+
+== USE flags ==
+|| *Flag* || *Description* ||
+|| noemail || Don't install `net-mail/email`. This dependant package is used for sending a summary mail by `ae_cron`. ||
+|| notmpfs || Don't mount `tmpfs` disk for packages building by default. Can be overwritten at run time by setting `$AE_NOTMPFS` or `$AE_USETMPFS` (respectively). ||
  
 
 == Unmask & install AE ==
