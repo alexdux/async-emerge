@@ -4,7 +4,7 @@
 
 = AE Installation =
 
-There are 3 simple steps to install `async-emerge` (AE). Fourth step is just the test if it is working. Fifth step is the cron configuration task. Finer configuration is described in [AEConfiguration "Configuration"] section...
+Here is described how to install `async-emerge` (AE) and make top-level configuration. <br>Finer configuration is described in [AEConfiguration "Configuration"] section...
  
  
 == ...for really old Gentoo box ==
