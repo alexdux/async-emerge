@@ -276,6 +276,8 @@ call_cmd1_with_emerge_solver() {
 # optional $2 - ignore list
 scan_for_rdlibs() {
 	local ignore=''
+	[ "${AE_REBUILD[DO_OBSOLETED_LIBS]}" == "y" ] || return 0
+	
 	[ "$2" ] && ignore=$2
 	# * Please run revdep-rebuild --library libnss3.so.12 ,
 	local f="${AE_DIR[REBUILD_VAR]}.${AECMD[FILE_PREFIX]}${AE_REBUILD[FILE_OBSOLETED_LIBS]}"
