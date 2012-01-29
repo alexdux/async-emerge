@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# ae_install - 'async emerge' timed wrapper for ae_makeworld
+# GPL ver. 2
+# version: 2.0
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+time $(basename $0)/ae_makeworld
+
