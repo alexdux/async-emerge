@@ -5,5 +5,5 @@
 # version: 2.0
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
-time $(basename $0)/ae_makeworld
+time $(dirname $0)/ae_makeworld
 
