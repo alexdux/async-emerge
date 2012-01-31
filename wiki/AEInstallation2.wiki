@@ -129,8 +129,10 @@ Check `/etc/make.conf` for features and options:
 
   * strongly recommended:
 <code> FEATURES="protect-owned" # +"preserve-libs" for portage-2-2+
-EMERGE_DEFAULT_OPTS="--fail-clean --with-bdeps y --keep-going --binpkg-respect-use"</code>
+EMERGE_DEFAULT_OPTS="--fail-clean --with-bdeps y --keep-going --binpkg-respect-use"
+USE="-symlink"</code>
 
   * recommended:
 <code> FEATURES="parallel-fetch ccache protect-owned" # +"preserve-libs" for portage-2-2+
-EMERGE_DEFAULT_OPTS="--fail-clean --with-bdeps y --keep-going --binpkg-respect-use -j# --color=y --autounmask"</code>
+EMERGE_DEFAULT_OPTS="--fail-clean --with-bdeps y --keep-going --binpkg-respect-use -j# --color=y --autounmask"
+USE="-symlink"</code>
