@@ -2,8 +2,8 @@
 
 # ae_functions - common functions for 'async emerge' toolset
 # GPL ver. 2
-# version: 1.0
-# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version: 2.1
+# 2011-2012, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features: see below
 
@@ -48,20 +48,12 @@ begin_log() { :; }
 # ???
 end_log() { :; }
 
-# to remove!
-# get state: -> $st
-collect_signes() { # to-do: correct build lock
-	for i in "${AE_PID[AE_COOK]}" "${AE_SIGN[SYNCED]}" "${AE_SIGN[COOKED]}" "${AE_SIGN[REVDEPED]}"; do 
-		[ -e $i ] && st+='Y' || st+='N'
-	done
-}
-
 # check if emerge {update|rebuild} world is going to fall
 # check_if_emerge_possible: $full_cmd_to_check $log_last $warn_log_last $log $warn_log
 check_if_emerge_possible() {
 
-	dt_mark &> "$2"
-	dt_mark &> "$3"
+	dt_mark &>> "$2"
+	dt_mark &>> "$3"
 # to-do: add $() & `` support
 #	case "$1" in
 #		update)
