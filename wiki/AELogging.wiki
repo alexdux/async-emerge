@@ -1,10 +1,8 @@
 #summary How to watch AE logs.
 
-* draft *
+All paths here are given for default configuration! 
 
-All paths are given for default configuration! 
-
-Nothing new - just reminders that could help someone ;) 
+Nothing new - just reminders that could help to someone ;) 
 
 =Logs naming and location=
 By default all AE logs are stored in one dir `/var/log/async.emerge`.<br>
