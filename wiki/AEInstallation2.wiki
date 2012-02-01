@@ -34,7 +34,7 @@ Check if AE is available:
 
 
 == AE USE flags ==
-Adjust it if it needed:
+Adjust it if it necessary:
 || *Flag* || *Description* ||
 || noemail || Don't install `net-mail/email`. This dependant package is used for sending a summary mail by `ae_cron`. ||
 || notmpfs || Don't mount `tmpfs` disk for packages building by default. Can be overwritten at run time by setting `$AE_NOTMPFS` or `$AE_USETMPFS` (respectively). ||
@@ -48,7 +48,7 @@ If you want to use the latest SVN version do:
 <code># echo "app-portage/async-emerge `**`" > /etc/portage/package.keywords/async-emerge</code>
 
 *Finally, install AE.*
-<code># emerge -av -j1 app-portage/async-emerge</code>
+<code># emerge -av app-portage/async-emerge</code>
  
 
 == Optional: testing ==
@@ -122,9 +122,9 @@ In order to build (cook) in background binaries of packages updates you have to 
 Recommended frequency of running: once at 1-7 days. Anacron is suggested for rare used Gentoo boxes.
 
 
-== /etc/make.conf ==
+== Check /etc/make.conf ==
 
-Check `/etc/make.conf` for features and options:
+Check `/etc/make.conf` for correct features and options:
 
   * strongly recommended:
 <code> FEATURES="protect-owned" # +"preserve-libs" for portage-2-2+
