@@ -1,7 +1,5 @@
 #summary How to install AE.
 
-* draft 2 *
-
 = AE Installation =
 
 Here is described how to install `async-emerge` (AE) and make top-level configuration. <br>Finer configuration is described in [AEConfiguration "Configuration"] section...
@@ -9,8 +7,8 @@ Here is described how to install `async-emerge` (AE) and make top-level configur
  
 == ...for really old Gentoo box ==
 
-  * Sync the portage and update your package manager (portage by default).
-  * Check with `emerge -uDNvp world` (or similar) if all keywords/USE/mask is OK. Correct if necessary.
+  # Sync the portage and update your package manager (portage by default).
+  # Check with `emerge -uDNvp world` (or similar) if all keywords/USE/mask is OK. Correct if necessary.
 
 == Add AE Overlay to Portage ==
 
@@ -31,11 +29,12 @@ Sync the layman overlays list:
 Add AE overlay:
 <code># layman -a async-emerge</code>
 
-Check if it available:
+Check if AE is available:
 <code># eix async-emerge</code>
 
 
-== USE flags ==
+== AE USE flags ==
+Adjust it if it needed:
 || *Flag* || *Description* ||
 || noemail || Don't install `net-mail/email`. This dependant package is used for sending a summary mail by `ae_cron`. ||
 || notmpfs || Don't mount `tmpfs` disk for packages building by default. Can be overwritten at run time by setting `$AE_NOTMPFS` or `$AE_USETMPFS` (respectively). ||
