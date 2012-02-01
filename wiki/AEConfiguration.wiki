@@ -3,11 +3,11 @@
 = AE Configuration =
 
 AE config file is: `/etc/async.emerge.conf`.<br>
-The file include a lot of things you could configure (if you really need it) and some built-in 'code' sections you shouldn't edit to.<br>
+The file include a lot of things that could be configured (if somebody is really need it) and some built-in 'code' sections that shouldn't be edited.<br>
 Code sections are marked with <code># --- code ---</code> and have indented text.<br>
 Default options should allow you to use AE 'out-of-the-box'.
 
-Brief config structure by sections:
+Brief config structure by sections with comments what is safe to change and what is not:
 
 
 == # 0. DEFAULT ROOT FOR VCS ==
@@ -20,7 +20,7 @@ Various dirs and paths to mount/unmount VCS. If you want to alter it - be carefu
 
 == # 2. TMPFS configuration ==
 Default size for `tmpfs` used for PM 'compile' phase.<br>
-The default size (4Gb) is large enough to rebuild something gecko-based in one (may be two) threads (-j# PMs option).<br>
+The default size (4Gb) is large enough to rebuild something gecko-based in one (may be two) threads (-j# PMs option) at once.<br>
 If there is no such packages at your system, 1250Mb + 250..500Mb for each additional PMs thread is enough.<br>
 The size *MUST* be less then your box free memory (including the swap). Otherwise you be experienced with error 'no space left on device'. So if there is no memory enough it's better to switch this feature off by USE flag 'notmpfs' or by put `AE_NOTMPFS=1` before an AE cmd.<br>
 Also it was mentioned in AUFS docs that 'ramdisk might produce very rare bugs with UDBA logic'.  
@@ -48,7 +48,7 @@ This section allow you to enable or disable additional steps at the time of inst
 
 
 == # 8. REBUILDING logic configuration==
-This section defines some logic of `ae_makeworld` (this is used twice - one at building binaries and second at installing that).<br>Allowed to edit.
+This section defines some logic of `ae_makeworld` (this is used twice - first time with building binaries and second time with installing that).<br>Allowed to edit.
 
 
 == # 9. REBUILDING command configuration ==
@@ -67,7 +67,7 @@ Definition of some internal files - not recommended to alter this.
 
 
 == # 13. RBLOOP_LOGIC bit states ==
-Internal of `ae_makewolrd` logic. Recommended do not edit this. (See section #8 if you need to enable/disable something.)
+Internal of `ae_makewolrd` logic. Recommended do not edit this. (See section #8 if it is needed to enable/disable something.)
 
 
 == # 13. LOCKS configuration ==
