@@ -429,7 +429,8 @@ compare_sysvers() { # todo: change echo to sed/vars
 
 
 # Msg 'World update (Rebuild)'
-einfo "Starting Gentoo Update:"
+einfon "  "
+echo -e "\033[01;37mStarting Gentoo Update:\033[00;10m"
 # Control for loop iterations:
 loopLogic_set() { bitflag_set loopLogic ${AE_RBLL[$1]}; }
 loopLogic_reset() { bitflag_reset loopLogic ${AE_RBLL[$1]}; }
@@ -488,7 +489,8 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 	dcPend2=''
 	alcruPend=''
 	
-	einfo "  Updating system with restoring of consistency, pass "$((loop+1))" of $max_loop:"
+	einfon "  "
+	echo -e "\033[01;37mUpdating system with restoring of consistency, pass "$((loop+1))" of $max_loop:\033[00;10m"
 	loopLogicLog
 
 	# experimental and most likely not needed at all feature	
@@ -1168,9 +1170,13 @@ done
 
 # Bye World
 if (($loopLogic)); then
-	eerror "  Can't recover system consistency! Will try again next time."; eend 1
+	eerror "  "
+	echo -e "\033[01;31mCan't recover system consistency! Will try again next time.\033[00;10m"
+	eend 1
 else
-	einfo "  Now the system is consistently."; eend 0
+	einfon "  "
+	echo -e "\033[01;32mNow the system is consistently.\033[00;10m"
+	eend 0
 fi
 
 
@@ -1223,7 +1229,8 @@ if !(($AE_VCS)); then
 
 	# to-do: print out install.emerge.warn.log
 
-	einfo "Binary packages installation is finished!"
+	einfon "  "
+	echo -e "\033[01;37mBinary packages installation is finished!\033[00;10m"
 	eend 0
 fi
 
