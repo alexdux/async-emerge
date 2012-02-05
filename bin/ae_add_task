@@ -59,7 +59,14 @@ if [[ (( ${#} )) && "$1" != "--help" ]]; then
 	[ -e "$fileI" ] && cat "$fileI"
 	
 	einfo "  Set 'user task bit' in loopLogic file."
+	# save ts
+	llTS=$(stat -c '%Y' "$fileLL")
+	# convert ts
+	llTS=$(date -d @${llTS} +'%d %b %Y %R')
+	# update loopLogic &= 0x20 (user_task)
 	echo $(($(cat "$fileLL" 2>/dev/null && echo '|' )0x20)) > "$fileLL"
+	# restore old ts
+	touch -d "${llTS}" "$fileLL"
 	eend $?
 
 else
