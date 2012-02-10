@@ -34,8 +34,8 @@ In short, please, rebuild you kernel AND `AUFS` twice after kernel OR AUFS updat
 
 Also, it is recommended to add `aufs` to modules autoload (at system start) list, for example:
 <code>
-# echo modules="aufs" >> /etc/conf.d/modules</code>
-.. or better edit `"/etc/conf.d/modules"` manually to the similar way.
+# echo 'modules="aufs"' >> /etc/conf.d/modules</code>
+.. or better edit `"/etc/conf.d/modules"` manually the similar way.
 
 == Add AE Overlay to Portage ==
 
@@ -60,7 +60,7 @@ Check if AE is available:
 <code># eix async-emerge</code>
 
 
-== AE USE flags ==
+== Check USE flags ==
 Adjust it if it necessary:
 || *Flag* || *Description* ||
 || noemail || Don't install `net-mail/email`. This dependant package is used for sending a summary mail by `ae_cron`.<br>If you are not going to send AE reports by email and don't want to have `net-mail/email` installed - set this on.||
