@@ -29,7 +29,7 @@ Or unmask and install `AUFS v.3` for kernel branch version 3.
 
 *Important:*
 _When `AUFS` is installing at first time it patches the kernel.
-After that you NEED to rebuild the kernel (run `make`), then you NEED to rebuild `AUFS` (re-emerge it OR use `module-rebuild` tool). Check if `/usr/src/linux` symlink is point to the kernel you actually use.<br>
+After that you NEED to rebuild the kernel (run `make`), then you NEED to rebuild `AUFS` again (re-emerge it OR use `module-rebuild` tool). Check if `/usr/src/linux` symlink is point to the kernel you actually use.<br>
 In short, please, rebuild you kernel AND `AUFS` twice after kernel OR AUFS update and do care about the kernel symlink. _
 
 Also, it is recommended to add `aufs` to modules autoload (at system start) list, for example:
