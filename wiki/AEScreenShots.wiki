@@ -333,3 +333,283 @@ real	16m2.007s
 user	5m2.564s 
 sys	0m24.338s 
 </pre>
+
+
+== Non typical build logs ==
+
+But sometimes you will see other logs:
+
+=== The system configs need to be adjusted ===
+
+Sooner or earlier you have to adjust you Gentoo setting, like USE-flags, masked packages and so on. In that case, if further building is not possible any more without admin's action, you will see the next log: 
+<pre>--- Fri Jan 27 04:54:01 MSK 2012 ---
+*** Layman ***
+At revision 327.
+Already up-to-date.
+
+real    0m6.313s
+user    0m1.017s
+sys     0m0.177s
+
+*** EIX-sync ***
+
+real    0m33.505s
+user    0m10.613s
+sys     0m6.016s
+
+--- Fri Jan 27 04:54:41 MSK 2012 ---
+ * Chrooting to /var/async.emerge/chroot:
+ *   Automounting AUFS,
+ * Mounting AUFS root to /var/async.emerge/:  
+ *   /var/async.emerge/delta/etc/mtab unlinked.                   [ ok ] 
+ *   Binded and mounted 28 dirs, +0 created, +5 binded as transparent (non-merged) and created 0 symlinks.  [ ok ] 
+ * Chrooting to /var/async.emerge/chroot (continued):
+ *   Cleaning /var/async.emerge/chroot/var/run from host's *.pid. [ ok ] 
+ *   proc fs is mounted to /var/async.emerge/chroot/proc.         [ ok ] 
+ *   Mounting sys fs is not configured.                           [ ok ] 
+ * Starting Virtually Chrooted System with: 'ae_makeworld' ...    [ ok ] 
+ * Starting Gentoo Update: 
+ *   Testing for possibilities of various updates: 
+ *     - testing with '-DNu @world' ...                           [ !! ] 
+ *   Oops, human is needed !!! 
+ *   Test 'ae_chroot MEMSIZE=4G temerge -pv -DNu @world' failed.  [ !! ] 
+
+<<< Log file '/var/log/async.emerge/last.cook.world-update.test.warn.log' >>> 
+*** Fri Jan 27 04:54:45 MSK 2012 *** 
+*** Fri Jan 27 04:54:45 MSK 2012 *** 
+ * Mounting 4G of memory to /var/tmp/portage ... [ ok ] 
+ * emerge -pv -DNu @world 
+
+These are the packages that would be merged, in order: 
+
+Calculating dependencies  ...... done! 
+
+emerge: there are no ebuilds built with USE flags to satisfy ">=gnome-base/gnome-menus-2.27.92:0[python]". 
+!!! One of the following packages is required to complete your request: 
+- gnome-base/gnome-menus-2.30.5::gentoo (Change USE: +python) 
+(dependency required by "x11-misc/alacarte-0.13.2" [installed]) 
+(dependency required by "gnome-base/gnome-2.32.1-r1" [installed]) 
+(dependency required by "@selected" [set]) 
+(dependency required by "@world" [argument]) 
+ * unmounting tmpfs ... [ ok ] 
+Retcode: 1 
+</pre>
+
+
+=== Updating old Gentoo (GCC update) ===
+
+This is the really hard thing:)
+Probably the one of the longest.
+
+<pre>
+--- Sun Jan 1 17:44:59 MSK 2012 --- 
+ * Chrooting to /var/async.emerge/chroot: 
+ *   Automounting AUFS, 
+ * Mounting AUFS root to /var/async.emerge/: 
+ *   Binded and mounted 26 dirs, +6 created, +5 binded as transparent (non-merged) and created 3 symlinks. 
+                                                                          [ ok ] 
+ * Chrooting to /var/async.emerge/chroot (continued): 
+ *   Cleaning /var/async.emerge/chroot/var/run from host's *.pid. 
+                                                                          [ ok ] 
+ *   proc fs is mounted to /var/async.emerge/chroot/proc. 
+                                                                          [ ok ] 
+ *   Mounting sys fs is not configured. 
+                                                                          [ ok ] 
+ * Starting Virtually Chrooted System with: 'ae_makeworld' ... 
+                                                                          [ ok ] 
+ * Starting Gentoo Update: 
+ *   Testing for possibilities of various updates: 
+ *     - testing with '-DNu @world' ... 
+                                                                          [ ok ] 
+ *   Updating system with restoring of consistency, pass 1 of 5: 
+ *     Saving critical system packages versions ... 
+                                                                          [ ok ] 
+   *   ATTENTION!  Something important like GCC is going to been updated!   * 
+   *                Skipping World update till the next pass!               * 
+ *     Testing for possibility of world rebuild for critical system packages updates: 
+ *       - for package 'GCC': 
+ *         - testing with 'sys-devel/gcc ' ... 
+                                                                          [ ok ] 
+ *         - testing with '-e @system ' ... 
+                                                                          [ !! ] 
+ *           Well... '@system' is subset of the '@world'... 
+ *           So we can try to do some heuristic: step back to world update, then came back to the subset update: 
+ *           - possibility of world update is already tested 
+                                                                          [ ok ] 
+ *             Ok, world update is possible ... Pend 'GCC' subset update till the next pass. 
+                                                                          [ ok ] 
+ *         - testing with '-e @world' ... 
+ *       - for package 'EIX': 
+ *         - testing with '--usepkg n app-portage/eix' ... 
+                                                                          [ ok ] 
+ *     Updating world ... 
+                                                                          [ !! ] 
+ *     Checking critical system packages versions ... 
+                                                                          [ ok ] 
+ *     Checking for various subsets updates: 
+ *       EIX update detected, update method is '1-pass': 
+ *         (app-portage/eix: 0.22.5 -> 0.23.3-r1) 
+ *         - 1/1. MEMSIZE=4G temerge -1 --usepkg n -b -v '--usepkg n app-portage/eix' ... 
+                                                                          [ ok ] 
+                                                                          [ ok ] 
+ *       Python update detected, update method is '1-pass': 
+ *         (dev-lang/python: 2.6.6-r1, 3.1.2-r4 -> 2.6.6-r1, 2.7.2-r3, 3.1.4-r3) 
+ *         - 1/2. 'eselect python update --$(eselect python list | sed -e 's:.*\(python.\)\..*\*.*:\1:p;d') ' ... 
+                                                                          [ ok ] 
+ *         - 2/2. 'python-updater -- --usepkg n -b -v' ... 
+                                                                          [ ok ] 
+ *       Perl update detected, update method is '1-pass': 
+ *         (dev-lang/perl: 5.12.2-r6 -> 5.12.4-r1) 
+ *         - 1/1. 'perl-cleaner --reallyall -- --usepkg n -b -v' ... 
+                                                                          [ ok ] 
+ *       X server update detected, update method is '1-pass': 
+ *         (x11-base/xorg-server: 1.9.2 -> 1.11.2-r2) 
+ *         - 1/1. MEMSIZE=4G temerge -1 --usepkg n -b -v 'x11-drivers/nvidia-drivers x11-drivers/xf86-input-evdev x11-drivers/xf86-input-keyboard x11-drivers/xf86-input-mouse x11-drivers/xf86-video-nv' ... 
+                                                                          [ ok ] 
+                                                                          [ ok ] 
+ *       Ca-Cert update detected, update method is '1-pass': 
+ *         (app-misc/ca-certificates: 20090709 -> 20111025) 
+ *         - 1/1. 'find -L /etc/ssl/certs/ -type l -exec rm {} +' ... 
+                                                                          [ ok ] 
+ *       GCC updates are pended till the next pass. 
+                                                                          [ ok ] 
+                                                                          [ ok ] 
+ *       GTK+, CUPS, SIP updates were skipped: not installed. 
+                                                                          [ ok ] 
+ *     Cleaning system is delayed till the next pass.  (Critical system packages update behavior) 
+                                                                          [ ok ] 
+ *     Rebuilding for 20 advised libs consumers ... 
+                                                                          [ ok ] 
+ *       Save lost libs list for further operations. (Critical system packages update behavior) 
+                                                                          [ ok ] 
+ *     Rebuilding world with @preserved-rebuild is not configured. 
+ *     Rebuilding world with revdep-rebuild ... 
+                                                                          [ ok ] 
+ *     There are no scheduled tasks. 
+                                                                          [ ok ] 
+ *   Updating system with restoring of consistency, pass 2 of 5: 
+ *     Saving critical system packages versions ... 
+                                                                          [ ok ] 
+   *   ATTENTION!  Something important like GCC is going to been updated!   * 
+   *                Skipping World update till the next pass!               * 
+ *     Testing for possibility of world rebuild for critical system packages updates: 
+ *       - for package 'GCC': 
+ *         - testing with 'sys-devel/gcc ' ... 
+                                                                          [ ok ] 
+ *         - testing with '-e @system ' ... 
+                                                                          [ ok ] 
+ *         - testing with '-e @world' ... 
+                                                                          [ ok ] 
+ *     Checking critical system packages versions ... 
+                                                                          [ ok ] 
+ *     Checking for various subsets updates: 
+ *       GCC update detected, update method is '1-pass': 
+ *         (sys-devel/gcc: 4.4.4-r2 -> 4.5.3-r1) 
+ *         - 1/7. MEMSIZE=4G temerge -1 --usepkg n -b -v 'sys-devel/gcc ' ... 
+                                                                          [ ok ] 
+                                                                          [ ok ] 
+ *         - 2/7. 'gcc-config $(gcc-config -l | cut -f2 -d '[' | cut -f1 -d ']' | tail -n1) && source /etc/profile ' ... 
+ * Switching native-compiler to x86_64-pc-linux-gnu-4.5.3 ...>>> Regenerating /etc/ld.so.cache...
+ [ ok ] 
+
+ * If you intend to use the gcc from the new profile in an already 
+ * running shell, please remember to do: 
+
+ *   . /etc/profile 
+
+                                                                          [ ok ] 
+ *         - 3/7. 'eix -qI sys-devel/libtool && eval ${AECMD[SUBSET_UPDATE]} sys-devel/libtool ' ... 
+                                                                          [ ok ] 
+ *         - 4/7. 'eix -qI dev-lang/ghc && eval ${AECMD[SUBSET_UPDATE]} dev-lang/ghc ' ... 
+                                                                          [ ok ] 
+ *         - 5/7. MEMSIZE=4G temerge -1 --usepkg n -b -v '-e @system ' ... 
+                                                                          [ ok ] 
+                                                                          [ ok ] 
+ *         - 6/7. 'MEMSIZE=4G temerge -c sys-devel/gcc ' ... 
+                                                                          [ ok ] 
+ *         - 7/7. MEMSIZE=4G temerge -1 --usepkg n -b -v '-e @world' ... 
+                                                                          [ !! ] 
+ *     Emerge fault, trying to solve: 
+ *       trying to solve emerge '    - 7/7. MEMSIZE=4G temerge -1 --usepkg n -b -v '-e @world'', try 1 of 7 ... 
+                                                                          [ ok ] 
+                                                                          [ ok ] 
+                                                                          [ ok ] 
+ *       EIX, Python, Perl, X server, Ca-Cert updates were not detected. 
+                                                                          [ ok ] 
+ *       GTK+, CUPS, SIP updates were skipped: not installed. 
+                                                                          [ ok ] 
+ *     Cleaning system is delayed till the next pass.  (Critical system packages update behavior) 
+                                                                          [ ok ] 
+ *     Rebuilding for 24 advised libs consumers ... 
+                                                                          [ ok ] 
+ *       Save lost libs list for further operations. (Critical system packages update behavior) 
+                                                                          [ ok ] 
+ *     Rebuilding world with @preserved-rebuild is not configured. 
+ *     Rebuilding world with revdep-rebuild ... 
+                                                                          [ ok ] 
+ *     All scheduled tasks have been already done. 
+                                                                          [ ok ] 
+ *   Updating system with restoring of consistency, pass 3 of 5: 
+ *     Saving critical system packages versions ... 
+                                                                          [ ok ] 
+   *   ATTENTION!  Something important like GCC is going to been updated!   * 
+   *                Skipping World update till the next pass!               * 
+ *     Testing for possibility of world rebuild for critical system packages updates: 
+ *     Subsets already have been updated. 
+                                                                          [ ok ] 
+ *     Cleaning system is delayed till the next pass.  (Critical system packages update behavior) 
+                                                                          [ ok ] 
+ *     Rebuilding for 24 advised libs consumers ... 
+                                                                          [ ok ] 
+ *       Save lost libs list for further operations. (Critical system packages update behavior) 
+                                                                          [ ok ] 
+ *     Rebuilding world with @preserved-rebuild is not configured. 
+ *     Rebuilding world with revdep-rebuild ... 
+                                                                          [ ok ] 
+ *     All scheduled tasks have been already done. 
+                                                                          [ ok ] 
+ *   Updating system with restoring of consistency, pass 4 of 5: 
+ *     Critical system packages versions already saved - use it ... 
+                                                                          [ ok ] 
+ *     Updating world ... 
+                                                                          [ ok ] 
+ *     Checking critical system packages versions ... 
+                                                                          [ ok ] 
+ *     Checking for various subsets updates: 
+                                                                          [ ok ] 
+ *       GCC, EIX, Python, Perl, X server, Ca-Cert updates were not detected. 
+                                                                          [ ok ] 
+ *       GTK+, CUPS, SIP updates were skipped: not installed. 
+                                                                          [ ok ] 
+ *     Cleaning system from unused dependencies ... 
+                                                                          [ ok ] 
+ *     Rebuilding for 24 advised libs consumers ... 
+                                                                          [ ok ] 
+ *       Unlinking advised obsoleted libs ... 
+                                                                          [ ok ] 
+ *     Rebuilding world with @preserved-rebuild is not configured. 
+ *     Rebuilding world with revdep-rebuild ... 
+                                                                          [ ok ] 
+ *     All scheduled tasks have been already done. 
+                                                                          [ ok ] 
+ *   Now the system is consistently. 
+                                                                          [ ok ] 
+ * Unchrooting from /var/async.emerge/chroot: 
+ *   proc fs is unmounted from /var/async.emerge/chroot/proc. 
+                                                                          [ ok ] 
+ *   Autounmounting AUFS, 
+ * Unmounting AUFS /+/var from /var/async.emerge/: 
+ *   Unmounted and unbinded 26 dirs, +5 as transparent (non-merged) and 0 specials. 
+                                                                          [ ok ] 
+ * Unchrooting from /var/async.emerge/chroot (continued) 
+                                                                          [ ok ] 
+
+real    3718m11.662s 
+user    7749m37.815s 
+sys     1760m1.281s 
+</pre>
+(It was an Intel Atom and portage-2.1.)
+
+== Note ==
+
+Actual logs may vary very much due to flexible logic of updates.
