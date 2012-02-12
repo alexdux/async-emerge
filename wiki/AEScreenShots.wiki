@@ -1,9 +1,12 @@
-#summary Some typical "screenshots" of AE.
+#summary Some typical screenshots and terminal outs of AE.
 
 = About =
 
-Async-emerge is a terminal software, it has no GUI, so here are given some terminal output as screenshots.
+Async-emerge is a terminal software, it has no GUI, so here are given a couple of real screenshots and some terminal output.
 
+== X-term screenshots ==
+http://async-emerge.googlecode.com/svn/wiki/Screenshot-root@x300:~.png
+http://async-emerge.googlecode.com/svn/wiki/Screenshot-root@x300:~-1.png
 
 == Typical state of the system ==
 
