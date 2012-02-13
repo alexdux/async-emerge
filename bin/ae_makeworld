@@ -645,6 +645,7 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 				# set subset update, revdep-rebuild
 				loopLogic_set SUBSET_UPDATE
 				loopLogic_set WORLD_REVDEP
+				loopLogic_set PRESERVED_REBUILD
 				# set flags
 				if !(($cmdRet)); then # if OK
 					# reset this
@@ -848,6 +849,7 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 											# add depclean and revdep-rebuild pass
 											loopLogic_set WORLD_DEPCLEAN
 											loopLogic_set WORLD_REVDEP
+											loopLogic_set PRESERVED_REBUILD
 										else
 											echo "skip empty line in '${AE_SUPD[${i}_CMD]}'"
 										fi
@@ -933,6 +935,7 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 				(($cmdRet)) || loopLogic_reset WORLD_DEPCLEAN
 				# add revdep-rebuild pass
 				loopLogic_set WORLD_REVDEP
+				loopLogic_set PRESERVED_REBUILD
 			fi
 		else
 			if (($loopLogic & ${AE_RBLL[WORLD_UPDATE]})); then # check
@@ -1001,6 +1004,7 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 				scan_for_rdlibs "${AELOG[OBSLLIBS_LAST]}" "$ol_ignore"
 				# add revdep-rebuild pass
 				loopLogic_set WORLD_REVDEP
+				loopLogic_set PRESERVED_REBUILD
 			else
 				einfo "    Not found any libs advised for consumers rebuilding."; eend 0
 			fi
@@ -1150,6 +1154,7 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 				loopLogic_set WORLD_UPDATE
 				loopLogic_set WORLD_DEPCLEAN
 				loopLogic_set WORLD_REVDEP
+				loopLogic_set PRESERVED_REBUILD
 
 				# check for rebuild advised libs
 				scan_for_rdlibs "${AELOG[TASKS_LAST]}"
