@@ -702,7 +702,7 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 				eend 0
 			else
 				eerror "Internal error: saved data about critical packages versions is not found. Stop."; eend 1
-				exit 0xFF
+				exit ((0xFF))
 			fi
 
 			einfo "    Checking for various subsets updates:"
