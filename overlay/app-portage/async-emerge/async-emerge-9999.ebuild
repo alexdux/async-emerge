@@ -5,7 +5,7 @@
 EAPI=4
 inherit eutils
 
-if [ "$PV" == "9999" ]; then
+if [ "${PV}" == "9999" ]; then
     inherit subversion
     SRC_URI=""
     ESVN_REPO_URI="http://async-emerge.googlecode.com/svn/trunk/"
@@ -16,10 +16,7 @@ else
 fi
 
 HOMEPAGE="http://code.google.com/p/async-emerge/"
-#DESCRIPTION="Prebuild ready-to-intall binary updates for Gentoo."
-#DESCRIPTION="Asynchronous binary Gentoo's updater."
 DESCRIPTION="Periodically sync portage and build binary packages for Gentoo updates."
-#DESCRIPTION="Asynchronous multiple binaries cooker for Gentoo"
 LICENSE="GPL-2"
 SLOT="0"
 
