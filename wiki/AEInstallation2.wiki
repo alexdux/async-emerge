@@ -160,3 +160,9 @@ USE="-symlink"</code>
 <code> FEATURES="parallel-fetch ccache protect-owned" # +"preserve-libs" for portage-2-2+
 EMERGE_DEFAULT_OPTS="--fail-clean --with-bdeps y --keep-going --binpkg-respect-use -j# --color=y --autounmask"
 USE="-symlink"</code>
+
+
+== Check if PKGDIR is exist ==
+
+Create if not exists.
+<code># mkdir $(portageq pkgdir)</code>
