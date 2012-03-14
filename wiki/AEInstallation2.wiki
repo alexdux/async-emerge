@@ -8,12 +8,10 @@ Here is described how to install `async-emerge` (AE) and make top-level configur
 == ...for really old Gentoo box ==
 
   # Sync the portage and update your package manager (portage by default).
-  # Check with `emerge -uDNvp world` (or similar) if all keywords/USE/mask is OK. Correct if necessary.
+  # Check with `emerge -uDNvp world` (or similar) if all keywords/USE/mask are OK. Correct if necessary.
 
 == Install AUFS ==
-AUFS package is required for AE work.
-
-AUFS installs a patch to kernel AND a kernel module.
+AUFS is required for AE work. AUFS installs a patch to kernel AND a kernel module.
 
 Set `"kernel-patch"` USE flag. (Locally for AUFS in `/etc/portage/package.use` or globally in `/etc/make.conf`)
 
