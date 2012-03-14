@@ -2,7 +2,7 @@
 
 # ae_state - getting state of 'async emerge'
 # GPL ver. 2
-# version: 1.1
+# version: 2.1
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
@@ -88,6 +88,7 @@ for o in $*; do
 done
 #echo $opt
 
+
 # skip to run in chrooted env: useless????????
 #if [[ "`LC_ALL=en_EN df 2>&1 | grep $AE_ROOT | grep 'No such file or directory'`" ]]; then
 #	echo "$PNAME: Running in chrooted environment is impossible: skipped."
@@ -97,6 +98,7 @@ done
 # check locking with ${AE_LOCK[AE_STATE_LOCK]}
 do_lock "${AE_LOCK[AE_STATE_LOCK]}" 0 #"One instance of '$PNAME' is already running, exit by lock..."
 
+
 # "Once a day" logic 
 ts_reported=$(stat -c %Y "${AE_SIGN[STATE]}" 2>/dev/null) || ts_reported=0
 (($opt & 0x4)) && (($(date +%s 2>/dev/null)-$ts_reported < ${AE_STATE[PERIOD]})) && exit 0
@@ -105,8 +107,10 @@ touch "${AE_SIGN[STATE]}" #2>/dev/null
 # change workdir
 cd "${AE_DIR[PKGDIR]}"
 
+
 # welcome msg
 echo -e "\033[01;33m***\033[01;33m Async Emerge \033[01;33m***\033[00;10m"
+
 
 # list built packages
 echo -n "  Cooked binary packages:"
@@ -114,15 +118,10 @@ echo -n "  Cooked binary packages:"
 
 # query some timestamps
 # to-do?: change to file1 -nt file2
-#ts_from=`stat -c %Y "$AE_MERGED_SIGN" 2>/dev/null` || ts_from=0
 #ts_from=`stat -c %Y "/usr/portage/metadata" 2>/dev/null` || ts_from=0
 ts_from=$(stat -c %Y "${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null)
 [ "$ts_from" ] || ts_from=$(stat -c %Y "/var/db/pkg" 2> /dev/null) || ts_from=0
 ts_last=$ts_from
-
-# to-do : fix:
-#-rw-r--r-- 1 root root 37389478 Mar 20 02:02 icedtea6-bin-1.9.7.tbz2._checksum_failure_.8pFibM
-#-rw-r--r-- 1 root root 37379100 Mar  9 01:42 icedtea6-bin-1.9.7.tbz2._checksum_failure_.aB8zER
 
 forupd=0
 for i in $(ls -t$ls_sort */*bz2 2>/dev/null); do
@@ -178,12 +177,14 @@ done
 (($opt & 0x2)) || { (($forupd)) && (($opt & 0x80)) && echo; echo -n "    total:"; }
 echo -e " \033[00;32m$forupd\033[00;10m"
 
+
 # KERNEL UPDATES (available only after install phase)
 echo -ne "  Linux kernel: "
 #eix -cI2 sys-kernel/* &>/dev/null
 (eselect kernel list | egrep "\[.+\]" | tail -n1 | grep '*') &>/dev/null
 !(($?)) && echo -e "\033[00;32mis up to date.\033[00;10m" ||\
 	echo -e "\033[01;33mnew slot for manual switch is available ...\033[00;10m"
+
 
 # scheduled user tasks
 usertasks=$(grep ".*" "${AE_DIR[GATEWAY]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_TASK[FILE_LIST]}" 2>/dev/null | \
@@ -192,9 +193,9 @@ usertasks=$(grep ".*" "${AE_DIR[GATEWAY]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_TASK[F
 			wc -l || echo '0')))
 echo -e "  Scheduled user tasks: \033[00;32m$usertasks\033[00;10m"
 
+
 # list last
 # SYNCED
-#lsync=$(date -r "${AE_SIGN[SYNCED]}" 2>/dev/null)
 #[ "$lsync" ] || lsync=$(date -r "${AE_DIR[DELTA]}/usr/portage/metadata" 2>/dev/null)
 #[ "$lsync" ] || lsync=$(date -r "/usr/portage/metadata" 2>/dev/null)
 lsync=$(date -r "/usr/portage/metadata/timestamp.chk" 2>/dev/null)
@@ -203,9 +204,6 @@ echo "  Last synced at    : $lsync."
 # COOKED (revderped,tasked)
 lcook=$((($ts_last!=$ts_from)) && date -d @$ts_last 2>/dev/null || \
 date -r "${AE_DIR[GATEWAY]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null)
-#[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[TASKED]}" 2>/dev/null)
-#[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[REVDEPED]}" 2>/dev/null)
-#[ "$lcook" ] || lcook=$(date -r "${AE_SIGN[COOKED]}" 2>/dev/null)
 [ "$lcook" ] || lcook='no binary packages is found'
 echo "  Last cooked at    : $lcook."
 
@@ -213,6 +211,7 @@ echo "  Last cooked at    : $lcook."
 linst=$(date -r "${AE_DIR[GATEWAY]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" 2>/dev/null || \
 		date -r "/var/db/pkg" 2>/dev/null)
 echo "  Last installed at : $linst."
+
 
 # State
 get_ll_state() { # to-do: add flag to set
@@ -286,60 +285,6 @@ get_all_states "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBL
 get_all_states "${AE_DIR[REBUILD_VAR]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}" "  Last install state:" \
 	"${AE_PID[AE_REBUILD_PATH]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_PID[AE_REBUILD_FILE]}" "ae_makeworld" "" "$?"
 
-# status and guide
-if false; then
-	echo -n "  State: "
-	# check state
-	collect_signes
-	case $st in
-		Y*) echo -e "\033[01;33mCOOKING IS IN PROGRESS, please come back later ...\033[00;10m"
-			(($forupd)) && echo "  Hint: installation at this phase is possible but not recommended." || \
-							echo "  Hint: nothing to install yet, please wait." 
-			;;
-		NN*) echo -e "\033[01;31mSYNC IS FAILED !!!\033[00;10m"
-			echo "  Hint: check and fix Internet connection, proxy, mirrors and other settings at GRS."
-			echo "	Then recheck syncing at VCS with 'ping', 'emerge --sync' or 'eix-sync' and so on..."
-			echo "	After repaire run 'ae_cron' or leave it for a cron service."
-			# add cron log
-			((opt|=0x100))
-			;;
-		NYNN) echo -e "\033[01;31mCOOK IS FAILED !!!\033[00;10m"
-			echo -e "  Hint: run 'ae_vcs' to enter into VCS to check if cooking is Ok." 
-			# add cron log
-			((opt|=0x100))
-			# add emerge warn
-			((opt|=0x20))
-			;;
-		NYNY) echo -e "\033[01;33mCOOK IS UNCOMPLETED !\033[00;10m"
-			echo -e "  Hint: some packages weren't built." \
-					"Run 'emerge -uDNkvtp world' in VCS or 'ae_vcs temerge -uDNkvtp world' in GRS for details..."
-					# bug with emerge
-			# add emerge warn
-			((opt|=0x20))
-			;;
-		NYYN) echo -e "\033[01;33mCOOK IS OK, BUT REVDEP-REBUILD IS FAILED !\033[00;10m"
-			echo -e "  Hint: run 'ae_vcs' to enter into VCS and check revdep-cooking." #\
-	#			"\n\tLearn logs like: $AE_LOG_DIR*emerge.*last.log."\
-	#			"\n\tFix configs and check building with 'emerge --pretend'."\
-	#			"\n\t( With next 'ae_install' new configs will be copied to your real system.)"\
-	#			"\n\tRun 'ae_build' or leave it for (ana)cron if success, else try to repair again (if it possible)."\
-	#			"\n\t(*) also you can try to fix the problem in your real system. (please read documentation first)"
-			# add emerge warn
-			((opt|=0x20))
-			;;
-		
-		# to-do: add NYYY? (ae_install.pid) "INSTALL IS IN PROGRESS, please wait..."
-		NYYY) if (($forupd)); then
-					echo -e "\033[01;32mOK, READY TO INSTALL ...\033[00;10m"
-					echo "  Hint: run 'ae_install' to install cooked binaries to your real system."
-				else
-					echo -e "\033[01;32mSYSTEM IS UP TO DATE.\033[00;10m"
-					echo "  Hint: your system is up to date - no more actions is needed ;)"
-				fi
-			;;
-		*) echo "state is undefined (this is a bug.)"
-	esac	
-fi
 
 # show last log
 show_log() {
