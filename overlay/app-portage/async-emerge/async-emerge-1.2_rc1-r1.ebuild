@@ -77,8 +77,9 @@ src_install() {
 	doins "${S}"/etc/* || die
 	# log
 	keepdir /var/log/async.emerge
-	# logrotate
+	# logrotate config for AE
 	if has_version "app-admin/logrotate"; then
+		dodir /etc/logrotate.d/
 		cp -R ${S}/etc/logrotate.d/* ${D}/etc/logrotate.d/ || die
 		keepdir /var/log/async.emerge/archive
 	fi
