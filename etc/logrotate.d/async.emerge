@@ -1,0 +1,15 @@
+/var/log/async.emerge/cron.log {
+    copytruncate
+    size 32k
+    olddir archive
+    missingok
+    sharedscripts
+}
+
+/var/log/async.emerge/cook.*.log /var/log/async.emerge/install.*.log {
+    copytruncate
+    olddir archive
+    missingok
+    sharedscripts
+}
+
