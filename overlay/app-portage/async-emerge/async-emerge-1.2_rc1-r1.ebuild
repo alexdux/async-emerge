@@ -69,7 +69,7 @@ src_configure() {
 }
 
 src_install() {
-	# binapp-admin/logrotate
+	# bin
 	dodir /usr/bin
 	cp -R ${S}/bin/* ${D}/usr/bin/ || die
 	# conf
