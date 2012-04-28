@@ -1234,6 +1234,7 @@ if !(($AE_VCS)); then
 	# restart changed services
 	if [ "${AE_INSTALL[DO_DAEMONS_RESTART]}" == "y" ]; then
 		einfon "  Restarting services with changed binary objects: "
+		# search for changed services
 		for i in $(eval "${AE_CMD[CDAEMONS_LIST]}"); {
 			if [ -x "${AE_DIR[SINIT]}$i" ]; then # same name with proc
 				proc_name="$i"
@@ -1242,11 +1243,14 @@ if !(($AE_VCS)); then
 			fi
 			[[ "$proc_name" ]] &&  [[ $daemons_to_restart != *"$proc_name "* ]] && daemons_to_restart+="$proc_name "
 		}
-		echo "$daemons_to_restart"
+		echo "$daemons_to_restart ..."
+		# restart daemons
 		for i in $daemons_to_restart; {
 			${AE_DIR[SINIT]}$i status
 		}
 		#eend $?
+		einfon "  Processes needed to be restarted manually: "
+		${AE_CMD[CDAEMONS_LIST]}
 	else
 		einfo "  Services restart is not configured."
 		eend 0
