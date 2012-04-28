@@ -1250,8 +1250,8 @@ if !(($AE_VCS)); then
 		}
 		#eend $?
 		daemons_to_restart=$(eval "${AE_CMD[CDAEMONS_LIST]}")
-		if "$daemons_to_restart"; then
-			ewarn "  Processes are left unrestarted: $daemons_to_restart."
+		if [ "$daemons_to_restart" ]; then
+			ewarn "  Processes are left unrestarted: "$daemons_to_restart"."
 		else
 			einfo "  All needed process have been restarted."
 		fi
