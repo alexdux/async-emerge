@@ -1249,8 +1249,8 @@ if !(($AE_VCS)); then
 			${AE_DIR[SINIT]}$i status
 		}
 		#eend $?
-		einfon "  Processes needed to be restarted manually: "
-		${AE_CMD[CDAEMONS_LIST]}
+		einfon "  Processes are left unrestarted: "
+		echo $(eval "${AE_CMD[CDAEMONS_LIST]}")
 	else
 		einfo "  Services restart is not configured."
 		eend 0
