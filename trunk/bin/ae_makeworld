@@ -1246,7 +1246,7 @@ if !(($AE_VCS)); then
 		echo "$daemons_to_restart ..."
 		# restart daemons
 		for i in $daemons_to_restart; {
-			${AE_DIR[SINIT]}$i status
+			${AE_DIR[SINIT]}$i restart
 		}
 		#eend $?
 		daemons_to_restart=$(eval "${AE_CMD[CDAEMONS_LIST]}")
