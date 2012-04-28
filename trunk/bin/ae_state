@@ -183,7 +183,7 @@ echo -ne "  Linux kernel: "
 #eix -cI2 sys-kernel/* &>/dev/null
 (eselect kernel list | egrep "\[.+\]" | tail -n1 | grep '*') &>/dev/null
 !(($?)) && echo -e "\033[00;32mis up to date.\033[00;10m" ||\
-	echo -e "\033[01;33mnew slot for manual switch is available ...\033[00;10m"
+	echo -e "\033[01;33ma new slot for manual switch is available ...\033[00;10m"
 
 
 # scheduled user tasks
