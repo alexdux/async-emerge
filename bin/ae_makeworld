@@ -1235,13 +1235,16 @@ if !(($AE_VCS)); then
 	if [ "${AE_INSTALL[DO_DAEMONS_RESTART]}" == "y" ]; then
 		einfon "  Restarting services with changed binary objects: "
 		# search for changed services
+		daemons_to_restart=' '
 		for i in $(eval "${AE_CMD[CDAEMONS_LIST]}"); {
 			if [ -x "${AE_DIR[SINIT]}$i" ]; then # same name with proc
 				proc_name="$i"
 			else # the proc has a different name - try to find a helper
 				proc_name=$(grep "$i" <(echo "${AE_GRS[DAEMONS_RESTART_HELPER]}") | cut -f1 -d ' ')
 			fi
-			[[ "$proc_name" ]] &&  [[ $daemons_to_restart != *"$proc_name "* ]] && daemons_to_restart+="$proc_name "
+			[[ "$proc_name" ]] && [[ "${AE_GRS[DAEMONS_RESTART_RESTRICT]}" != *" $proc_name "* ]] && \
+				[[ "$daemons_to_restart" != *" $proc_name "* ]] && \
+					daemons_to_restart+="$proc_name "
 		}
 		echo "$daemons_to_restart ..."
 		# restart daemons
