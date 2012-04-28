@@ -1249,10 +1249,24 @@ if !(($AE_VCS)); then
 			${AE_DIR[SINIT]}$i status
 		}
 		#eend $?
-		einfon "  Processes are left unrestarted: "
+		ewarnn "  Processes are left unrestarted: "
 		echo $(eval "${AE_CMD[CDAEMONS_LIST]}")
 	else
 		einfo "  Services restart is not configured."
+		eend 0
+	fi
+
+	# put news to terminal
+	if [ "${AE_INSTALL[DO_OUTNEWS]}" == "y" ]; then
+		if $(($(${AE_CMD[NEWSCOUNT]}))); then
+			einfo "  Here is Gentoo news:"
+			${AE_CMD[NEWSOUT]}
+		else
+			einfo "  There is no Gentoo news."
+			eend 0
+		fi
+	else
+		einfo "  Printing Gentoo news is not configured."
 		eend 0
 	fi
 
