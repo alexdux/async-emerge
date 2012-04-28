@@ -38,7 +38,7 @@ This section is related to `ae_chroot` logic and it is not recommended to alter 
 == # 5. GRS configuration ==
 This section has a list of process names for daemons which should be restarted if related objects code is changed. The daemon should be added here only if process and daemon names not the same.<br>
 You can edit the list if needed.<br>
-Format: `<daemon name> <proc name> <proc name> ... <new line> ...`
+Format per line: `<daemon name> <proc name> <proc name> ... ` (1 trailing space is required)
 
 
 == # 6. COOKING logic configuration ==
