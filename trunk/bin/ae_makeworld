@@ -1271,7 +1271,7 @@ if !(($AE_VCS)); then
 	# put news to terminal
 	if [ "${AE_INSTALL[DO_OUTNEWS]}" == "y" ]; then
 		if (($(${AE_CMD[NEWSCOUNT]}))); then
-			einfo "  Here are Gentoo news:"
+			einfo "  There are Gentoo news:"
 			${AE_CMD[NEWSOUT]}
 		else
 			einfo "  There are no Gentoo news."
