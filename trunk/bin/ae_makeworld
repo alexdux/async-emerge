@@ -2,7 +2,7 @@
 
 # ae_makeworld - 'async emerge' Gentoo system updater/rebuilder
 # GPL ver. 2
-# version: 2.1
+# version: 2.2
 # 2011-2012, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
@@ -638,9 +638,14 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 			
 			# World update logic
 			if !(($loopLogic & ${AE_RBLL[_CRITICAL_UPDATE]})) || [ "${AE_REBUILD[ALLOW_SKIP_WORLD_UPDATE]}" != "y" ]; then
-				call_emerge "  Updating world" "${AECMD[EMERGE]}${updateExclude}" \
+				# define cmd for world update, use for last try safest cmd
+				((loop+1 != max_loop)) && wrlUpdCmd="${AECMD[EMERGE]}" || wrlUpdCmd="${AECMD[EMERGE_LAST]}"
+				wrlUpdCmd+="${updateExclude}"
+				
+				# world update caller
+				call_emerge "  Updating world" "${wrlUpdCmd}" \
 					"${AELOG[EMERGE_LAST]}" "${AELOG[EMERGE_WARN_LAST]}" "${AELOG[EMERGE]}" "${AELOG[EMERGE_WARN]}"
-		
+	
 				# set subset update, revdep-rebuild
 				loopLogic_set SUBSET_UPDATE
 				loopLogic_set WORLD_REVDEP
