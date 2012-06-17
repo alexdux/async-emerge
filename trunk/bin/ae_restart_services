@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ae_reload_services - 'async emerge' changed binary objects services reloader
+# ae_restart_services - 'async emerge' changed binary objects services reloader
 # GPL ver. 2
 # version: 2.2
 # 2011-2012, Alex Dubenetsky: alexdu@forums.gentoo.org
