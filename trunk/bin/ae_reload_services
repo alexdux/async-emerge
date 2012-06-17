@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# ae_reload_services - 'async emerge' changed binary objects services reloader
+# GPL ver. 2
+# version: 2.2
+# 2011-2012, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+
+# get config
+. /etc/async.emerge.conf
+
+		einfon "  Restarting services with changed binary objects:"
+		# search for changed services
+		daemons_to_restart=' '
+		for i in $(eval "${AE_CMD[CDAEMONS_LIST]}"); {
+			if [ -x "${AE_DIR[SINIT]}$i" ]; then # same name with proc
+				proc_name="$i"
+			else # the proc has a different name - try to find a helper
+				proc_name=$(grep "$i" <(echo "${AE_GRS[DAEMONS_RESTART_HELPER]}") | cut -f1 -d ' ')
+			fi
+			[[ "$proc_name" ]] && [[ "${AE_GRS[DAEMONS_RESTART_RESTRICT]}" != *" $proc_name "* ]] && \
+				[[ "$daemons_to_restart" != *" $proc_name "* ]] && \
+					daemons_to_restart+="$proc_name "
+		}
+		if [ "$daemons_to_restart" == ' ' ]; then
+			echo ' none.'
+		else
+			echo "$daemons_to_restart ..."
+			# restart daemons
+			for i in $daemons_to_restart; {
+				${AE_DIR[SINIT]}$i restart
+			}
+			#eend $?
+			daemons_to_restart=$(eval "${AE_CMD[CDAEMONS_LIST]}")
+			if [ "$daemons_to_restart" ]; then
+				ewarn "  Processes and services are left unrestarted: "$daemons_to_restart"."
+			else
+				einfo "  All needed process have been restarted."
+			fi
+		fi
+		eend 0
+
+exit 0
+
