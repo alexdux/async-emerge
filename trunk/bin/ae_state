@@ -100,8 +100,14 @@ do_lock "${AE_LOCK[AE_STATE_LOCK]}" 0 #"One instance of '$PNAME' is already runn
 
 
 # "Once a day" logic 
-ts_reported=$(stat -c %Y "${AE_SIGN[STATE]}" 2>/dev/null) || ts_reported=0
-(($opt & 0x4)) && (($(date +%s 2>/dev/null)-$ts_reported < ${AE_STATE[PERIOD]})) && exit 0
+(($opt & 0x4)) && {
+	# sleep for 0.001-0.01 sec
+	sleep "0.0"$(($RANDOM % 100))
+	# get the last ts
+	ts_reported=$(stat -c %Y "${AE_SIGN[STATE]}" 2>/dev/null) || ts_reported=0
+	# check if the timeout passed
+	(($(date +%s 2>/dev/null)-$ts_reported < ${AE_STATE[PERIOD]})) && exit 0
+}
 touch "${AE_SIGN[STATE]}" #2>/dev/null
 
 # change workdir
