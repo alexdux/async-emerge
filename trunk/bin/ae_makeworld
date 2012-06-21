@@ -1238,7 +1238,7 @@ if !(($AE_VCS)); then
 
 	# restart changed services
 	if [ "${AE_INSTALL[DO_DAEMONS_RESTART]}" == "y" ]; then
-		ae_reload_services
+		ae_restart_services
 	else
 		einfo "  Services restart is not configured."
 		eend 0
