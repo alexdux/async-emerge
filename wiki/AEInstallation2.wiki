@@ -49,7 +49,7 @@ Edit layman's config, add ae-repo to layman:
 </code>
 
 Sync the layman overlays list:
-<code># layman -l</code>
+<code># layman -L</code>
 
 Add AE overlay:
 <code># layman -a async-emerge</code>
