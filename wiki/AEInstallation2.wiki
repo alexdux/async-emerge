@@ -55,7 +55,7 @@ Add AE overlay:
 <code># layman -a async-emerge</code>
 
 Check if AE is available:
-<code># eix async-emerge</code>
+<code># eix-update; eix async-emerge</code>
 
 
 == Check USE flags ==
