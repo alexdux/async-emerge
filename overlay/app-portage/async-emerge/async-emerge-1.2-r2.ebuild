@@ -32,6 +32,7 @@ RDEPEND="|| ( sys-fs/aufs2 sys-fs/aufs3 )
 			app-shells/bash
 			app-portage/eix
 			sys-process/lsof
+			sys-apps/util-linux
 			!noemail? ( net-mail/email )"
 #DEPEND="${RDEPEND}"
 
