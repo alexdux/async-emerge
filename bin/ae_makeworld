@@ -154,8 +154,6 @@ call_cmd0() {
 # emerge solver: msg log_file_last -> $cmdRet
 # Features:
 #	- for 'python-updater' and 'perl-cleaner' ONLY !!!
-# To-do:
-#	- this is awful --> emerge --ignore-invalid-atoms
 # parse log, get emerge cmd, try to build it 'anyway' by escaping invalid atoms
 # : info_msg log_file
 emerge_solver() {

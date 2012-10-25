@@ -2,8 +2,8 @@
 
 # ae_state - getting state of 'async emerge'
 # GPL ver. 2
-# version: 2.1
-# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version: 2.2
+# 2011-2012, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
 # 	- List prebuilt packages
@@ -98,17 +98,15 @@ done
 # check locking with ${AE_LOCK[AE_STATE_LOCK]}
 do_lock "${AE_LOCK[AE_STATE_LOCK]}" 0 #"One instance of '$PNAME' is already running, exit by lock..."
 
-
-# "Once a day" logic 
-(($opt & 0x4)) && {
-	# sleep for 0.001-0.01 sec
-	sleep "0.0"$(($RANDOM % 100))
-	# get the last ts
-	ts_reported=$(stat -c %Y "${AE_SIGN[STATE]}" 2>/dev/null) || ts_reported=0
-	# check if the timeout passed
-	(($(date +%s 2>/dev/null)-$ts_reported < ${AE_STATE[PERIOD]})) && exit 0
-}
-touch "${AE_SIGN[STATE]}" #2>/dev/null
+# "Once a day" logic && locking
+# get the last ts
+ts_reported=$(stat -c %Y "${AE_SIGN[STATE]}" 2>/dev/null) || ts_reported=0
+# flock to avoid multiple instance running
+exec 9> "${AE_SIGN[STATE]}"
+# check the lock & if the timeout passed
+!(flock -n 9) || \
+	(( (($opt & 0x4)) && (($(date +%s 2>/dev/null)-$ts_reported < ${AE_STATE[PERIOD]})) )) && \
+	exit 0
 
 # change workdir
 cd "${AE_DIR[PKGDIR]}"
