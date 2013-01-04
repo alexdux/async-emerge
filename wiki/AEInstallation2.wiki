@@ -61,6 +61,7 @@ Check if AE is available:
 == Check USE flags ==
 Adjust AE USE flags if it necessary:
 || *Flag* || *Description* ||
+|| logrotate || Add support to logrotate: install `logrotate.d/async.emerge` configuration file.||
 || noemail || Don't install `net-mail/email`. This dependant package is used for sending a summary mail by `ae_cron`.<br>If you are not going to send AE reports by email and don't want to have `net-mail/email` installed - set this on.||
 || notmpfs || Don't mount `tmpfs` disk for packages building by default. Can be overwritten at run time by setting `$AE_NOTMPFS` or `$AE_USETMPFS` (respectively).<br>If you don't want to use `temerge` - set this on. ||
  
