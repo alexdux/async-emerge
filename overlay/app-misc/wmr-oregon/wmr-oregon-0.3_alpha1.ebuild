@@ -4,7 +4,7 @@
 
 EAPI=4
 
-DESCRIPTION="Oregon Scientific WMRxxx, RMSxxx and IxxxUSB stations reader and logger."
+DESCRIPTION="Oregon Scientific WMRxxx, RMSxxx and Ixxx USB stations reader and logger."
 HOMEPAGE="http://code.google.com/p/wmr/"
 KEYWORDS="~amd64 ~x86" # others archs nor restricted neither tested, feel free to test and submit/feedback them
 LICENSE="LGPL-2"
@@ -39,9 +39,12 @@ src_install() {
 	insinto /etc/wmr
 	doins ${S}/contrib/wmr.conf || die
 	# daemon
-#	mv ${S}/contrib/wmr.init ${S}/contrib/wmr || die
-#	doinitd ${S}/contrib/wmr
 	doinitd ${FILESDIR}/wmrd
+	# udev rules
+	if has_version "sys-fs/udev" || has_version "virtual/udev"; then
+		dodir /lib/udev/rules.d/
+		cp ${S}/udev/10-wmr.rules ${D}/lib/udev/rules.d/
+	fi
 	# scripts
 	keepdir /etc/wmr/scripts
 	cp -R ${S}/script/wmr_alarm_advanced/etc/wmr/script/* ${D}/etc/wmr/scripts || die

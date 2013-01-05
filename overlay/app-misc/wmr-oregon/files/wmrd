@@ -10,6 +10,9 @@ command_args="-d"
 start_stop_daemon_args="--quiet"
 description="Daemon for Advanced Configuration and Power Interface"
 
+description_reload="Reloads the configuration."
+description_reinit="Re-inits related USB devices and reloads the configuration."
+
 depend() {
     need localmount
     use logger
@@ -22,7 +25,7 @@ reload() {
 }
 
 reinit() {
-    ebegin "Reiniting [served] USB devices and reloading wmrd configuration"
+    ebegin "Reiniting related USB devices and reloading wmrd configuration"
     start-stop-daemon --exec $command --signal USR1
     eend $?
 }
