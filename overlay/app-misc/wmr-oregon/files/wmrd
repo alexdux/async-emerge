@@ -1,0 +1,29 @@
+#!/sbin/runscript
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: $
+
+extra_started_commands="reload reinit"
+command="/usr/sbin/wmr-oregon"
+#command_args="${ACPID_ARGS}"
+command_args="-d"
+start_stop_daemon_args="--quiet"
+description="Daemon for Advanced Configuration and Power Interface"
+
+depend() {
+    need localmount
+    use logger
+}
+
+reload() {
+    ebegin "Reloading wmrd configuration"
+    start-stop-daemon --exec $command --signal HUP
+    eend $?
+}
+
+reinit() {
+    ebegin "Reiniting [served] USB devices and reloading wmrd configuration"
+    start-stop-daemon --exec $command --signal USR1
+    eend $?
+}
+
