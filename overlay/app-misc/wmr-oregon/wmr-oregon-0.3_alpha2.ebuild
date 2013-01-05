@@ -3,6 +3,7 @@
 # $Header: $
 
 EAPI=4
+inherit linux-info
 
 DESCRIPTION="Oregon Scientific WMRxxx, RMSxxx and Ixxx USB stations reader and logger."
 HOMEPAGE="http://code.google.com/p/wmr/"
@@ -21,42 +22,62 @@ DEPEND="	logrotate? ( app-admin/logrotate )
 			dev-db/sqlite:3
 			dev-libs/libhid
 			virtual/libusb:0"
+
 			
 src_unpack() {
 	default_src_unpack
+
 	mv Oregon_Scientific_WMR ${P}
+
 	sed -i -e 's:<libhid/hid.h>:<hid.h>:' ${S}/*.{c,h}
 }
+
+
+src_prepare() {
+	default_src_prepare
+
+	if ! linux_config_exists || ! linux_chkconfig_present USB_HID; then
+		ewarn "Your kernel is compiled without USB_HID support."
+		ewarn "wmr-oregon requires USB_HID support to run."
+		ewarn "Please enable CONFIG_USB_HID in your kernel config."
+#		eend 1
+#	else
+#		eend 0
+	fi
+
+}
+
 
 src_compile() {
 		emake all
 }
 
+
 src_install() {
-	# sbin
+
 	dosbin ${S}/wmr-oregon ${S}/script/wmr_alarm_advanced/wmr_alarm.sh
-	# conf
+
 	insinto /etc/wmr
 	doins ${S}/contrib/wmr.conf || die
-	# daemon
+
 	doinitd ${FILESDIR}/wmrd
-	# udev rules
+
 	if has_version "sys-fs/udev" || has_version "virtual/udev"; then
 		dodir /lib/udev/rules.d/
 		cp ${S}/udev/10-wmr.rules ${D}/lib/udev/rules.d/
 	fi
-	# scripts
+
 	keepdir /etc/wmr/scripts
 	cp -R ${S}/script/wmr_alarm_advanced/etc/wmr/script/* ${D}/etc/wmr/scripts || die
 	dodir /etc/wmr/sqlite
 	cp ${S}/script/wmr_create_db_sqlite3.sh ${D}/etc/wmr/sqlite || die
-	# logrotate
+
 	if use logrotate ; then
 		dodir /etc/logrotate.d/
 		cp ${FILESDIR}/wmr-oregon ${D}/etc/logrotate.d/ || die
 		#keepdir /var/log/async.emerge/archive
 	fi
-	# docs
+
 	if use doc ; then 
 		dodoc ${S}/doc/* 
 		newdoc ${S}/README.ru.txt README.rus.txt
@@ -65,6 +86,7 @@ src_install() {
 		newdoc ${S}/script/wmr_alarm_advanced/README wmr_alarm_advanced.README
 	fi
 }
+
 
 pkg_postinst() {
 	if true ; then # use sqlite
