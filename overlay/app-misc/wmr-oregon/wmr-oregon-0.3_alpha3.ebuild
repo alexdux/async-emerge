@@ -30,6 +30,10 @@ src_unpack() {
 	mv Oregon_Scientific_WMR ${P}
 
 	sed -i -e 's:<libhid/hid.h>:<hid.h>:' ${S}/*.{c,h}
+	
+	cd ${S}
+	epatch "${FILESDIR}/wmr.c.patch"
+	epatch "${FILESDIR}/wmr_conf.c.patch"
 }
 
 
