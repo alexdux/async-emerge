@@ -5,8 +5,7 @@
 
 extra_started_commands="reload reinit"
 command="/usr/sbin/wmr-oregon"
-#command_args="${ACPID_ARGS}"
-command_args="-d -l /var/run"
+command_args="-d -l /var/run/wmrd.pid"
 start_stop_daemon_args="--quiet"
 description="Daemon for Advanced Configuration and Power Interface"
 
