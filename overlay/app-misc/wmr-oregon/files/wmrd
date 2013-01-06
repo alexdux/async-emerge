@@ -5,8 +5,9 @@
 
 extra_started_commands="reload reinit"
 command="/usr/sbin/wmr-oregon"
-command_args="-d -l /var/run/wmrd.pid"
-start_stop_daemon_args="--quiet"
+VMRD_PID="/var/run/wmrd.pid"
+command_args="-d -l ${VMRD_PID}"
+start_stop_daemon_args="--quiet -p ${VMRD_PID} -b"
 description="Daemon for Advanced Configuration and Power Interface"
 
 description_reload="Reloads the configuration."
