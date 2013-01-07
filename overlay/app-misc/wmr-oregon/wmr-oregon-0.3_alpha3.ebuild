@@ -10,7 +10,7 @@ HOMEPAGE="http://code.google.com/p/wmr/"
 KEYWORDS="~amd64 ~x86" # others archs nor restricted neither tested, feel free to test and submit/feedback them
 LICENSE="LGPL-2"
 SLOT="0"
-SRC_URI="http://wmr.googlecode.com/files/wmr-oregon-2012-12-26.tar.gz"
+SRC_URI="http://wmr.googlecode.com/files/wmr-oregon-2012-12-26.tar.gz "
 
 IUSE="doc logrotate rrdtool"
 
