@@ -1176,6 +1176,14 @@ for (( loop=0; $loop < $max_loop && $loopLogic; loop++ )); do
 done
 
 
+# Do fs sync
+if [ "${AE_REBUILD[FSSYNC]}" == "y" ]; then
+	einfo "  Syncing the disks ..."
+	${AE_CMD[FSSYNC]}
+	eend $?
+fi
+
+
 # Bye World
 if (($loopLogic)); then
 	eerror "  "
@@ -1262,14 +1270,6 @@ if !(($AE_VCS)); then
 	einfon "  "
 	echo -e "\033[01;37mBinary packages installation is finished!\033[00;10m"
 	eend 0
-fi
-
-
-# Do fs sync
-if [ "${AE_REBUILD[FSSYNC]}" == "y" ]; then
-	einfo "  Syncing the disks ..."
-	${AE_CMD[FSSYNC]}
-	eend $?
 fi
 
 
