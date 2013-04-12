@@ -1266,7 +1266,7 @@ fi
 
 
 # Do fs sync
-if [ "{AE_REBUILD[FSSYNC]}" == "y" ]; then
+if [ "${AE_REBUILD[FSSYNC]}" == "y" ]; then
 	einfo "  Syncing the disks ..."
 	${AE_CMD[FSSYNC]}
 	eend $?
