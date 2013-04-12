@@ -2,8 +2,8 @@
 
 # ae_makeworld - 'async emerge' Gentoo system updater/rebuilder
 # GPL ver. 2
-# version: 2.2
-# 2011-2012, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version: 2.3
+# 2011-2013, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
 #	- Work in both GRS and VCS environments. Auto-detect it.
@@ -1263,6 +1263,15 @@ if !(($AE_VCS)); then
 	echo -e "\033[01;37mBinary packages installation is finished!\033[00;10m"
 	eend 0
 fi
+
+
+# Do fs sync
+if [ "{AE_REBUILD[FSSYNC]}" == "y" ]; then
+	einfo "  Syncing the disks ..."
+	${AE_CMD[FSSYNC]}
+	eend $?
+fi
+
 
 #times
 
