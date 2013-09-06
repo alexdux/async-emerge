@@ -179,7 +179,7 @@ emerge_solver() {
 			# check masked
 			aMasked=$((grep -m1 'masked by:.*keyword' "$log_last") 2>> "$log_last")
 			if [ "$aMasked" ]; then
-				# get packet category/name
+				# get package category/name
 				aMasked=${aMasked%%-[0-9]*}; aMasked=${aMasked/* /}
 				# too slow: shopt -s extglob; eCmd=${eCmd/$aMasked*([! ])/}; shopt -u extglob
 				s=$eCmd; eCmd=''
@@ -191,7 +191,7 @@ emerge_solver() {
 			# emerge: there are no ebuilds to satisfy "=net-print/hplip-3.10.9-r1"
 			aMissed=$((grep -m1 'there are no ebuilds to satisfy' "$log_last" | cut -f2 -d'"') 2>> "$log_last")
 			if [ "$aMissed" ]; then
-				# get packet category/name
+				# get package category/name
 				aMissed=${aMissed%%-[0-9]*}; aMasked=${aMissed/* /}
 				s=$eCmd; eCmd=''
 				for i in $s; do [[ "$i" != *"$aMissed"* ]] && eCmd+=" $i"; done
@@ -203,7 +203,7 @@ emerge_solver() {
 			for aBlocker in $(grep -m1 'pulled in by' "$log_last" | sed 's/.*(\(.*\)::.*/\1/'); do #'
 				#echo "$aBlocker"
 				if [ "$aBlocker" ]; then
-					# get packet category/name
+					# get package category/name
 					aBlocker=${aBlocker%%-[0-9]*}; aMasked=${aBlocker/* /}
 					s=$eCmd; eCmd=''
 					for i in $s; do [[ "$i" != *"$aBlocker"* ]] && eCmd+=" $i"; done
@@ -337,10 +337,14 @@ scan_for_sysvers() {
 						pkg=$(eix '-I*' -e --format '<category>/<name>' $sens)
 						if [ "$pkg" ]; then
 							sysvers+="$pkg:\t"
-							iver=$(eix '-I*' -e --format '<installedversions:VERSION>' $sens)
+							iver=$(eix '-I*' -e --format '<installedversions:NAMEVERSION>' $sens)
+							# extract package version
+							iver=${iver##*[A-z+_]-}
 							sysvers+="$iver"
 							if [[ "$dtc" == "-pre-eixc-" ]]; then
-								uver=$(eix '-I*' -e --format '<bestversion:VERSION>' $sens)
+								uver=$(eix '-I*' -e --format '<bestversion:NAMEVERSION>' $sens)
+								# extract package version
+								uver=${uver##*[A-z+_]-}
 								#uver=$(eix '-I*' -e --format '<bestslotupgradeversions:VERSION>' $sens)
 								#"$uver" || uver=$(eix '-I*' -e --format '<bestversion:VERSION>' $sens)
 								[[ "$iver" == "$uver" ]] || {
