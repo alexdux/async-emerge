@@ -16,7 +16,7 @@ TE_ZRAM=/dev/zram0
  
 mounttmpfs() {
 	[ -b "$TE_ZRAM" ] && \
-		einfo "  ($TE_ZRAM using)" ;	\
+		einfo "  (using compressed RAM device: $TE_ZRAM)" ;	\
 		mount -t tmpfs -o size=$TE_MEMSIZE $TE_ZRAM $TE_VTP \
 	|| \
 		mount -t tmpfs tmpfs -o size=$TE_MEMSIZE $TE_VTP
