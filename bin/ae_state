@@ -2,8 +2,8 @@
 
 # ae_state - getting state of 'async emerge'
 # GPL ver. 2
-# version: 2.2
-# 2011-2012, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version: 2.3
+# 2011-2013, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
 # 	- List prebuilt packages
@@ -163,7 +163,7 @@ for i in $(ls -t$ls_sort */*bz2 2>/dev/null); do
 			if [ "${AE_STATE[USE_EIX]}" == "y" ]; then # call eix
 				#echo "eix -Fec ${i%%-[0-9]*} 2>/dev/null"
 				# installed ??? out=$out`eix -ceFI ${i%%-[0-9]*} 2>/dev/null`"\n"
-				out+=$(eix -ceF ${i%%-[0-9]*} 2>/dev/null)"\n"
+				out+=$(eix -ceF ${i%%-[0-9]*} 2>/dev/null) #"\n"
 				# out=${out/ (/-${i##*[^0-9]-} (}
 			else # call emerge, to-do: bad out
 				out+=$(emerge -sq "%@^${i%%-[0-9]*}$" | grep '*' 2>/dev/null && \
