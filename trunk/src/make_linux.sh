@@ -59,6 +59,12 @@ for i in linux-*; do
 	cp -fpv ${i}/.config ${OLDCFGS}/.config-${i}
 done
 
+# extra stuff
+if [ -x extra_kernel.sh ]; then
+	echo '>>> extra stuff running:'
+	. ./extra_kernel.sh
+fi
+
 # Bye info
 echo '******************************************'
 echo '*** Done Building Kernel: '$(ls -l /usr/src/linux | cut -f12 -d' ')' ***'
