@@ -6,7 +6,7 @@
 KRNVER=`ls -l /usr/src/linux | cut -f2 -d'>'`
 # Welcome info
 echo '*******************************************'
-echo '*** Start Building Kernel: '${KRNVER}' ***'
+echo '*** Start Building Kernel:'${KRNVER}' ***'
 echo '*******************************************'
 
 # Get compl/make opts
@@ -68,5 +68,5 @@ fi
 
 # Bye info
 echo '******************************************'
-echo '*** Done Building Kernel: '${KRNVER}' ***'
+echo '*** Done Building Kernel:'${KRNVER}' ***'
 echo '******************************************'
