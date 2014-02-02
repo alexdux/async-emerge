@@ -61,7 +61,7 @@ for i in linux-*; do
 done
 
 # extra stuff
-if [ -x extra_kernel.sh ]; then
+if [ -e extra_kernel.sh ]; then
 	echo '>>> extra stuff running:'
 	. ./extra_kernel.sh
 fi
