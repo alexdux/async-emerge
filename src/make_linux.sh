@@ -1,11 +1,12 @@
 #!/bin/sh
 
 # Script to build, install & conf linux kernel
-# V1.0 Ald Sun 02 Feb 2014 01:42:10 PM MSK
+# V1.1 Ald Sun 02 Feb 2014 01:42:10 PM MSK
 
+KRNVER=`ls -l /usr/src/linux | cut -f2 -d'>'`
 # Welcome info
 echo '*******************************************'
-echo '*** Start Building Kernel: '$(ls -l /usr/src/linux | cut -f12 -d' ')' ***'
+echo '*** Start Building Kernel: '${KRNVER}' ***'
 echo '*******************************************'
 
 # Get compl/make opts
@@ -67,5 +68,5 @@ fi
 
 # Bye info
 echo '******************************************'
-echo '*** Done Building Kernel: '$(ls -l /usr/src/linux | cut -f12 -d' ')' ***'
+echo '*** Done Building Kernel: '${KRNVER}' ***'
 echo '******************************************'
