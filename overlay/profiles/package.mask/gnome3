@@ -109,7 +109,7 @@ gnome-extra/office-runner
 >=gnome-base/gnome-core-libs-3.0
 >=gnome-base/gnome-fallback-3.0
 >=gnome-base/gnome-light-3.0
->=gnome-base/gnome-3.0
+>=gnome-base/gnome-3.0::gentoo
 # Misc applications
 >=gnome-extra/nautilus-open-terminal-0.19
 >=app-mobilephone/gnome-phone-manager-0.67
