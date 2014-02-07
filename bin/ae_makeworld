@@ -44,7 +44,7 @@ AE_VCS=${#AE_STATE_SKIP}
 
 # Get param (1)
 # -v	verbose (copy out to stdout), default for GRS
-# -q	quite (don't cope out to stdout) default for VCS
+# -q	quite (don't copy out to stdout) default for VCS
 if (($AE_VCS)); then
     [[ "$1" == '-v' ]] && AE_MW_VERBOSE='verbose'
 else
