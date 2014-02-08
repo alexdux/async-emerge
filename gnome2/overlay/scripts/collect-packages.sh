@@ -26,7 +26,7 @@ copy_pkg() {
 }
 
 
-for pkg in $(grep -v "^#" ../profiles/package.mask/gnome3 | eix '-|*' --format '<category>/<name>\n'); do
+for pkg in $(grep -v "^#" ../profiles/package.mask/gnome3 | eix '-|' --format '<category>/<name>\n' --pure-packages); do
     copy_pkg ${pkg}
 done
 

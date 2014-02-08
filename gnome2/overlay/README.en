@@ -8,14 +8,15 @@ Installation
 1. # emerge -av layman eix
 2. add to /etc/layman/layman.cfg to "overlays:"
     https://async-emerge.googlecode.com/svn/distfiles/layman/gnome2-overlay.xml
-3. # layman -a gnome2
+3. # layman -L 
+   # layman -a gnome2
 4. # cd /var/lib/portage/
    # cp -pv world world.backup-before-gnome2-overlay
    # cd /var/lib/layman/gnome2/scripts/
    # ./gnome2-gentoo-to-overlay-migration.sh
-5. ? # emerge --regen
-6. # emerge -DNatuv @world
+6. ? # emerge --regen
    # emerge -ca
+7. # emerge -DNatuv @world
    # emerge -av @preserved-rebuild
 
 
@@ -31,8 +32,10 @@ The latest available at official Gentoo tree.
 
 Any Issues?
 ===========
-Some rare icons (mostly at some games) disappeared.
-(What is exactly the way it was/is in the portage.)
+- Some rare icons (mostly at some games) disappeared.
+  (What is exactly the way it was/is in the portage.)
+- overlay disfiles not used, ebuilds update is needed.
+  (Stored as a backup)
 
 
 Technical Feedback

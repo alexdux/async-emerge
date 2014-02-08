@@ -28,7 +28,7 @@ gnome-extra/sushi
 # GNOME 3 core libs
 >=dev-libs/libgweather-3.0
 >=gnome-base/libgnomekbd-3.0
-=media-libs/libcanberra-0.28-r4
+#=media-libs/libcanberra-0.28-r4
 # Core Applications
 >=app-accessibility/orca-3.0
 >=gnome-base/gdm-3.0
@@ -144,3 +144,4 @@ gnome-extra/office-runner
 >=dev-lang/vala-0.22
 #
 >=app-crypt/libsecret-0.15-r1
+>=x11-themes/gdm-themes-2008
