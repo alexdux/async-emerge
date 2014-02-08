@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE repositories SYSTEM "/dtd/repositories.dtd">
+<repositories xmlns="" version="1.0">
+  <repo quality="experimental" status="unofficial">
+    <name><![CDATA[gnome2]]></name>
+    <description lang="en"><![CDATA[This is TEMPORARY UNOFFICIAL Gnome2 overlay.]]></description>
+    <homepage>http://code.google.com/p/async-emerge/</homepage>
+    <owner type="person">
+      <email>alexdu.com.ae@gmail.com</email>
+      <name><![CDATA[Alex Dubenetsky]]></name>
+    </owner>
+    <source type="svn">http://async-emerge.googlecode.com/svn/gnome2/overlay/</source>
+    <feed>https://code.google.com/feeds/p/async-emerge/updates/basic</feed>
+  </repo>
+</repositories>
+
