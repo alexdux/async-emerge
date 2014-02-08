@@ -1,7 +1,7 @@
 #
-# This will mask GNOME 3.6 packages in portage
+# This will mask GNOME 3.0-3.6 packages in portage
 #
-# Updated 2013-12-16
+# Updated 2014-02-08
 #
 #
 # GNOME 3.2 stuff
@@ -31,7 +31,6 @@ gnome-extra/sushi
 #=media-libs/libcanberra-0.28-r4
 # Core Applications
 >=app-accessibility/orca-3.0
->=gnome-base/gdm-3.0
 >=gnome-base/gnome-applets-3.0
 >=gnome-base/gnome-keyring-3.0
 >=gnome-base/gnome-menus-3.0
