@@ -15,8 +15,9 @@ Installation
    # cd /var/lib/layman/gnome2/scripts/
    # ./gnome2-gentoo-to-overlay-migration.sh
 6. ? # emerge --regen
-   # emerge -ca
-7. # emerge -DNatuv @world
+7. # emerge -atuvN @world
+   # emerge -aev @world
+   # emerge -ac
    # emerge -av @preserved-rebuild
 
 

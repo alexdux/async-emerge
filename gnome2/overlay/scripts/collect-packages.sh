@@ -3,14 +3,13 @@
 
 copy_pkg() {
     echo "=== $1"
+    pcat=$(eix -e --format '<category>' --pure-packages $1)
     pkg="$(eix -e --format '<bestversion:NAMEVERSION>' --pure-packages $1)"
+    catpkg=$(eix -e --format '<category>/<name>' --pure-packages $1)
     if [[ "${pkg}" != "" ]]; then
-	pcat=$(eix -e --format '<category>' --pure-packages $1)
-	catpkg=$(eix -e --format '<category>/<name>' --pure-packages $1)
 	pkg=${pkg##*\/}
 	echo "  available: ${pkg}, coping..."
 
-	mkdir -pv ../${catpkg}
 	cp -rpv /usr/portage/${catpkg}/{${pkg}.ebuild,files,metadata.xml,ChangeLog} ../${catpkg}/
 
 	ebuild ../${catpkg}/${pkg}.ebuild manifest
@@ -18,11 +17,12 @@ copy_pkg() {
 	for dist in $(grep DIST ../${catpkg}/Manifest | cut -d ' ' -f2); do
 	    cp -pv /usr/portage/distfiles/${dist} ../../distfiles/
 	done
-
-	echo ${pcat} >> ../profiles/categories
     else
 	echo "  not available! skipping!"
     fi
+	mkdir -pv ../${catpkg}
+
+    echo ${pcat} >> ../profiles/categories
 }
 
 
