@@ -34,7 +34,7 @@ Any Issues?
 ===========
 - Some rare icons (mostly at some games) disappeared.
   (What is exactly the way it was/is in the portage.)
-- overlay disfiles not used, ebuilds update is needed.
+- overlays disfiles not used, ebuilds update is needed.
   (Stored as a backup)
 
 
