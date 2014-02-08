@@ -1,5 +1,0 @@
-# -Gnome3
-#gnome-base/gvfs -gnome-online-accounts
-dev-util/anjuta -glade
-x11-libs/vte -glade
-x11-libs/gtksourceview -glade
