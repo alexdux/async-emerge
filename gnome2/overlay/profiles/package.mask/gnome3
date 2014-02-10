@@ -144,3 +144,5 @@ gnome-extra/office-runner
 #
 >=app-crypt/libsecret-0.15-r1
 >=x11-themes/gdm-themes-2008
+# 2014-02-10
+>=media-gfx/shotwell-0.15.0
