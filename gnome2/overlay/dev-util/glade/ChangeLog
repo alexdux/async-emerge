@@ -1,6 +1,16 @@
 # ChangeLog for dev-util/glade
-# Copyright 1999-2013 Gentoo Foundation; Distributed under the GPL v2
-# $Header: /var/cvsroot/gentoo-x86/dev-util/glade/ChangeLog,v 1.195 2013/12/24 15:53:01 pacho Exp $
+# Copyright 1999-2014 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/dev-util/glade/ChangeLog,v 1.197 2014/02/11 08:32:02 jlec Exp $
+
+  11 Feb 2014; Justin Lecher <jlec@gentoo.org>
+  +files/glade-3.16.1-underlinking.patch, glade-3.16.1.ebuild:
+  Add fix for underlinking (https://bugzilla.gnome.org/show_bug.cgi?id=724104)
+
+*glade-3.16.1 (09 Feb 2014)
+
+  09 Feb 2014; Gilles Dartiguelongue <eva@gentoo.org> glade-3.16.0.ebuild,
+  +glade-3.16.1.ebuild:
+  Version bump.
 
 *glade-3.16.0 (24 Dec 2013)
 
