@@ -12,10 +12,10 @@ copy_pkg() {
 
 	cp -rpv /usr/portage/${catpkg}/{${pkg}.ebuild,files,metadata.xml,ChangeLog} ../${catpkg}/
 
-	ebuild ../${catpkg}/${pkg}.ebuild manifest
+	ebuild ../${catpkg}/${pkg}.ebuild fetch manifest
 
 	for dist in $(grep DIST ../${catpkg}/Manifest | cut -d ' ' -f2); do
-	    cp -pv /usr/portage/distfiles/${dist} ../../distfiles/
+	    cp -fpv /usr/portage/distfiles/${dist} ../../distfiles/
 	done
     else
 	echo "  not available! skipping!"
