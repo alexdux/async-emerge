@@ -6,7 +6,7 @@ EAPI=3
 GCONF_DEBUG=no
 GNOME2_LA_PUNT=yes
 
-inherit eutils gnome2
+inherit eutils gnome2 flag-o-matic
 
 DESCRIPTION="Notification daemon"
 HOMEPAGE="http://git.gnome.org/browse/notification-daemon/"
