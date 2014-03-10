@@ -41,6 +41,7 @@ src_prepare() {
 	gnome2_src_prepare
 }
 
-src_compile() {
-        LDFLAGS="$LDFLAGS -lgmodule-2.0" emake
+src_configure() {
+        append-ldflags "-lgmodule-2.0"
+        econf
 }
