@@ -5,7 +5,7 @@
 EAPI="3"
 GCONF_DEBUG="no"
 
-inherit eutils gnome2
+inherit eutils gnome2 flag-o-matic
 
 DESCRIPTION="Multimedia related programs for the GNOME desktop"
 HOMEPAGE="http://www.gnome.org/"
