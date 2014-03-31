@@ -18,6 +18,7 @@ RDEPEND="media-libs/alsa-lib
 	 x11-libs/gtk+:2
 	 >=gnome-base/libgnomeui-2"
 DEPEND="${RDEPEND}
+        sys-libs/glibc
 	virtual/pkgconfig"
 
 src_prepare() {
