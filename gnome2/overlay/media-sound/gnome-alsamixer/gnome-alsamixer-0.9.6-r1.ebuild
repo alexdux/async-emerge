@@ -26,7 +26,7 @@ src_prepare() {
 }
 
 src_configure() {
-        no-as-needed
+        filter-ldflags "-Wl,--as-needed"
         append-ldflags "-lm"
         econf
 }
