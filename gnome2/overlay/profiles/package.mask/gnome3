@@ -146,3 +146,5 @@ gnome-extra/office-runner
 >=x11-themes/gdm-themes-2008
 # 2014-02-10
 >=media-gfx/shotwell-0.15.0
+# 2014-04-04
+>=dev-libs/totem-pl-parser-3.5
