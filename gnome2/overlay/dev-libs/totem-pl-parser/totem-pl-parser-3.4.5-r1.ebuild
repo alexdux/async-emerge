@@ -13,7 +13,7 @@ HOMEPAGE="http://projects.gnome.org/totem/ http://developer.gnome.org/totem-pl-p
 LICENSE="LGPL-2+"
 SLOT="0"
 KEYWORDS="~alpha amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc x86 ~x86-fbsd"
-IUSE="archive crypt +introspection +quvi test"
+IUSE="archive crypt +introspection quvi test"
 
 RDEPEND="
 	>=dev-libs/glib-2.31:2
