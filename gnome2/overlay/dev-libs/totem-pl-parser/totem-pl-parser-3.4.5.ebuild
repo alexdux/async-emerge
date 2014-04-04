@@ -22,7 +22,7 @@ RDEPEND="
 	archive? ( >=app-arch/libarchive-2.8.4 )
 	crypt? ( dev-libs/libgcrypt )
 	introspection? ( >=dev-libs/gobject-introspection-0.9.5 )
-	quvi? ( >=media-libs/libquvi-0.2.15 )
+	quvi? ( media-libs/libquvi:0.4 )
 "
 DEPEND="${RDEPEND}
 	!<media-video/totem-2.21
