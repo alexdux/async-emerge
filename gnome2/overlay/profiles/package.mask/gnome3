@@ -142,7 +142,7 @@ gnome-extra/office-runner
 >=x11-misc/notification-daemon-0.7
 >=dev-lang/vala-0.22
 #
->=app-crypt/libsecret-0.15-r1
+>=app-crypt/libsecret-0.16
 >=x11-themes/gdm-themes-2008
 # 2014-02-10
 >=media-gfx/shotwell-0.15.0
