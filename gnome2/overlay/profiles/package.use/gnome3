@@ -3,3 +3,5 @@
 dev-util/anjuta -glade
 x11-libs/vte -glade
 x11-libs/gtksourceview -glade
+
+dev-libs/totem-pl-parser quvi
