@@ -148,3 +148,5 @@ gnome-extra/office-runner
 >=media-gfx/shotwell-0.15.0
 # 2014-04-04
 >=dev-libs/totem-pl-parser-3.5
+# 2014-04-30
+>=x11-misc/xdg-user-dirs-gtk-0.10
