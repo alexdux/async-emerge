@@ -117,7 +117,7 @@ gnome-extra/office-runner
 >=media-gfx/gthumb-3.2
 >=app-admin/system-config-printer-gnome-1.4
 >=gnome-extra/sensors-applet-3.0
->=net-libs/webkit-gtk-2
+>=net-libs/webkit-gtk-2:3
 #>=media-sound/pulseaudio-4
 >=gnome-base/gnome-desktop-3
 >=dev-cpp/gtkmm-3
