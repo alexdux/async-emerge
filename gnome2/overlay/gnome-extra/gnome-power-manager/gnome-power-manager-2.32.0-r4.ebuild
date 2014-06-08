@@ -29,7 +29,7 @@ COMMON_DEPEND=">=dev-libs/glib-2.13.0:2
 	>=x11-libs/cairo-1
 	>=gnome-base/gconf-2.10:2[policykit?]
 	>=media-libs/libcanberra-0.10[gtk]
-	>=sys-power/upower-0.9.1
+        || ( <sys-power/upower-0.99 sys-power/upower-pm-utils )
 	>=dev-libs/libunique-1.1:1
 	>=x11-apps/xrandr-1.3
 	>=x11-proto/xproto-7.0.15
