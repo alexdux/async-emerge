@@ -26,7 +26,7 @@ RDEPEND=">=dev-libs/glib-2.16:2
 	>=dev-libs/dbus-glib-0.76
 	>=gnome-base/gconf-2:2[gtk(+)]
 	<gnome-base/gconf-3.2.6
-	>=sys-power/upower-0.9.0
+	|| ( <sys-power/upower-0.99 sys-power/upower-pm-utils )
 	elibc_FreeBSD? ( dev-libs/libexecinfo )
 
 	x11-libs/libSM
