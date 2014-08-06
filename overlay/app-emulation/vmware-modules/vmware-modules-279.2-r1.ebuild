@@ -86,6 +86,7 @@ src_prepare() {
 	#kernel_is ge 3 15 0 && epatch "${FILESDIR}/${PV_MAJOR}-vmware-vsock-3.15.patch"
 	epatch "${FILESDIR}/${PV_MAJOR}-inode_patch.patch"
 	epatch "${FILESDIR}/${PV_MAJOR}-3.15-vfsreadlink.patch"
+	kernel_is ge 3 15 0 && epatch "${FILESDIR}/${PV_MAJOR}-3.15-lindrv-ioctrl.patch"
 	# Allow user patches so they can support RC kernels and whatever else
 	epatch_user
 }
