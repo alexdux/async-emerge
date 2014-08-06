@@ -1,5 +1,5 @@
---- work/vmblock-only/linux/control.orig.c  2014-05-08 09:29:01.000000000 +0300                                                                                                                                                                
-+++ work/vmblock-only/linux/control.c 2014-05-08 09:41:02.000000000 +0300
+--- vmblock-only/linux/control.orig.c  2014-05-08 09:29:01.000000000 +0300                                                                                                                                                                
++++ vmblock-only/linux/control.c 2014-05-08 09:41:02.000000000 +0300
 @@ -279,11 +279,17 @@
     int i;
     int retval;
