@@ -1,0 +1,11 @@
+--- vsock-only/linux/notifyQState.c.orig	2014-04-15 01:41:41.000000000 +0400
++++ vsock-only/linux/notifyQState.c	2014-08-06 15:08:43.000000000 +0400
+@@ -566,7 +566,7 @@
+       }
+ 
+       /* See the comment in VSockVmciNotifyPktSendPostEnqueue */
+-      sk->sk_data_ready(sk, 0);
++      sk->sk_data_ready(sk);
+    }
+ 
+    return err;
