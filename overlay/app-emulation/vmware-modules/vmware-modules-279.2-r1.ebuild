@@ -76,7 +76,7 @@ src_prepare() {
 	epatch "${FILESDIR}/${PV_MAJOR}-makefile-kernel-dir.patch"
 	epatch "${FILESDIR}/${PV_MAJOR}-makefile-include.patch"
 	epatch "${FILESDIR}/${PV_MAJOR}-netdevice.patch"
-	use pax_kernel && epatch "${FILESDIR}/279-hardened.patch"
+	use pax_kernel && epatch "${FILESDIR}/${PV_MAJOR}-hardened.patch"
 	epatch "${FILESDIR}/${PV_MAJOR}-apic.patch"
 	kernel_is ge 3 7 0 && epatch "${FILESDIR}/${PV_MAJOR}-putname.patch"
 	kernel_is ge 3 10 0 && epatch "${FILESDIR}/${PV_MAJOR}-vmblock.patch"
@@ -88,6 +88,7 @@ src_prepare() {
 	epatch "${FILESDIR}/${PV_MAJOR}-3.15-vfsreadlink.patch"
 	kernel_is ge 3 15 0 && epatch "${FILESDIR}/${PV_MAJOR}-3.15-lindrv-ioctrl.patch"
 	kernel_is ge 3 15 0 && epatch "${FILESDIR}/${PV_MAJOR}-3.15-vsock2.patch"
+	kernel_is ge 3 15 0 && epatch "${FILESDIR}/${PV_MAJOR}-getname.patch"
 	# Allow user patches so they can support RC kernels and whatever else
 	epatch_user
 }
