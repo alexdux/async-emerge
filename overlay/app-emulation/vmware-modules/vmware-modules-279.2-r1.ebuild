@@ -82,8 +82,9 @@ src_prepare() {
 	kernel_is ge 3 10 0 && epatch "${FILESDIR}/${PV_MAJOR}-vmblock.patch"
 	kernel_is ge 3 11 0 && epatch "${FILESDIR}/${PV_MAJOR}-filldir.patch"
 	kernel_is ge 3 12 0 && epatch "${FILESDIR}/${PV_MAJOR}-vfsfollowlink.patch"
-	kernel_is ge 3 14 0 && epatch "${FILESDIR}/${PV_MAJOR}-vmware-3.14.patch"
-	kernel_is ge 3 15 0 && epatch "${FILESDIR}/${PV_MAJOR}-vmware-vsock-3.15.patch"
+	#kernel_is ge 3 14 0 && epatch "${FILESDIR}/${PV_MAJOR}-vmware-3.14.patch"
+	#kernel_is ge 3 15 0 && epatch "${FILESDIR}/${PV_MAJOR}-vmware-vsock-3.15.patch"
+	epatch "${FILESDIR}/${PV_MAJOR}-inode_patch.patch"
 	
 	# Allow user patches so they can support RC kernels and whatever else
 	epatch_user
