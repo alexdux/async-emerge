@@ -1,9 +1,10 @@
---- a/vmblock-only/inode.c	2014-08-06 13:28:35.000000000 +0400
-+++ b/vmblock-only/inode.c	2014-08-06 13:31:51.000000000 +0400
-@@ -177,7 +177,11 @@
+diff -Naup inode.c inode.c.new
+--- inode.c     2014-08-06 13:28:35.000000000 +0400
++++ inode.c.new 2014-08-06 13:31:51.000000000 +0400
+@@ -177,7 +177,11 @@ InodeOpReadlink(struct dentry *dentry,
        return -EINVAL;
     }
- 
+
 -   return vfs_readlink(dentry, buffer, buflen, iinfo->name);
 +#if LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 99)
 +   return vfs_readlink(dentry, buffer, buflen, fileName);
@@ -11,5 +12,3 @@
 +   return readlink_copy(buffer, buflen, fileName);
 +#endif
  }
- 
- 
