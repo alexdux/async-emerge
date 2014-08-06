@@ -1,7 +1,6 @@
-diff -Naup inode.c inode.c.new
---- inode.c     2014-08-06 13:28:35.000000000 +0400
-+++ inode.c.new 2014-08-06 13:31:51.000000000 +0400
-@@ -177,7 +177,11 @@ InodeOpReadlink(struct dentry *dentry,
+--- vmblock-only/linux/inode.c.orig     2014-08-06 13:28:35.000000000 +0400
++++ vmblock-only/linux/inode.c  2014-08-06 13:31:51.000000000 +0400
+@@ -177,7 +177,11 @@
        return -EINVAL;
     }
 
