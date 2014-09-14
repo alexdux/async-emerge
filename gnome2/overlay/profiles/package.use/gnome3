@@ -6,4 +6,8 @@ x11-libs/gtksourceview -glade
 
 dev-libs/totem-pl-parser quvi
 
+# not used
 >=xfce-base/thunar-1.6.3 -dbus -udisks -xfce_plugins_trash
+# wrkarnd
+xfce-base/xfdesktop -thunar
+
