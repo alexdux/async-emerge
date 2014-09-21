@@ -26,6 +26,7 @@ net-libs
 net-misc
 net-wireless
 sys-apps
+sys-kernel
 www-client
 x11-libs
 x11-misc
