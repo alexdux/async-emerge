@@ -35,11 +35,12 @@ RDEPEND="app-portage/gentoolkit
 			!noemail? ( net-mail/email )"
 #DEPEND="${RDEPEND}"
 
+
 src_configure() {
 	AE_CONF="${S}/etc/async.emerge.conf"
 	# check for AUFS, out the banner if needed to inform the user about dependencies
 	if use aufs ; then
-		if linux_chkconfig_present CONFIG_AUFS_FS ; then # check for builtin
+		if linux_config_exists && linux_chkconfig_present CONFIG_AUFS_FS ; then # check for built-in
 			ewarn "Bltn ok"
 			#;
 		elif best_version 'sys-fs/aufs3'; then # check for standalone aufs3 module
