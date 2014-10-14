@@ -114,10 +114,10 @@ pkg_postinst() {
 			ewarn "   - or add AUFS support to the kernel by another way (e.g. patch it)!"
 		fi
 	else
-		einfo "\`Aufs\` USE flag in not set. Functionality of AE is limited."
-		einfo "If you intend to build binaries in a chrooted environment,"
-		einfo "you need to add USE flag \`aufs\` and install standalone aufs"
-		einfo "package or a kernel with AUFS support."
+		ewarn "\`Aufs\` USE flag in not set. Functionality of AE is limited."
+		ewarn "If you intend to build binaries in a chrooted environment,"
+		ewarn "you need to add USE flag \`aufs\` and install standalone aufs"
+		ewarn "package or a kernel with AUFS support."
 	fi
 }
 
