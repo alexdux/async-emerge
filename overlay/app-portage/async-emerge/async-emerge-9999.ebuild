@@ -67,7 +67,7 @@ src_configure() {
 	# check for AUFS support in kernel (if USE has aufs flag)
 	if check_aufs ; then
 		eerror "Now stop."
-		return 1
+		exit 1
 	fi
 	# to-do: add checking FEATURES & EMERGE_DEFAULT_OPTS
 	# configure USE
@@ -127,7 +127,7 @@ src_install() {
 	cp -R ${S}/src/* ${D}/usr/src/ || die
 }
 
-pkg_postinst() {
-	check_aufs
-}
+#pkg_postinst() {
+#	check_aufs
+#}
 
