@@ -35,9 +35,40 @@ RDEPEND="app-portage/gentoolkit
 			!noemail? ( net-mail/email )"
 #DEPEND="${RDEPEND}"
 
+check_aufs() {
+	# check for AUFS, out the banner if needed to inform the user about dependencies
+	if use aufs ; then
+		if linux_chkconfig_present CONFIG_AUFS_FS ; then # check for builtin
+			ewarn "Bltn ok"
+			#;
+		elif best_version 'sys-fs/aufs3'; then # check for standalone aufs3 module
+			ewarn "Stnd alone ok"
+			#;
+		else
+			ewarn "AUFS functionality is enabled in the USE var,"
+			ewarn "but neither standalone \`aufs\` not kernel support for \`aufs\`"
+			ewarn "is not found. Please, to get AUFS working choose one of:"
+			ewarn "   - emerge \`sys-fs/aufs3\`"
+			ewarn "   - emerge \`sys-kernel/aufs-sources\` or another kernel witn AUFS support"
+			ewarn "   - or add AUFS support to the kernel by another way (e.g. patch it)!"
+			return 1
+		fi
+	else
+		einfo "\`Aufs\` USE flag in not set. Functionality of AE is limited."
+		einfo "If you intend to build binaries in a chrooted environment,"
+		einfo "you need to add USE flag \`aufs\` and install standalone aufs"
+		einfo "package or a kernel with AUFS support."
+	fi
+	return 0
+}
+
 src_configure() {
 	AE_CONF="${S}/etc/async.emerge.conf"
 	# check for AUFS support in kernel (if USE has aufs flag)
+	if check_aufs ; then
+		eerror "Now stop."
+		return 1
+	fi
 	# to-do: add checking FEATURES & EMERGE_DEFAULT_OPTS
 	# configure USE
 	if use notmpfs ; then
@@ -97,27 +128,6 @@ src_install() {
 }
 
 pkg_postinst() {
-	# check for AUFS, out the banner if needed to inform the user about dependencies
-	if use aufs ; then
-		if linux_chkconfig_present CONFIG_AUFS_FS ; then # check for builtin
-			ewarn "Bltn ok"
-			#;
-		elif best_version 'sys-fs/aufs3'; then # check for standalone aufs3 module
-			ewarn "Stnd alone ok"
-			#;
-		else
-			ewarn "AUFS functionality is enabled in the USE var,"
-			ewarn "but neither standalone \`aufs\` not kernel support for \`aufs\`"
-			ewarn "is not found. Please, to get AUFS working choose one of:"
-			ewarn "   - emerge \`sys-fs/aufs3\`"
-			ewarn "   - emerge \`sys-kernel/aufs-sources\` or another kernel witn AUFS support"
-			ewarn "   - or add AUFS support to the kernel by another way (e.g. patch it)!"
-		fi
-	else
-		ewarn "\`Aufs\` USE flag in not set. Functionality of AE is limited."
-		ewarn "If you intend to build binaries in a chrooted environment,"
-		ewarn "you need to add USE flag \`aufs\` and install standalone aufs"
-		ewarn "package or a kernel with AUFS support."
-	fi
+	check_aufs
 }
 
