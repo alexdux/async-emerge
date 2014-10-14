@@ -54,9 +54,7 @@ src_configure() {
 			eerror "   - emerge \`sys-fs/aufs3\`"
 			eerror "   - emerge \`sys-kernel/aufs-sources\` or another kernel witn AUFS support"
 			eerror "   - or add AUFS support to the kernel by another way (e.g. patch it)!"
-			eerror "Now stop."
-			echo
-			exit 1
+			die "Misconfigured: now stop."
 		fi
 	else
 		echo
