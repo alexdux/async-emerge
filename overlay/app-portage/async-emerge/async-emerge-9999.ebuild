@@ -106,18 +106,18 @@ pkg_postinst() {
 			ewarn "Stnd alone ok"
 			#;
 		else
-			ewarn "AUFS functionality is enabled in the USE var,\n" \ 
-					"but neither standalone \`aufs\` not kernel support for \`aufs\`\n" \
-					"is not found. Please, to get AUFS working choose one of:\n" \
-					"   - emerge \`sys-fs/aufs3\`\n" \
-					"   - emerge \`sys-kernel/aufs-sources\` or another kernel witn AUFS support\n" \
-					"   - or add AUFS support to the kernel by another way (e.g. patch it)!"
+			ewarn "AUFS functionality is enabled in the USE var,"
+			ewarn "but neither standalone \`aufs\` not kernel support for \`aufs\`"
+			ewarn "is not found. Please, to get AUFS working choose one of:"
+			ewarn "   - emerge \`sys-fs/aufs3\`"
+			ewarn "   - emerge \`sys-kernel/aufs-sources\` or another kernel witn AUFS support"
+			ewarn "   - or add AUFS support to the kernel by another way (e.g. patch it)!"
 		fi
 	else
-		einfo "\`Aufs\` USE flag in not set. Functionality of AE is limited.\n" \
-				"If you intend to build binaries in a chrooted environment,\n" \
-				"you need to add USE flag \`aufs\` and install standalone aufs\n" \
-				"package or a kernel with AUFS support."
+		einfo "\`Aufs\` USE flag in not set. Functionality of AE is limited."
+		einfo "If you intend to build binaries in a chrooted environment,"
+		einfo "you need to add USE flag \`aufs\` and install standalone aufs"
+		einfo "package or a kernel with AUFS support."
 	fi
 }
 
