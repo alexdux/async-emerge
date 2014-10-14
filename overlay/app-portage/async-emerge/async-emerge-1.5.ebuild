@@ -40,13 +40,8 @@ src_configure() {
 	AE_CONF="${S}/etc/async.emerge.conf"
 	# check for AUFS, out the banner if needed to inform the user about dependencies
 	if use aufs ; then
-		if linux_config_exists && linux_chkconfig_present CONFIG_AUFS_FS ; then # check for built-in
-			ewarn "Bltn ok"
-			#;
-		elif has_version '>=sys-fs/aufs3-3'; then # check for standalone aufs3 module
-			ewarn "Stnd alone ok"
-			#;
-		else
+		if ! ( linux_config_exists && linux_chkconfig_present CONFIG_AUFS_FS ) && \
+				! has_version '>=sys-fs/aufs3-3'; then 
 			echo
 			eerror "AUFS functionality is enabled in the USE var,"
 			eerror "but neither standalone \`aufs\` not kernel support for \`aufs\`"
@@ -54,6 +49,7 @@ src_configure() {
 			eerror "   - emerge \`sys-fs/aufs3\`"
 			eerror "   - emerge \`sys-kernel/aufs-sources\` or another kernel witn AUFS support"
 			eerror "   - or add AUFS support to the kernel by another way (e.g. patch it)!"
+			echo
 			die "Misconfigured: now stop."
 		fi
 	else
