@@ -43,7 +43,7 @@ src_configure() {
 		if linux_config_exists && linux_chkconfig_present CONFIG_AUFS_FS ; then # check for built-in
 			ewarn "Bltn ok"
 			#;
-		elif best_version 'sys-fs/aufs3'; then # check for standalone aufs3 module
+		elif has_version '>=sys-fs/aufs3-3'; then # check for standalone aufs3 module
 			ewarn "Stnd alone ok"
 			#;
 		else
