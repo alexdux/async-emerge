@@ -12,7 +12,6 @@ Installation
    # layman -a gnome2
 4. # ln -s /var/lib/layman/gnome2/profiles/package.mask/gnome3 /etc/portage/package.keywords/gnome3 
    # ln -s /var/lib/layman/gnome2/profiles/package.use/gnome3 /etc/portage/package.use/gnome3
-   # ln -s /var/lib/layman/gnome2/profiles/package.unmask/gnome2 /etc/portage/package.unmask/gnome2
 5. # emerge -atuvDN @world
    # emerge -ac
    # emerge -av @preserved-rebuild
@@ -44,5 +43,22 @@ Please fill your reports at: http://code.google.com/p/async-emerge/issues/list
 Please add 'gnome2' in the feedback summary. Description is informal but provide
 enough information for the request.
 
+
+***
+  How to add a package to your local copy of the overlay
+  ======================================================
+  It's not tested but should be ok.
+  (If you are using a package that it is not listed in the overlay you can consider
+  to add that package to it. Please at first try to do it locally, at your machine.)
+  
+  1. Add the package with mask to the gnome3 mask file 
+      '/var/lib/layman/gnome2/profiles/packages.mask/gnome3'
+  2. # cd /var/lib/layman/gnome2/scripts/
+     # collect-packages.sh
+  3. rebuild the package if necessary
+  4. check it and feedback me to include it to the overlay (if you want to share it)
+  
+  (In case of a problem - just resync the overlay)
+*** 
 
 - Alex
