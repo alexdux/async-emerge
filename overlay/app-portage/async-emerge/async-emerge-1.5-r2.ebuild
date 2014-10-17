@@ -89,7 +89,7 @@ src_install() {
 		keepdir /var/log/async.emerge/archive
 	fi
 	# make_linux
-	insinto /usr/src
-	cp ${S}/src/* ${D}/usr/bin/ || die
+	dodir /usr/src
+	cp -R ${S}/src/* ${D}/usr/src/ || die
 }
 
