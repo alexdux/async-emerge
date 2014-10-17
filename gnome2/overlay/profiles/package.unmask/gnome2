@@ -68,7 +68,7 @@
 =gnome-base/gnome-keyring-2.32.1-r1
 =gnome-base/nautilus-2.32.2.1-r2
 =gnome-extra/evolution-webcal-2.32.0
-=gnome-base/gvfs-1.14.2-r1
+=gnome-base/gvfs-1.14.2-r2
 =app-editors/gedit-2.30.4
 =x11-misc/alacarte-0.13.2
 =dev-libs/folks-0.4.3
