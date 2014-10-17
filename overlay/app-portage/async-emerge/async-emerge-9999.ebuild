@@ -1,15 +1,15 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
 EAPI=4
-inherit eutils linux-info
+inherit eutils
 
 if [ "${PV}" == "9999" ]; then
     inherit subversion
     SRC_URI=""
     ESVN_REPO_URI="http://async-emerge.googlecode.com/svn/trunk/"
-    KEYWORDS="~amd64 ~x86"
+    KEYWORDS=""
 else
     SRC_URI="http://async-emerge.googlecode.com/svn/distfiles/${P}.tar.bz2"
     KEYWORDS="amd64 x86"
@@ -20,14 +20,15 @@ DESCRIPTION="Periodically sync portage and build binary packages for Gentoo upda
 LICENSE="GPL-2"
 SLOT="0"
 
-IUSE="aufs logrotate noemail notmpfs" # "eix layman"
+IUSE="logrotate noemail notmpfs" # "eix layman"
 
 # A space delimited list of portage features to restrict. man 5 ebuild for details.  Usually not needed.
 #RESTRICT="strip"
 RESTRICT="mirror"
 #RESTRICT="fetch"
 
-RDEPEND="app-portage/gentoolkit
+RDEPEND="|| ( sys-fs/aufs2 sys-fs/aufs3 )
+			app-portage/gentoolkit
 			app-shells/bash
 			app-portage/eix
 			sys-process/lsof
@@ -35,31 +36,8 @@ RDEPEND="app-portage/gentoolkit
 			!noemail? ( net-mail/email )"
 #DEPEND="${RDEPEND}"
 
-
 src_configure() {
 	AE_CONF="${S}/etc/async.emerge.conf"
-	# check for AUFS, out the banner if needed to inform the user about dependencies
-	if use aufs ; then
-		if ! ( linux_config_exists && linux_chkconfig_present CONFIG_AUFS_FS ) && \
-				! has_version '>=sys-fs/aufs3-3'; then 
-			echo
-			eerror "AUFS functionality is enabled in the USE var,"
-			eerror "but neither standalone \`aufs\` not kernel support for \`aufs\`"
-			eerror "is not found. Please, to get AUFS working choose one of:"
-			eerror "   - emerge \`sys-fs/aufs3\`"
-			eerror "   - emerge \`sys-kernel/aufs-sources\` or another kernel witn AUFS support"
-			eerror "   - or add AUFS support to the kernel by another way (e.g. patch it)!"
-			echo
-			die "Misconfigured: now stop."
-		fi
-	else
-		echo
-		einfo "\`Aufs\` USE flag in not set. Functionality of AE is limited."
-		einfo "If you intend to build binaries in a chrooted environment,"
-		einfo "you need to add USE flag \`aufs\` and install standalone aufs"
-		einfo "package or a kernel with AUFS support."
-		echo
-	fi
 	# to-do: add checking FEATURES & EMERGE_DEFAULT_OPTS
 	# configure USE
 	if use notmpfs ; then
@@ -110,11 +88,5 @@ src_install() {
 		cp -R ${S}/etc/logrotate.d/* ${D}/etc/logrotate.d/ || die
 		keepdir /var/log/async.emerge/archive
 	fi
-	
-	# Extra Stuff
-	# script to build new kernel 
-	# usr/src
-	dodir /usr/src
-	cp -R ${S}/src/* ${D}/usr/src/ || die
 }
 
