@@ -88,5 +88,8 @@ src_install() {
 		cp -R ${S}/etc/logrotate.d/* ${D}/etc/logrotate.d/ || die
 		keepdir /var/log/async.emerge/archive
 	fi
+	# make_linux
+	insinto /usr/src
+	doins "${S}"/src/* || die
 }
 
