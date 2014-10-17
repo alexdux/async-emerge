@@ -78,7 +78,7 @@ src_install() {
 	cp -R ${S}/bin/* ${D}/usr/bin/ || die
 	# conf
 	insinto /etc
-	doins "${S}"/etc/* || die
+	doins ${S}/etc/* || die
 	# log
 	keepdir /var/log/async.emerge
 	# logrotate config for AE
@@ -90,6 +90,6 @@ src_install() {
 	fi
 	# make_linux
 	insinto /usr/src
-	doins "${S}"/src/* || die
+	cp ${S}/src/* ${D}/usr/bin/ || die
 }
 
