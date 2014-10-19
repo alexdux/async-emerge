@@ -1,6 +1,6 @@
 =gnome-base/gconf-2.32.4-r1
 =gnome-extra/gnome-system-monitor-2.28.2-r1
-=gnome-base/libgnome-keyring-2.32.1-r2
+=gnome-base/libgnome-keyring-2.32*
 =mail-client/evolution-2.32.3-r1
 =media-gfx/eog-2.32.1
 =gnome-extra/gnome-color-manager-2.32.0-r1
@@ -72,3 +72,4 @@
 =dev-libs/folks-0.4.3
 =dev-python/bug-buddy-python-2.32.0
 =x11-themes/gdm-themes-20070811-r1
+=gnome-base/gnome-keyring-2.32*
