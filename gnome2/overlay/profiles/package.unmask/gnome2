@@ -1,6 +1,6 @@
 =gnome-base/gconf-2.32.4-r1
 =gnome-extra/gnome-system-monitor-2.28.2-r1
-=gnome-base/libgnome-keyring-2.32*
+=gnome-base/libgnome-keyring-2.32.1-r2
 =mail-client/evolution-2.32.3-r1
 =media-gfx/eog-2.32.1
 =gnome-extra/gnome-color-manager-2.32.0-r1
