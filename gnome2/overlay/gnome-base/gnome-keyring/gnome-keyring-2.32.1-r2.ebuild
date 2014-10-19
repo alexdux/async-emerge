@@ -66,6 +66,9 @@ src_prepare() {
 
 	# Fix undefined type in egg-asn1x.c
 	epatch "${FILESDIR}/${PN}-2.32.1-fix-undefined.patch"
+	
+	# Fix libtasn1
+	epatch "${FILESDIR}/${PN}-2.32.1-libtasn1.patch"
 }
 
 src_test() {
