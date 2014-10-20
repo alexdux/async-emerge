@@ -140,7 +140,7 @@ gnome-extra/office-runner
 >=gnome-extra/yelp-xsl-3.8
 >=x11-libs/gtk+-3.6
 >=x11-misc/notification-daemon-0.7
->=dev-lang/vala-0.22
+>=dev-lang/vala-0.24
 #
 >=app-crypt/libsecret-0.16
 >=x11-themes/gdm-themes-2008
@@ -151,7 +151,7 @@ gnome-extra/office-runner
 # 2014-04-30
 >=x11-misc/xdg-user-dirs-gtk-0.10
 # 2014-07-18
->=dev-libs/vala-common-0.21
+>=dev-libs/vala-common-0.24
 
 # tmp internal vanilla-sources (reisers broken)
 =sys-kernel/vanilla-sources-3.16*

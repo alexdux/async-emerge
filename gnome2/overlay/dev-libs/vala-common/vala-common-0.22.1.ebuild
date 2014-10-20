@@ -1,6 +1,6 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-libs/vala-common/Attic/vala-common-0.20.1.ebuild,v 1.4 2013/11/14 22:01:41 pacho dead $
+# $Header: /var/cvsroot/gentoo-x86/dev-libs/vala-common/vala-common-0.22.1.ebuild,v 1.13 2014/04/21 10:28:54 ago Exp $
 
 EAPI="5"
 GNOME_ORG_MODULE="vala"
@@ -8,19 +8,21 @@ GNOME_ORG_MODULE="vala"
 inherit gnome.org
 
 DESCRIPTION="Build infrastructure for packages that use Vala"
-HOMEPAGE="http://live.gnome.org/Vala"
+HOMEPAGE="https://wiki.gnome.org/Vala"
 
 LICENSE="LGPL-2.1"
 SLOT="0"
-KEYWORDS="~alpha amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc x86 ~amd64-fbsd ~x86-fbsd ~arm-linux ~x86-linux ~x64-macos ~x64-solaris"
+KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~x64-macos ~x64-solaris"
 IUSE=""
 
 # Previously ${PN} was part of dev-lang/vala
-RDEPEND="!<dev-lang/vala-0.10.4-r2
+RDEPEND="
+	!<dev-lang/vala-0.10.4-r2
 	!<dev-lang/vala-0.12.1-r1:0.12
 	!<dev-lang/vala-0.14.2-r2:0.14
 	!<dev-lang/vala-0.16.1-r2:0.16
-	!<dev-lang/vala-0.17.5:0.18"
+	!<dev-lang/vala-0.17.5:0.18
+"
 DEPEND=""
 
 src_configure() { :; }
