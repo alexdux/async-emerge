@@ -104,5 +104,5 @@ src_install() {
 		KERNEL=="vsock", GROUP="vmware", MODE=660
 	EOF
 	udev_dorules "${udevrules}"
-	use vmci || dodir "/etc/modprobe.d/" && echo "alias vmci vmw_vmci" > "${D}/etc/modprobe.d/vmci.conf"
+	use vmci || ( dodir "/etc/modprobe.d/" && echo "alias vmci vmw_vmci" > "${D}/etc/modprobe.d/vmci.conf" )
 }
