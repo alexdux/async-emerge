@@ -4,10 +4,13 @@
 # GPL ver. 2
 # version: 1.1
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version 2.0
+#	(OverlayFS support added.) Delayed - overlayfs is useless at this stage.
+# 2015, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
 #	- kickoff blockers
-# 	- unmount all AUFS, transparent, binded and lost @ ${AE_DIR[ROOT]}
+# 	- unmount all AUFS/OverlayFS, transparent, binded and lost @ ${AE_DIR[ROOT]}
 
 # get config
 . /etc/async.emerge.conf
