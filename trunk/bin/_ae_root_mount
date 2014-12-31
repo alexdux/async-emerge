@@ -5,10 +5,13 @@
 #	*some code was tacken from 'auroot' by Junjiro R. Okajima from 'aufs2' distribution
 # version: 1.1
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version 2.0
+#	(OverlayFS support added.) Delayed - overlayfs is useless at this stage.
+# 2015, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
-# 	- mount AUFS merged tree from / and /var of the box
-# 	- symlinks recreated with AUFS logic
+# 	- mount AUFS/OverlayFS merged tree from / and /var of the box
+# 	- symlinks recreated with AUFS/OverlayFS logic
 #	- separated disk partition supported via pre-rbinded root master dirs
 #	- config-excluded dirs not mounts and recreates empty
 
