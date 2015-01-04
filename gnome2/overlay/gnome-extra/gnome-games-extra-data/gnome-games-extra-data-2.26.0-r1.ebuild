@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/gnome-extra/gnome-games-extra-data/gnome-games-extra-data-2.26.0.ebuild,v 1.8 2011/03/22 19:25:15 ranger Exp $
 
-EAPI=4
+EAPI=2
 
 inherit gnome2
 
