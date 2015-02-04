@@ -75,3 +75,6 @@
 =gnome-base/gnome-keyring-2.32*
 =dev-lang/vala-0.22*
 =dev-libs/vala-common-0.22*
+=dev-games/ggz-client-libs-0.0.14.1-r1
+=dev-games/libggz-0.0.14.1
+=media-sound/gnome-alsamixer-0.9.6-r1
