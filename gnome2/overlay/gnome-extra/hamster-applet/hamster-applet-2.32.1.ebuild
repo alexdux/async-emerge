@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/gnome-extra/hamster-applet/hamster-applet-2.32.1.ebuild,v 1.9 2012/08/29 05:03:09 leio Exp $
 
-EAPI="3"
+EAPI="4"
 GCONF_DEBUG="no"
 PYTHON_DEPEND="2:2.5"
 PYTHON_USE_WITH="sqlite"

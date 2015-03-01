@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/gnome-extra/nautilus-open-terminal/nautilus-open-terminal-0.18.ebuild,v 1.7 2012/05/05 06:25:16 jdhore Exp $
 
-EAPI="2"
+EAPI="4"
 GCONF_DEBUG="no"
 
 inherit gnome2

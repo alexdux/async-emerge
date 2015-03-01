@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/x11-misc/notification-daemon/notification-daemon-0.5.0.ebuild,v 1.13 2012/01/28 02:17:07 ssuominen Exp $
 
-EAPI=3
+EAPI=4
 GCONF_DEBUG=no
 GNOME2_LA_PUNT=yes
 

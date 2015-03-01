@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/dev-python/bug-buddy-python/bug-buddy-python-2.32.0.ebuild,v 1.9 2012/02/24 09:05:41 patrick Exp $
 
-EAPI="3"
+EAPI="4"
 GCONF_DEBUG="no"
 G_PY_PN="gnome-python-desktop"
 G_PY_BINDINGS="bugbuddy"

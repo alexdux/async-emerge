@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/www-client/epiphany/epiphany-2.30.6-r1.ebuild,v 1.8 2012/05/03 06:01:03 jdhore Exp $
 
-EAPI="3"
+EAPI="4"
 GCONF_DEBUG="yes"
 
 inherit eutils gnome2 autotools

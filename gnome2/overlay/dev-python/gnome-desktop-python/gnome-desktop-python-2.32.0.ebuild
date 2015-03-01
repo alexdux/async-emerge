@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/dev-python/gnome-desktop-python/gnome-desktop-python-2.32.0.ebuild,v 1.8 2011/03/22 18:57:14 ranger Exp $
 
-EAPI="3"
+EAPI="4"
 GCONF_DEBUG="no"
 G_PY_PN="gnome-python-desktop"
 G_PY_BINDINGS="gnomedesktop"

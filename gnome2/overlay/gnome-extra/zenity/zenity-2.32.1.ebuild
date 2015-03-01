@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/gnome-extra/zenity/zenity-2.32.1.ebuild,v 1.9 2012/05/05 06:25:16 jdhore Exp $
 
-EAPI="3"
+EAPI="4"
 GCONF_DEBUG="yes"
 
 inherit eutils gnome2

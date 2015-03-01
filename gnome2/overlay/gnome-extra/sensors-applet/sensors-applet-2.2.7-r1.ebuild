@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/gnome-extra/sensors-applet/sensors-applet-2.2.7-r1.ebuild,v 1.10 2012/05/05 06:25:22 jdhore Exp $
 
-EAPI="2"
+EAPI="4"
 GCONF_DEBUG="no"
 
 inherit eutils gnome2

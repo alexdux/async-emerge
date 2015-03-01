@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/media-video/totem/totem-2.32.0-r2.ebuild,v 1.15 2013/01/12 11:38:08 eva Exp $
 
-EAPI="3"
+EAPI="4"
 GCONF_DEBUG="yes"
 PYTHON_DEPEND="python? 2"
 PYTHON_USE_WITH="threads"

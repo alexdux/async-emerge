@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/gnome-base/gnome-control-center/gnome-control-center-2.32.1-r1.ebuild,v 1.9 2014/01/05 07:39:55 tetromino Exp $
 
-EAPI="3"
+EAPI="4"
 GCONF_DEBUG="yes"
 
 inherit autotools gnome2 eutils

@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/dev-libs/libgdata/libgdata-0.8.1-r2.ebuild,v 1.9 2012/12/19 04:08:55 tetromino Exp $
 
-EAPI="3"
+EAPI="4"
 GCONF_DEBUG="yes"
 
 inherit autotools eutils gnome2

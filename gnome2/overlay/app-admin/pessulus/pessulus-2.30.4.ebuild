@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/app-admin/pessulus/pessulus-2.30.4.ebuild,v 1.8 2012/05/03 18:02:22 jdhore Exp $
 
-EAPI="3"
+EAPI="4"
 GCONF_DEBUG="no"
 PYTHON_DEPEND="2"
 

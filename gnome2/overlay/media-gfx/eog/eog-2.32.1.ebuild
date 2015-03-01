@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/media-gfx/eog/eog-2.32.1.ebuild,v 1.14 2012/10/27 08:33:28 tetromino Exp $
 
-EAPI="3"
+EAPI="4"
 GCONF_DEBUG="yes"
 PYTHON_DEPEND="2:2.5"
 

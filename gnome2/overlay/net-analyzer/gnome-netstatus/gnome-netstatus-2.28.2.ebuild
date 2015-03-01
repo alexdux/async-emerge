@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/net-analyzer/gnome-netstatus/gnome-netstatus-2.28.2.ebuild,v 1.10 2012/05/04 06:08:10 jdhore Exp $
 
-EAPI="3"
+EAPI="4"
 
 inherit eutils gnome2
 
