@@ -133,7 +133,7 @@ gnome-extra/office-runner
 >=x11-themes/gnome-themes-standard-3.6
 >=x11-themes/gnome-icon-theme-symbolic-3.8
 >=x11-themes/gnome-icon-theme-3.8
-#>=x11-themes/gnome-backgrounds-3.8
+>=x11-themes/gnome-backgrounds-3.14
 # ???
 >=gnome-base/gnome-common-3.7
 >=gnome-base/gsettings-desktop-schemas-3.8
