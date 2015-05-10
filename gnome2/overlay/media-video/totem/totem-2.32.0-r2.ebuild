@@ -138,6 +138,7 @@ pkg_setup() {
 	use youtube && G2CONF="${G2CONF} --enable-python"
 
 	python_set_active_version 2
+	python_pkg_setup
 }
 
 src_prepare() {
