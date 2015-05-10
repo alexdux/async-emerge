@@ -40,6 +40,7 @@ pkg_setup() {
 		--disable-static
 		$(use_enable python)
 		$(use_enable introspection)"
+	python_pkg_setup
 }
 
 src_prepare() {
