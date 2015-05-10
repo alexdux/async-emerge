@@ -53,6 +53,7 @@ MAKEOPTS+=" -j1"
 
 pkg_setup() {
 	python_set_active_version 2
+	python_pkg_setup
 }
 
 src_prepare() {

@@ -51,6 +51,7 @@ pkg_setup() {
 		--disable-schemas-install
 		--disable-scrollkeeper"
 	DOCS="AUTHORS ChangeLog NEWS README THANKS"
+	python_pkg_setup
 }
 
 src_prepare() {
