@@ -49,6 +49,7 @@ pkg_setup() {
 		--exec-prefix=/usr
 		--disable-scrollkeeper"
 	python_set_active_version 2
+	python_pkg_setup
 }
 
 src_prepare() {

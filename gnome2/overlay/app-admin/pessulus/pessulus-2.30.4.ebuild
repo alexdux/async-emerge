@@ -30,6 +30,7 @@ DEPEND="${RDEPEND}
 pkg_setup() {
 	DOCS="AUTHORS ChangeLog HACKING MAINTAINERS NEWS README TODO"
 	python_set_active_version 2
+	python_pkg_setup
 }
 
 src_prepare() {

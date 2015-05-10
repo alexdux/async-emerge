@@ -11,8 +11,8 @@ inherit gnome2 python eutils autotools
 
 DESCRIPTION="The GNOME panel"
 HOMEPAGE="http://www.gnome.org/"
-SRC_URI="${SRC_URI} mirror://gentoo/introspection-20110205.m4.tar.bz2
-	http://dev.gentoo.org/~pacho/gnome/${P}-patches.tar.bz2"
+#SRC_URI="${SRC_URI} mirror://gentoo/introspection-20110205.m4.tar.bz2
+#	http://dev.gentoo.org/~pacho/gnome/${P}-patches.tar.bz2"
 
 LICENSE="GPL-2+ FDL-1.1+ LGPL-2+"
 SLOT="0"
