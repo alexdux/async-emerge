@@ -55,7 +55,7 @@ pkg_setup() {
 		--disable-updater
 		$(use_enable python)
 		$(use_enable spell)"
-	use python && python_set_active_version 2
+	use python && python_set_active_version 2 && python_pkg_setup
 }
 
 src_prepare() {
