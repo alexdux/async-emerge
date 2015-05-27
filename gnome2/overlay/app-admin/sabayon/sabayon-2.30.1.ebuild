@@ -53,6 +53,7 @@ pkg_setup() {
 	enewuser ${PN}-admin -1 -1 "/var/lib/sabayon" "${PN}-admin"
 	# Should we delete the user/group on unmerge?
 	python_set_active_version 2
+	python_pkg_setup
 }
 
 src_prepare() {
