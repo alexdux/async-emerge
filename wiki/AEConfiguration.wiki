@@ -1,0 +1,90 @@
+#summary How to tune AE for special needs.
+
+= AE Configuration =
+
+AE config file is: `/etc/async.emerge.conf`.<br>
+The file include a lot of things that could be configured (if somebody is really need it) and some built-in 'code' sections that shouldn't be edited.<br>
+Code sections are marked with <code># --- code ---</code> and have indented text.<br>
+Default options should allow you to use AE 'out-of-the-box'.
+
+Brief config structure by sections with comments what is safe to change and what is not:
+
+
+== # 0. DEFAULT ROOT FOR VCS ==
+Usually, there is no need to edit this section - this is default root for all AE VCS.
+
+
+== # 1. paths for scripts ==
+Various dirs and paths to mount/unmount VCS. If you want to alter it - be careful.
+
+
+== # 2. TMPFS configuration ==
+Default size for `tmpfs` used for PM 'compile' phase.<br>
+The default size (4Gb) is large enough to rebuild something gecko-based in one (may be two) threads (-j# PMs option) at once.<br>
+If there is no such packages at your system, 1250Mb + 250..500Mb for each additional PMs thread is enough.<br>
+The size *MUST* be less then your box free memory (including the swap). Otherwise you be experienced with error 'no space left on device'. So if there is no memory enough it's better to switch this feature off by USE flag 'notmpfs' or by put `AE_NOTMPFS=1` before an AE cmd.<br>
+Also it was mentioned in AUFS docs that 'ramdisk might produce very rare bugs with UDBA logic'.  
+
+
+== # 3. EXTERNAL COMMANDS configuration ==
+This section is used to specify exact PMs commands (without params).<br>
+Unless you will try use another PM then `emerge` you won't need to edit this.
+
+
+== # 4. VCS configuration ==
+This section is related to `ae_chroot` logic and it is not recommended to alter this.
+
+
+== # 5. GRS configuration ==
+This section has a list of process names for daemons which should be restarted if related objects code is changed. The daemon should be added here only if process and daemon names not the same.<br>
+You can edit the list if needed.<br>
+Format per line: `<daemon name> <proc name> <proc name> ... ` (1 trailing space is required)
+
+
+== # 6. COOKING logic configuration ==
+Empty section.
+
+
+== # 7. INSTALLING logic configuration ==
+This section allow you to enable or disable additional steps at the time of install prebuilt binaries to your GRS.<br>Safe to edit.
+
+
+== # 8. REBUILDING logic configuration==
+This section defines some logic of `ae_makeworld` (this is used twice - first time with building binaries and second time with installing that).<br>Allowed to edit.
+
+
+== # 9. REBUILDING command configuration ==
+This section describes exactly each command with params used by `ae_makeworld`.<br>Allowed to edit.
+
+
+== # 10. DETECTING & REBUILDING SUBSET UPDATES configuration ==
+This section lists all possible sub-sets of packages with additional commands needed to be executed.<br>Allowed to edit, but be careful with system things like 'GCC'.<br>Given commands will be played by `ae_makeworld` if subset version change will detected before.
+
+
+== # 11. LOGS configuration ==
+Path to logs, logs file names, prefixes and suffixes.<br>Allowed to edit.
+ 
+== # 12. SIGNS configuration ==
+Definition of some internal files - not recommended to alter this.
+
+
+== # 13. RBLOOP_LOGIC bit states ==
+Internal of `ae_makewolrd` logic. Recommended do not edit this. (See section #8 if it is needed to enable/disable something.)
+
+
+== # 13. LOCKS configuration ==
+Internals of locking - do not alter this.
+
+
+== # 14. AE_STATE configuration ==
+`ae_state` small pre-config.<br>
+It is not recommended to alter `AE_STATE[USE_EIX]`.<br>
+Feel free to alter `AE_STATE[PERIOD]`.
+
+
+== # 15. TASKS configuration ==
+Internals for `ae_add_task` - do not edit this.
+
+
+== # 99. The End ==
+The end.

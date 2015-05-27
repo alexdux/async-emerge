@@ -1,0 +1,46 @@
+#summary How to watch AE logs.
+
+All paths here are given for default configuration! 
+
+Nothing new - just reminders that could help to someone ;) 
+
+=Logs naming and location=
+By default all AE logs are stored in one dir `/var/log/async.emerge`.<br>
+By default all log files have 1 or 2 prefixes indicating different stages of AE:
+  * `last.` - logs from last calling a tool
+  * `cook.` - logs from last calling `ae_makeworld` in VCS environment
+  * `install.` - same for GRS
+By default all log files have `.log` 'extension'.
+
+=Useful tools=
+
+It is recomended to install `xtail`:
+<code># emerge -av xtail</code>
+
+
+=Top-level logging of cronned activity of AE=
+
+<code># tailf /var/log/async.emerge/last.cron.log</code>
+
+(`Ctrl+C` to stop.)
+
+
+=Middle-level logging of AE tools activity= 
+
+<code># xtail /var/log/async.emerge/last.`*`</code> 
+(`Ctrl+\` to stop.)
+
+
+=Low-level logging of portage activity= 
+
+<code># xtail /var/log/portage/ /var/async.emerge/delta/var/log/portage/</code> 
+(`Ctrl+\` to stop.) 
+
+First path is for GRS, second - for VCS.
+
+
+=View many logs with colors=
+
+For example:
+<code># less -r last.co`*`</code>
+(in `less` type `:n` - next file, `:p` - prev file, `-S` - warp/unwarp long lines.)

@@ -1,0 +1,169 @@
+#summary How to install AE.
+
+= AE Installation =
+
+Here is described how to install `async-emerge` (AE) and make top-level configuration. <br>Finer configuration is described in [AEConfiguration "Configuration"] section...
+ 
+ 
+== ...for really old Gentoo box ==
+
+  # Sync the portage and update your package manager (portage by default).
+  # Check with `emerge -uDNvp world` (or similar) if all keywords/USE/mask are OK. Correct if necessary.
+
+== Install AUFS ==
+AUFS is required for AE work. AUFS installs a patch to kernel AND a kernel module.
+
+Set `"kernel-patch"` USE flag. (Locally for AUFS in `/etc/portage/package.use` or globally in `/etc/make.conf`)
+
+Unmask and install `AUFS v.2` for kernel branch version 2.
+<code>
+# echo "sys-fs/aufs2" > /etc/portage/package.keywords/aufs2
+# emerge -av sys-fs/aufs2</code>
+
+Or unmask and install `AUFS v.3` for kernel branch version 3.
+<code>
+# echo "sys-fs/aufs3" > /etc/portage/package.keywords/aufs3
+# emerge -av sys-fs/aufs3</code>
+
+*Important:*
+_When `AUFS` is installing at first time it patches the kernel.
+After that you NEED to rebuild the kernel (run `make`), then you NEED to rebuild `AUFS` again (re-emerge it OR use `module-rebuild` tool). Check if `/usr/src/linux` symlink is point to the kernel you actually use.<br>
+In short, please, rebuild you kernel AND `AUFS` twice after kernel OR AUFS update and do care about the kernel symlink. _
+
+Also, it is recommended to add `aufs` to modules autoload (at system start) list, for example:
+<code>
+# echo 'modules="aufs"' >> /etc/conf.d/modules</code>
+.. or better edit `"/etc/conf.d/modules"` manually the similar way.
+
+== Add AE Overlay to Portage ==
+
+Add AE repo:
+  * With layman (recommended way). Install layman if not installed yet:
+<code># emerge -av layman</code>
+(Make sure `source /you/layman/overlay/dir` is included and uncommented in your `/etc/make.conf`.)
+
+Edit layman's config, add ae-repo to layman:
+<code># nano /etc/layman/layman.cfg
+  overlays  : http://www.gentoo.org/proj/en/overlays/repositories.xml 
++             https://async-emerge.googlecode.com/svn/distfiles/layman/ae-overlay.xml
+</code>
+
+Sync the layman overlays list:
+<code># layman -L</code>
+
+Add AE overlay:
+<code># layman -a async-emerge</code>
+
+Check if AE is available:
+<code># eix-update; eix async-emerge</code>
+
+
+== Check USE flags ==
+Adjust AE USE flags if it necessary:
+|| *Flag* || *Description* ||
+|| logrotate || Add support to logrotate: install `logrotate.d/async.emerge` configuration file.||
+|| noemail || Don't install `net-mail/email`. This dependant package is used for sending a summary mail by `ae_cron`.<br>If you are not going to send AE reports by email and don't want to have `net-mail/email` installed - set this on.||
+|| notmpfs || Don't mount `tmpfs` disk for packages building by default. Can be overwritten at run time by setting `$AE_NOTMPFS` or `$AE_USETMPFS` (respectively).<br>If you don't want to use `temerge` - set this on. ||
+ 
+
+== Unmask & install AE ==
+
+If you want to use the latest development version do:
+<code># echo "app-portage/async-emerge" > /etc/portage/package.keywords/async-emerge</code>
+If you want to use the latest SVN version do:
+<code># echo "app-portage/async-emerge `**`" > /etc/portage/package.keywords/async-emerge</code>
+
+*Finally, install AE.*
+<code># emerge -av app-portage/async-emerge</code>
+ 
+
+== Optional: testing ==
+
+Try to start `VCS` with `df -h` command:
+<code># ae_vcs df -h </code>
+example "screenshot":
+<pre>
+ `*` Chrooting to /var/async.emerge/chroot: 
+ `*`   Automounting AUFS, 
+ `*` Mounting AUFS root to /var/async.emerge/: 
+ `*`   Binded and mounted 26 dirs, +0 created, +5 binded as transparent (non-merged) and created 0 symlinks.                 `[ ok ]` 
+ `*` Chrooting to /var/async.emerge/chroot (continued): 
+ `*`   Cleaning /var/async.emerge/chroot/var/run from hosts `*`.pid.                                                           `[ ok ]` 
+ `*`   proc fs is mounted to /var/async.emerge/chroot/proc.                                                                  `[ ok ]` 
+ `*`   Mounting sys fs is not configured.                                                                                    `[ ok ]` 
+ `*` Virtually chrooted with: `"df -h"`                                                                                        `[ ok ]` 
+`Filesystem            Size  Used Avail Use% Mounted on` 
+`/dev/sdb3              20G   15G  4.1G  79% /` 
+`sysfs                  20G   15G  4.1G  79% /sys` 
+`udev                   20G   15G  4.1G  79% /dev` 
+`devpts                 20G   15G  4.1G  79% /dev/pts` 
+/dev/sda1              20G   15G  4.1G  79% /mnt/squid
+/dev/sdb1              20G   15G  4.1G  79% /mnt/free
+shm                    20G   15G  4.1G  79% /dev/shm
+df: `/var/async.emerge/chroot/bin': No such file or directory
+df: `/var/async.emerge/chroot/boot': No such file or directory
+df: `/var/async.emerge/chroot/dev': No such file or directory
+df: `/var/async.emerge/chroot/etc': No such file or directory
+df: `/var/async.emerge/chroot/home': No such file or directory
+df: `/var/async.emerge/chroot/lib': No such file or directory
+df: `/var/async.emerge/chroot/mnt': No such file or directory
+df: `/var/async.emerge/chroot/mnt/squid': No such file or directory
+df: `/var/async.emerge/chroot/mnt/free': No such file or directory
+df: `/var/async.emerge/chroot/opt': No such file or directory
+df: `/var/async.emerge/chroot/root': No such file or directory
+df: `/var/async.emerge/chroot/sbin': No such file or directory
+df: `/var/async.emerge/chroot/usr': No such file or directory
+df: `/var/async.emerge/chroot/var/amavis': No such file or directory
+df: `/var/async.emerge/chroot/var/bind': No such file or directory
+df: `/var/async.emerge/chroot/var/cache': No such file or directory
+df: `/var/async.emerge/chroot/var/db': No such file or directory
+df: `/var/async.emerge/chroot/var/dcc': No such file or directory
+df: `/var/async.emerge/chroot/var/empty': No such file or directory
+df: `/var/async.emerge/chroot/var/lib': No such file or directory
+df: `/var/async.emerge/chroot/var/lock': No such file or directory
+df: `/var/async.emerge/chroot/var/log': No such file or directory
+df: `/var/async.emerge/chroot/var/run': No such file or directory
+df: `/var/async.emerge/chroot/var/spool': No such file or directory
+df: `/var/async.emerge/chroot/var/state': No such file or directory
+df: `/var/async.emerge/chroot/var/svn': No such file or directory
+df: `/var/async.emerge/chroot/var/tmp': No such file or directory
+df: `/var/async.emerge/chroot/var/www': No such file or directory
+ `*` Unchrooting from /var/async.emerge/chroot:
+ `*`   proc fs is unmounted from /var/async.emerge/chroot/proc.                                                              `[ ok ]` 
+ `*`   Autounmounting AUFS, 
+ `*` Unmounting AUFS /+/var from /var/async.emerge/: 
+ `*`   Unmounted and unbinded 27 dirs, +6 as transparent (non-merged) and 0 specials.                                        `[ ok ]` 
+ `*` Unchrooting from /var/async.emerge/chroot (continued)                                                                   `[ ok ]` 
+#</pre>
+
+
+== Add AE to cron ==
+
+In order to build (cook) in background binaries of packages updates you have to schedule `ae_cron` task:
+  * Edit cron table:
+<code># crontab -e
+`30 22 * * *	/usr/bin/ae_cron -sm root@mymail.com`</code>
+  * ...or edit anacron table:
+<code># nano /etc/anacrontab</code>
+Recommended frequency of running: once at 1-7 days. Anacron is suggested for rare used Gentoo boxes.
+
+
+== Check /etc/make.conf ==
+
+Check `/etc/make.conf` for correct features and options:
+
+  * strongly recommended:
+<code> FEATURES="protect-owned" # +"preserve-libs" for portage-2-2+
+EMERGE_DEFAULT_OPTS="--fail-clean --with-bdeps y --keep-going --binpkg-respect-use"
+USE="-symlink"</code>
+
+  * recommended:
+<code> FEATURES="parallel-fetch ccache protect-owned" # +"preserve-libs" for portage-2-2+
+EMERGE_DEFAULT_OPTS="--fail-clean --with-bdeps y --keep-going --binpkg-respect-use -j# --color=y --autounmask"
+USE="-symlink"</code>
+
+
+== Check if PKGDIR is exist ==
+
+Create if not exists.
+<code># mkdir $(portageq pkgdir)</code>

@@ -1,0 +1,130 @@
+#summary About Async Emerge
+
+=About=
+Async Emerge is a set of bash scripts that do semi-automatic Gentoo updates.
+
+All scripts of Async Emerge (AE) could be splitted by two parts: one in background, usually by cron,
+prebuilds binary updates for all needed packages with all needed dependencies; another part is
+make update physically by installing those binary updates to the Gentoo system.
+
+In order to build binary packages with dependencies, first part is working in a
+specially chrooted to a virtual filesystem environment. This environment is done by using AUFS.<br>
+In a way to differ those parts they were called: Virtually Chrooted System (VCS) and Gentoo Real System (GRS).<br>
+VCS is the chrooted environment to the exact virtual read only copy of the all filesystem (with a couple of exclusions).<br>
+GRS is real filesystem (not chrooted).
+
+AE makes a lot of logs and has an utility to show current state of VCS and GRS and a list of packages
+were built for the update.
+
+Since Gentoo updates sometimes is tricky AE has additional logic that trying hard to make some extra
+needed steps for the system consistency recovery.
+
+After all, this scripts save about 90% of Gentoo admins time. The exact digit is slightly vary depending of
+the hardware and the logic of the update.
+
+*Warning.*
+There is now stable version yet and it could be called an experimental or 'a proof of concept'. Although it should work in most cases, it is addressed for experienced Gentoo users who can recover the system in a case of possible disaster.
+
+=Features=
+  * package manager friendly
+  * sync portage and overlays (both optional)
+  * build binaries for all updated or changed packages, for all dependencies
+  * update really old Gentoo boxes
+  * use tmpfs for packages building (could be switched off if the RAM is not enough)
+  * update world with new packages and rebuild packages against changed USE flags
+  * detects changes in subsets (like Python, Perl and so on) and rebuild dependencies (or do another action if needed)
+  * remove obsoleted/unneeded packages with 'emerge depclean'
+  * rebuild libs consumers for advised packages (disabled by default for portage-2.2+)
+  * rebuild system-wide libs dependencies: '@preserved-rebuild' for portage-2.2+ users or 'revdep-rebuild' for others
+  * schedule and do extra 'user' task (like add, remove or rebuild something)
+  * has a flexible config allowing to enable or disable any features, adjust various portage commands, dirs, logs and etc.
+  * can send mail by result of binary packages building
+  * re-enterable after stop/error
+
+Current version of AE supports 'standard' PM emerge. Other PMs support is possible by user request.
+
+=Internals=
+==Set of scripts==
+`_ae_root_mount` and `_ae_root_umount`
+
+Mount a unmount virtual filesystem with AUFS.
+This FS has exact read-only copy of the GRS and read-write 'brahch' that overlap with changes GRS.<br>
+Have a set of service dirs which transparently mapped to GRS (for distfiles, packages, logs and etc.).
+
+`ae_cron`
+
+Starter for background binaries build part.<br>
+Boils down to `ae_vcs ae_makeworld` shortcut.
+
+`ae_chroot` (and symlink `ae_vcs`)
+
+VCS chroot. It calls `_ae_root_mount` and `_ae_root_umount` if is not called before then it chroots to the virtual FS environment.
+Could be started manually in interactive mode or used by a script in batch mode (with params).<br>
+(Could be used for other tasks like crossdev or testing, but although it was made with this possibility 
+in mind it was not tested for this purpose at all.)
+
+
+`ae_makeworld` (and symlink `ae_install`)
+
+Rebuild Gentoo system with advanced logic.
+It is used in both environments - VCS and GRS.<br>
+Call this to install prebuilt binary packages to GRS!
+
+
+`ae_delta_cleanup` and `ae_chroot_cleanup`
+
+Cleanup VCS. Called by `ae_makeworld` after success installation in GRS.<br>
+It is safe to call it manually.
+
+`ae_add_task`
+
+Schedules user task for AE. (Call with '--help' for possible options.)<br>
+Use it for delayed system care - like install or remove something later...
+
+`ae_state`
+
+A tool to show current VCS/GRS state. Has many options, call with '--help' for details.
+
+`temerge`
+
+Modified 3d party tool to run package manager in tmpfs.<br>
+It visible reduces time of packages building.<br>
+Used by `ae_makeworld`. Could be switched off if unneeded.
+
+`ansi2html`
+
+3d party tool to convert console  ANSI coloured test to a coloured HTML page. <br>
+Used by `ae_cron` to send report by email.
+
+`/etc/async.emerge.conf`
+
+The configuration file.
+
+=Reliability=
+In general AE is reliable as kernel+AUFS+package manager as reliable. AE is nor builds neither installs packages by itself. It is a wrapper to a package manager (now only 'standard' emerge is supported but support for other PM is possible in the future).
+Nevertheless, AE has some logic for system update, so in worst case it might harm your systems consistency.
+
+=Usability=
+Sooner or earlier AE stops building binaries anyway. Everybody has a different configuration of the system with different USE-flags, unmasked packages & so on. As soon as world update is not possible any more AE stops and you need to adjust the system configs to portage changes. (Actually you need to do it anyway with AE or without it. So it just a notice.)
+
+=Usage=
+  * [AEInstallation2 Install].
+  * Check the config (it should work OTB by default).
+  * Add to (ana)cron `ae_cron [-s] [-m address@sld.tld]` (feel free to start it manually if needed. [AELogging check logs for result])
+  * check periodically update availability with ae_state (or add it to shell rc script, like `~/.bashrc`; it's recommended)
+  * when you are in a good mood or have a time or need to, update your Gentoo with prebuit binaries by using `ae_install`, 
+read the output and follow a package manager extra instructions (skip `please revdep-rebuild --library` - AE will 
+do it for you)
+
+Feel free to still use package manager manually (if needed): AE doesn't mean to stop using `emerge` at all!
+
+Furthermore, basically you don't need to do something additional with AE if you admining Gentoo manually, AE will use current state of your system anyway.
+
+(There is one exception: sometimes VCS can 'save' some changed files, e.g. packages.keyword in VCS and GRS will be different
+if you edit it in VCS. This is feature. Remove this file in VCS(!) or clean-up VCS with ae_delta_cleanup if it harm your admining.)
+
+=If you need to uninstall AE=
+Just:
+  * `ae_delta_cleanup && ae_chroot_cleanup`
+  * `emerge -Ca async-emerge`
+  * comment out `ae_cron` in `crontab`
