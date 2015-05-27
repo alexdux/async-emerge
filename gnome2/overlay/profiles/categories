@@ -27,6 +27,7 @@ net-misc
 net-wireless
 sys-apps
 sys-kernel
+sys-power
 www-client
 x11-libs
 x11-misc
