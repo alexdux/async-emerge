@@ -3,6 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/gnome-extra/gnome-games-extra-data/gnome-games-extra-data-2.26.0.ebuild,v 1.8 2011/03/22 19:25:15 ranger Exp $
 
 EAPI=4
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit gnome2
 

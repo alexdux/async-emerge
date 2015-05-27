@@ -5,6 +5,7 @@
 EAPI=4
 GCONF_DEBUG=no
 GNOME2_LA_PUNT=yes
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit eutils gnome2 flag-o-matic
 

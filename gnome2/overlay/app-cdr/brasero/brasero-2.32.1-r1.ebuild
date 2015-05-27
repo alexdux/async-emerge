@@ -6,6 +6,7 @@ EAPI="4"
 GNOME2_LA_PUNT="yes"
 GNOME_TARBALL_SUFFIX="bz2"
 GCONF_DEBUG="no"
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit autotools eutils gnome2 multilib
 

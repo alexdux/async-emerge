@@ -6,6 +6,7 @@ EAPI="5"
 GCONF_DEBUG="yes"
 GNOME_ORG_MODULE="GConf"
 GNOME2_LA_PUNT="yes"
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit eutils gnome2
 

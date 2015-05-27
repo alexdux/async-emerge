@@ -5,6 +5,7 @@
 EAPI="4"
 # debug only changes CFLAGS
 GCONF_DEBUG="no"
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit eutils gnome2
 

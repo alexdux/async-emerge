@@ -6,6 +6,7 @@ EAPI="4"
 GCONF_DEBUG="no"
 GNOME2_LA_PUNT="yes"
 PYTHON_DEPEND="python? 2:2.5"
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit autotools gnome2 multilib python eutils
 

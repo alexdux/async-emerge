@@ -3,6 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/net-analyzer/gnome-netstatus/gnome-netstatus-2.28.2.ebuild,v 1.10 2012/05/04 06:08:10 jdhore Exp $
 
 EAPI="4"
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit eutils gnome2
 

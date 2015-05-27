@@ -5,6 +5,7 @@
 EAPI="4"
 GCONF_DEBUG="no"
 PYTHON_DEPEND="2:2.5"
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit eutils gnome2 python
 

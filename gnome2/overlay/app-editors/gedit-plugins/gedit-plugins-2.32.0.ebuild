@@ -8,6 +8,7 @@ GNOME2_LA_PUNT="yes"
 PYTHON_DEPEND="python? 2:2.6"
 PYTHON_USE_WITH="xml"
 PYTHON_USE_WITH_OPT="python"
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit gnome2 multilib python eutils
 

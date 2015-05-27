@@ -3,6 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/gnome-extra/gnome-audio/gnome-audio-2.22.2.ebuild,v 1.12 2013/02/07 22:22:06 ulm Exp $
 
 EAPI=4
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit gnome2
 

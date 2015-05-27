@@ -3,6 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/gnome-extra/gnome-screensaver/gnome-screensaver-2.30.2-r1.ebuild,v 1.13 2013/09/13 21:40:50 eva Exp $
 
 EAPI="4"
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit eutils gnome2 multilib autotools
 

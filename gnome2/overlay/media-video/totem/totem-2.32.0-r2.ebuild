@@ -7,6 +7,7 @@ GCONF_DEBUG="yes"
 PYTHON_DEPEND="python? 2"
 PYTHON_USE_WITH="threads"
 PYTHON_USE_WITH_OPT="python"
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit autotools eutils gnome2 multilib python
 

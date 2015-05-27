@@ -4,6 +4,7 @@
 
 EAPI="4"
 GCONF_DEBUG="yes"
+GNOME_TARBALL_SUFFIX="bz2"
 
 inherit autotools gnome2 eutils
 
