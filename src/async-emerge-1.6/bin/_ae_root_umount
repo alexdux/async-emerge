@@ -7,6 +7,9 @@
 # version 2.0
 #	(OverlayFS support added.) Delayed - overlayfs is useless at this stage.
 # 2015, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version 2.1
+#   some mount|unmount cmd changed due to recent kernel changes
+# 2016, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
 #	- kickoff blockers
@@ -75,7 +78,7 @@ umnt_path_type(){
 		umount -lv "$i" &> /dev/null
 		((count++))
 	done
-	[ "$3" ] && let "$3=$count"
+	[ "$3" ] && let "(($3+=$count))"
 	return $count
 }
 
@@ -91,6 +94,7 @@ fi
 # unmount everything
 umnt_path_type "${AE_DIR[CHROOT]}" '(proc|sysfs|tmpfs)' 'lost' # unmount special
 umnt_path_type "${AE_DIR[CHROOT]}" 'rw,bind' 'nonmerged' # unmount transparent
+umnt_path_type "${AE_DIR[ROOT]}" 'aufs' 'unmounted' # unmount AUFS below ${AE_DIR[ROOT]}
 umnt_path_type "${AE_DIR[ROOT]}" 'aufs' 'unmounted' # unmount AUFS below ${AE_DIR[ROOT]}
 umnt_path_type "${AE_DIR[ROOT]}" 'bind' 'unbinded' # unmount binded below ${AE_DIR[ROOT]}
 

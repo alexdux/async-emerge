@@ -2,12 +2,15 @@
 
 # _ae_root_mount - AUFS mounter for 'aync emerge'
 # GPL ver. 2
-#	*some code was tacken from 'auroot' by Junjiro R. Okajima from 'aufs2' distribution
+#	*some code was taken from 'auroot' by Junjiro R. Okajima from 'aufs2' distribution
 # version: 1.1
 # 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
 # version 2.0
 #	(OverlayFS support added.) Delayed - overlayfs is useless at this stage.
 # 2015, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version 2.1
+#   some mount|unmount cmd changed due to recent kernel changes
+# 2016, Alex Dubenetsky: alexdu@forums.gentoo.org
 
 # Features:
 # 	- mount AUFS/OverlayFS merged tree from / and /var of the box
@@ -62,7 +65,7 @@ mnt_list() {
 			  # mount -vR "$i" "$bind" && \
 				# ff
 				# mount --make-rslave "$bind" && \
-			mount -vo remount,ro "$bind" && \
+			# 2.1+ (not supported any more): mount -vo remount,ro "$bind" && \
 			# mount with AUFS
 			mount -vt aufs -o async,trunc_xino,br="$delta"=rw:"$bind"=ro $3 "$chroot" ) &> /dev/null
 			if (($?)); then
@@ -82,7 +85,7 @@ mnt_list() {
 							#echo "mount -vt aufs -o br=\"$delta\"=rw:\"$bind\"=ro $3 \"$chroot\" 2>/dev/null >&2"
 							(mkdir -vp "$bind" "$delta" "$chroot" && \
 							mount -vB "$k" "$bind" && \
-							mount -vo remount,ro "$bind" && \
+							# 2.1+: mount -vo remount,ro "$bind" && \
 							mount -vt aufs -o async,trunc_xino,br="$delta"=rw:"$bind"=ro $3 "$chroot" ) &> /dev/null
 							#
 							if (($?)); then
