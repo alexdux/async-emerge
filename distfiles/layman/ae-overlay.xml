@@ -9,8 +9,8 @@
       <email>alexdu.com.ae@gmail.com</email>
       <name><![CDATA[Alex Dubenetsky]]></name>
     </owner>
-    <source type="git">https://github.com/alexdux/async-emerge.git</source>
-    <feed>https://github.com/alexdux/async-emerge/commits/master.atom</feed>
+    <source type="git">https://github.com/alexdux/async-emerge-layman.git</source>
+    <feed>https://github.com/alexdux/async-emerge-layman/commits/master.atom</feed>
   </repo>
 </repositories>
 
