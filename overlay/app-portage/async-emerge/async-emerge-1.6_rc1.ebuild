@@ -27,7 +27,7 @@ IUSE="logrotate noemail notmpfs" # "eix layman"
 RESTRICT="mirror"
 #RESTRICT="fetch"
 
-RDEPEND="|| ( sys-fs/aufs2 sys-fs/aufs3 )
+RDEPEND="|| ( sys-fs/aufs3 sys-fs/aufs4 )
 			app-portage/gentoolkit
 			app-shells/bash
 			app-portage/eix
@@ -47,8 +47,8 @@ src_configure() {
 			die "Can't adjust AE_USETMPFS! Stop."
 	fi
 	# portage version adjust
-	P_VER=$(emerge --info | grep 'portage ' -i | cut -f2 -d'.')
-	if ((P_VER>1)); then # new portage-2.2 +
+	P_VER=$(emerge --info | grep 'portage ' -i | cut -f2 -d' ')
+	if [[ "${P_VER}" > "2.2" ]]; then # new portage-2.2 +
 		sed -i -e "s/^\(AE_REBUILD\[DO_OBSOLETED_LIBS\]='\)y/\1n/" "${AE_CONF}" || \
 			die "Can't adjust AE_REBUILD[DO_OBSOLETED_LIBS]! Stop."
 		sed -i -e "s/^\(AE_REBUILD\[DO_REVDEP_REBUILD\]='\)y/\1n/" "${AE_CONF}" || \
@@ -56,6 +56,11 @@ src_configure() {
 		# $(qlist -I -C x11-drivers/) -> @x11-module-rebuild
 #		sed -i -e "s/\$\(qlist -I -C x11-drivers\/\)/\@x11-module-rebuild/" "${AE_CONF}" || \
 #			die "Can't adjust add_subset_update 'X server'! Stop."
+		if [[ "${P_VER}" > "2.2.16" ]]; then # since some about 2.2.16 we don't need use perl-cleaner,
+												# it's build-in in portage
+			sed -i -e "s/\(add_subset_update 'eixc' 'dev-lang\/perl'\)/# \1/" "${AE_CONF}" || \
+			die "Can't adjust PERL subset! Stop."
+		fi
 	else # old portage-2.2 -
 		sed -i -e "s/^\(AE_REBUILD\[DO_PRESERVED_REBUILD\]='\)y/\1n/" "${AE_CONF}" || \
 			die "Can't adjust AE_REBUILD[DO_PRESERVED_REBUILD]! Stop."
