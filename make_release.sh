@@ -37,6 +37,6 @@ DISTDIR=distfiles/ ebuild --force overlay/app-portage/async-emerge/async-emerge-
 ##cd ../../..
 
 # add ebuild to Git
-#cd overlay/app-portage/async-emerge/
-git add overlay/app-portage/async-emerge/${PF}.ebuild
-#cd ../../..
+cd overlay/app-portage/async-emerge/
+git add ${PF}.ebuild
+cd ../../..

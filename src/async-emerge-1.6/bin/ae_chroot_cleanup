@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# ae_chroot_cleanup - chrooted dirs cleaner for 'async emerge'
+# GPL ver. 2
+# version: 1.1
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+#	- check if not chrooted
+# 	- clean up ${AE_DIR[CHROOT]}
+
+# get config
+. /etc/async.emerge.conf
+
+[[ "${AE_DIR[CHROOT]}" == "" || "${AE_DIR[CHROOT]}" == "/" ]] && {
+	eerror "'$PNAME' misconfigured: GRS corruption is possible! Stop."	
+	eend 1; exit 1
+}
+
+ebegin "Clearing ${AE_DIR[CHROOT]}"
+
+# check if aufs is mounted
+if [ "$(mount | grep ${AE_DIR[ROOT]} | grep aufs)" ]; then
+	eerror "  AUFS is mounted! Stop."
+	eend 1
+	exit 1
+fi
+
+rm -rfv "${AE_DIR[CHROOT]}" &> /dev/null
+
+eend $?
+exit $?
+
