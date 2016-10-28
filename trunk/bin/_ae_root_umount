@@ -95,8 +95,7 @@ fi
 umnt_path_type "${AE_DIR[CHROOT]}" '(proc|sysfs|tmpfs)' 'lost' # unmount special
 umnt_path_type "${AE_DIR[CHROOT]}" 'rw,bind' 'nonmerged' # unmount transparent
 umnt_path_type "${AE_DIR[ROOT]}" 'aufs' 'unmounted' # unmount AUFS below ${AE_DIR[ROOT]}
-umnt_path_type "${AE_DIR[ROOT]}" 'aufs' 'unmounted' # unmount AUFS below ${AE_DIR[ROOT]}
-umnt_path_type "${AE_DIR[ROOT]}" 'bind' 'unbinded' # unmount binded below ${AE_DIR[ROOT]}
+umnt_path_type "${AE_DIR[ROOT]}" '(bind|rw)' 'unbinded' # unmount binded below ${AE_DIR[ROOT]}
 
 
 # out status

@@ -44,8 +44,8 @@ temerge @module-rebuild
 echo '>>> build & install kernel'
 make ${MAKEOPTS} && make install modules_install
 
-echo '>>> reconfig the grub2 loader'
-grub2-mkconfig -o /boot/grub/grub.cfg
+echo '>>> reconfig the grub loader'
+grub-mkconfig -o /boot/grub/grub.cfg
 
 # Go to orig dir
 echo '>>> restore dir to: '${OLDWD}
