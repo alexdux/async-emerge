@@ -2,10 +2,11 @@
 
 # V.3.0 - ald
 # Sat 07 Sep 2013 08:44:02 MSK - zram support added
+# V.3.1 - ald -Thu 10 Oct 2019 11:44:09 AM MSK
 
 TE_VTP=/var/tmp/portage
-TE_DEFMEMSIZE=1750M
-TE_ZRAM=/dev/zram0
+TE_DEFMEMSIZE=8G
+#TE_ZRAM=/dev/zram0
 
 #[ "${AE_TMPFS[SIZE]}" ] && TE_MEMSIZE=${AE_TMPFS[SIZE]}
 [ "$MEMSIZE" ] && TE_MEMSIZE=$MEMSIZE
@@ -17,7 +18,7 @@ TE_ZRAM=/dev/zram0
 mounttmpfs() {
 	[ -b "$TE_ZRAM" ] && \
 		einfo "  (using compressed RAM device: $TE_ZRAM)" ;	\
-		mount -t tmpfs -o size=$TE_MEMSIZE $TE_ZRAM $TE_VTP \
+		mount -t tmpfs tmpfs -o size=$TE_MEMSIZE $TE_ZRAM $TE_VTP \
 	|| \
 		mount -t tmpfs tmpfs -o size=$TE_MEMSIZE $TE_VTP
 	mounted="true"
