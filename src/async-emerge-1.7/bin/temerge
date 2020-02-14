@@ -3,7 +3,7 @@
 # V.3.0 - ald
 # Sat 07 Sep 2013 08:44:02 MSK - zram support added
 # V.3.1 - ald -Thu 10 Oct 2019 11:45:54 AM MSK
-# V.3.2 - ald - Fri 14 Feb 2020 07:42:11 PM MSK
+# V.3.2 - ald - Fri 14 Feb 2020 08:14:58 PM MSK
 
 TE_VTP=/var/tmp/portage
 TE_DEFMEMSIZE=11G
