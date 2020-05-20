@@ -11,7 +11,7 @@
 
 TMP_FILE="/tmp/${1}.txt"
 
-emerge --pretend "${2}" --quiet --columns --color\=n "${1}" | sed -e '/^$/,$d' | awk -F ' ' '{print $2}' > "${TMP_FILE}" && \
+emerge --pretend "${2}" --quiet --columns --color\=n "${1}" | sed -e '/^$/,$d' | sed -r '/^.{,9}$/d' | awk -F ' ' '{print $2}' > "${TMP_FILE}" && \
 emerge --verbose --oneshot --nodeps --keep-going "${@:3}" $(cat "${TMP_FILE}")
 
 
