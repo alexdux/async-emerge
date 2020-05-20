@@ -7,10 +7,11 @@
 #		- default -ask removed
 #	1.2 Thu May 21 00:20:33 2020
 #		- remove interactive editing the list
+#		- remove --emptytree
 
 TMP_FILE="/tmp/${1}.txt"
 
-emerge --pretend --emptytree --quiet --columns --color\=n "${1}" | sed -e '/^$/,$d' | awk -F ' ' '{print $2}' > "${TMP_FILE}" && \
-emerge --verbose --oneshot --nodeps --keep-going "${@:2}" $(cat "${TMP_FILE}")
+emerge --pretend "${2}" --quiet --columns --color\=n "${1}" | sed -e '/^$/,$d' | awk -F ' ' '{print $2}' > "${TMP_FILE}" && \
+emerge --verbose --oneshot --nodeps --keep-going "${@:3}" $(cat "${TMP_FILE}")
 
 
