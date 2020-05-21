@@ -8,10 +8,12 @@
 #	1.2 Thu May 21 00:20:33 2020
 #		- remove interactive editing the list
 #		- remove --emptytree
+#	1.3 Thu May 21 12:08:47 2020
+#		- remove --verbose
 
 TMP_FILE="/tmp/${1}.txt"
 
 emerge --pretend "${2}" --quiet --columns --color\=n "${1}" | sed -e '/^$/,$d' | cut -c8- | cut -d' ' -f1 > "${TMP_FILE}" && \
-emerge --verbose --oneshot --nodeps --keep-going "${@:3}" $(cat "${TMP_FILE}")
+emerge --oneshot --nodeps --keep-going "${@:3}" $(cat "${TMP_FILE}")
 
 
