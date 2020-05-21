@@ -8,12 +8,10 @@
 # TODO: detect emerge exit code
 
 gentoo-old-update-set.sh system --emptytree "${@}" && \
-gentoo-old-update-set.sh system --update "${@}" && \
-gentoo-old-update-set.sh system --update "${@}" && \
+gentoo-old-update-set.sh system --emptytree "${@}" && \
 (eselect gcc set 2 || true) && \
 (eselect binutils set 2 || true) && \
 . /etc/profile && \
 gentoo-old-update-set.sh world --emptytree "${@}" && \
-gentoo-old-update-set.sh world --update "${@}" && \
-gentoo-old-update-set.sh world --update "${@}" && \
+gentoo-old-update-set.sh world --emptytree "${@}" && \
 emerge --emptytree "${@}" @world 
