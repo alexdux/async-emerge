@@ -11,29 +11,27 @@
 
 # TODO: detect emerge exit code
 
-[ "$RC_GOT_FUNCTIONS" ] || . /etc/init.d/functions.sh
-
- einfo "1/12. Update gcc ..." && \
+ echo " * 1/12. Update gcc ..." && \
 emerge --oneshot --nodeps "${@}" gcc && \
- einfo "2/12. Update binutils ..." && \
+ echo " * 2/12. Update binutils ..." && \
 emerge --oneshot --nodeps "${@}" binutils && \
- einfo "3/12. Update glibc ..." && \
+ echo " * 3/12. Update glibc ..." && \
 emerge --oneshot --nodeps "${@}" glibc && \
- einfo "4/12. Remove old versions of the toolchain ..." && \
+ echo " * 4/12. Remove old versions of the toolchain ..." && \
 emerge --depclean --nodeps "${@}" gcc binutils glibc && \
- einfo "5/12. Update profile ..." && \
-. /etc/profile && \
- einfo "6/12. Rebuild system set (pass 1/3) ..." && \
+ echo " * 5/12. Update profile ..." && \
+source /etc/profile && \
+ echo " * 6/12. Rebuild system set (pass 1/3) ..." && \
 gentoo-old-update-set.sh system --emptytree "${@}" && \
- einfo "7/12. Rebuild system set (pass 2/3) ..." && \
+ echo " * 7/12. Rebuild system set (pass 2/3) ..." && \
 gentoo-old-update-set.sh system --emptytree "${@}" && \
- einfo "8/12. Rebuild system set (pass 3/3) ..." && \
+ echo " * 8/12. Rebuild system set (pass 3/3) ..." && \
 gentoo-old-update-set.sh system --emptytree "${@}" && \
- einfo "9/12. Rebuild world set (pass 1/3) ..." && \
+ echo " * 9/12. Rebuild world set (pass 1/3) ..." && \
 gentoo-old-update-set.sh world --emptytree "${@}" && \
- einfo "10/12. Rebuild world set (pass 2/3) ..." && \
+ echo " * 10/12. Rebuild world set (pass 2/3) ..." && \
 gentoo-old-update-set.sh world --emptytree "${@}" && \
- einfo "11/12. Rebuild world set (pass 3/3) ..." && \
+ echo " * 11/12. Rebuild world set (pass 3/3) ..." && \
 gentoo-old-update-set.sh world --emptytree "${@}" && \
- einfo "12/12. Rebuild world set with dependancies ..." && \
+ echo " * 12/12. Rebuild world set with dependancies ..." && \
 emerge --emptytree "${@}" @world
