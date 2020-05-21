@@ -19,7 +19,7 @@ emerge --oneshot --nodeps "${@}" gcc && \
 emerge --oneshot --nodeps "${@}" binutils && \
  einfo "3/12. Update glibc ..." && \
 emerge --oneshot --nodeps "${@}" glibc && \
- einfo "4/12. Remove old version of the toolchains ..." && \
+ einfo "4/12. Remove old versions of the toolchain ..." && \
 emerge --depclean --nodeps "${@}" gcc binutils glibc && \
  einfo "5/12. Update profile ..." && \
 . /etc/profile && \

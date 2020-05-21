@@ -12,6 +12,7 @@
 #		- remove --verbose
 #	1.4 Thu May 21 12:14:33 2020
 #		- echo added
+#		- COLLISION_IGNORE added
 
 TMP_FILE="/tmp/${1}.txt"
 
@@ -20,6 +21,6 @@ emerge --pretend "${2}" --quiet --columns --color\=n "${1}" | sed -e '/^$/,$d' |
 echo "<<< (2/2) Update the list without dependencies checking. It takes a while ...          >>>" && \
 echo "<<<       Please use Ctrl+C to stop; --verbose/--queit for control output details;     >>>" && \
 echo "<<<       and \"nonup ... &\" and \"tail -f nohup.out\" to run in background.          >>>" && \
-emerge --oneshot --nodeps --keep-going "${@:3}" $(cat "${TMP_FILE}")
+COLLISION_IGNORE="*" emerge --oneshot --nodeps --keep-going "${@:3}" $(cat "${TMP_FILE}")
 
 
