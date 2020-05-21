@@ -10,10 +10,16 @@
 #		- remove --emptytree
 #	1.3 Thu May 21 12:08:47 2020
 #		- remove --verbose
+#	1.4 Thu May 21 12:14:33 2020
+#		- echo added
 
 TMP_FILE="/tmp/${1}.txt"
 
+echo "<<< (1/2) Request packets ordered list from portage for set \"${1}\". Please wait ... >>>"
 emerge --pretend "${2}" --quiet --columns --color\=n "${1}" | sed -e '/^$/,$d' | cut -c8- | cut -d' ' -f1 > "${TMP_FILE}" && \
+echo "<<< (2/2) Update the list without dependencies checking. It takes a while ...          >>>" && \
+echo "<<<       Please use Ctrl+C to stop; --verbose/--queit for control output details;     >>>" && \
+echo "<<<       and \"nonup ... &\" and \"tail -f nohup.out\" to run in background.          >>>" && \
 emerge --oneshot --nodeps --keep-going "${@:3}" $(cat "${TMP_FILE}")
 
 
