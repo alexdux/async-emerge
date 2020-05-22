@@ -21,7 +21,7 @@ emerge --pretend "${2}" --quiet --columns --color\=n "${1}" | sed -e '/^$/,$d' |
 echo "<<< (2/2) Update the list without dependencies checking. It takes a while ...      >>>"
 echo "<<<       Please use <Ctrl>+<C> several times to stop;                             >>>"
 echo "<<<       --verbose/--queit for control output details;                            >>>"
-echo "<<<       and \"nonup ... &\" and \"tail -f nohup.out\" to run in background.      >>>"
+echo "<<<       and \"nonup ... &\" and \"tail -f nohup.out\" to run in background.          >>>"
 COLLISION_IGNORE="*" emerge --oneshot --nodeps --keep-going "${@:3}" $(cat "${TMP_FILE}")
 
 
