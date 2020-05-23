@@ -13,8 +13,10 @@
 #	1.4 Thu May 21 12:14:33 2020
 #		- echo added
 #		- COLLISION_IGNORE added
+#	1.5 Sat May 23 14:23:54 2020
+#		- tmp_file moved from /tmp/ to /var/tmp/portage
 
-TMP_FILE="/tmp/${1}.txt"
+TMP_FILE="/var/tmp/portage/${1}.txt"
 
 echo "<<< (1/2) Request packets ordered list from portage for set \"${1}\". Please wait ... >>>"
 emerge --pretend "${2}" --quiet --columns --color\=n "${1}" | sed -e '/^$/,$d' | cut -c8- | cut -d' ' -f1 > "${TMP_FILE}"
