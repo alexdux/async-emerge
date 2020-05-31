@@ -10,6 +10,8 @@
 #		- system echo added
 #	1.4 Fri 22 May 2020 07:45:02 AM MSK
 #		- add log func
+3	1.5 Mon 01 Jun 2020 12:50:10 AM MSK
+#		- exclude gcc from early stages
 
 
 log() {
@@ -33,15 +35,15 @@ time emerge --depclean --nodeps "${@}" gcc binutils glibc
  log "5/12. Update profile"
 time source /etc/profile
  log "6/12. Rebuild system set (pass 1/3)"
-time gentoo-old-update-set.sh system --emptytree "${@}"
+time gentoo-old-update-set.sh system --emptytree --exclude sys-devel/gcc "${@}"
  log "7/12. Rebuild system set (pass 2/3)"
-time gentoo-old-update-set.sh system --emptytree "${@}"
+time gentoo-old-update-set.sh system --emptytree --exclude sys-devel/gcc "${@}"
  log "8/12. Rebuild system set (pass 3/3)"
 time gentoo-old-update-set.sh system --emptytree "${@}"
  log "9/12. Rebuild world set (pass 1/3)"
-time gentoo-old-update-set.sh world --emptytree "${@}"
+time gentoo-old-update-set.sh world --emptytree --exclude sys-devel/gcc "${@}"
  log "10/12. Rebuild world set (pass 2/3)"
-time gentoo-old-update-set.sh world --emptytree "${@}"
+time gentoo-old-update-set.sh world --emptytree --exclude sys-devel/gcc "${@}"
  log "11/12. Rebuild world set (pass 3/3)"
 time gentoo-old-update-set.sh world --emptytree "${@}"
  log "12/12. Rebuild world set with dependancies"
