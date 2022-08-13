@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# ae_add_task - 'async emerge' users task adder
+# GPL ver. 2
+# version: 1.0
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+# 	- Add cmd OR PM params to to-do file in VCS or GRS
+#	- Print # of lines in VCS and GRS to-do files
+#	- Brief usage help
+
+# get config
+. /etc/async.emerge.conf
+
+# compose to-do filenames
+fileI="${AE_DIR[REBUILD_VAR]}${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
+fileC="${AE_DIR[REBUILD_VAR]}${AE_RCMD[COOK_FILE_PREFIX]}${AE_TASK[FILE_LIST]}"
+
+# check alone key
+if [ "$1" == "-grs" ]; then
+	addTo="$fileI"
+	addToGRS=1
+	shift
+	fileLL="${AE_DIR[REBUILD_VAR]}.${AE_RCMD[INSTALL_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}"
+else
+	addTo="$fileC"
+	fileLL="${AE_DIR[REBUILD_VAR]}.${AE_RCMD[COOK_FILE_PREFIX]}${AE_SIGN[RBLOOP_LOGIC]}"
+fi
+
+# check if params exist
+if [[ (( ${#} )) && "$1" != "--help" ]]; then
+	(($addToGRS)) && \
+		ebegin "Adding user tasks (to GRS only!)" || \
+		ebegin "Adding user tasks" 
+
+	# join params to 1 line
+	for s in ${*}; do
+		s=${s/\\\*/*}
+		o="$o$s "
+	done
+	o=${o% }
+
+	# add to preselected file
+	if [[ "$o" == \#* ]]; then
+		einfo "  Added shell command: '${o:1}'."
+	else
+		einfo "  Added PM '${AE_CMD[PM]}' calling with: '$o'."
+	fi
+	echo -e "$o" >> "$addTo"
+	eend $?
+	
+	cntC=$((wc -l < "$fileC") 2>/dev/null)
+	cntI=$((wc -l < "$fileI") 2>/dev/null)
+
+	einfo "  Total tasks to do in VCS $cntC:"
+	[ -e "$fileC" ] && cat "$fileC"
+	einfo "  Total tasks to do in GRS $cntI:"
+	[ -e "$fileI" ] && cat "$fileI"
+	
+	einfo "  Set 'user task bit' in loopLogic file."
+	# save ts
+	llTS=$(stat -c '%Y' "$fileLL")
+	# convert ts
+	llTS=$(date -d @${llTS} +'%d %b %Y %R')
+	# update loopLogic &= 0x20 (user_task)
+	echo $(($(cat "$fileLL" 2>/dev/null && echo '|' )0x20)) > "$fileLL"
+	# restore old ts
+	touch -d "${llTS}" "$fileLL"
+	eend $?
+
+else
+	echo "Help: $PNAME [-grs] [\"]cmd[ params...][\"] ..."
+	echo "  -grs   add tasks to install phase only (to GRS)"
+fi
+
+# bye
+exit 0
+

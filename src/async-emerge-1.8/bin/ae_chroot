@@ -1,0 +1,164 @@
+#!/bin/bash
+
+# ae_chroot - Chrooter for 'async emerge'
+# GPL ver. 2
+# version: 2.0
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+#	- mount AUFS if not mounted
+# 	- mount /proc, /sys if configured
+#	- start chrooted DBUS if configured
+#	- wipe out chrooted /var/run
+#	- Allow many instances of $0 for one VCS
+
+# get config
+. /etc/async.emerge.conf
+
+einfo "Chrooting to ${AE_DIR[CHROOT]}:"
+
+# to-do: add autounmount at trap???.......
+
+# mount/unmount a special device
+mnt_special() { # 'y'/'n', fs dir, fs type
+	if [ "$1" == "y" ]; then
+		if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep "$2") ]]; then
+			mount -vt $3 $3 "${AE_DIR[CHROOT]}/$2" &> /dev/null
+			if (($?)); then
+				error "  Error mounting $2 fs to ${AE_DIR[CHROOT]}/$2!"
+				eend 1
+				exit 2
+			fi
+			einfo "  $2 fs is mounted to ${AE_DIR[CHROOT]}/$2."
+		else
+			ewarn "  $2 fs was already mounted."
+		fi
+	else
+		einfo "  Mounting $2 fs is not configured."
+	fi
+	eend 0
+}
+unmnt_special() { # 'y'/'n', fs dir
+	if [ "$1" == "y" ]; then
+		umount -v "${AE_DIR[CHROOT]}/$2" &> /dev/null
+		if (($?)); then
+			ewarn "  Can't unmount $2 fs." 
+			eend 2
+		else
+			einfo "  $2 fs is unmounted from ${AE_DIR[CHROOT]}/$2."
+			eend 0
+		fi
+	fi
+}
+
+
+# mount AUFS if not mounted
+# to-do: /usr/bin/aubrsync:279
+if [[ ! $(mount | grep "${AE_DIR[ROOT]}" | grep 'aufs') ]]; then
+	einfo "  Automounting AUFS,"
+	_ae_root_mount
+	if (($?)); then # check for errors
+		eerror "  Can't mount AUFS! '$PNAME' is not operational!!!"
+		# clennup
+		_ae_root_umount
+		exit 1
+	fi
+
+	einfo "Chrooting to ${AE_DIR[CHROOT]} (continued):"
+
+	# proc/sysfs staff
+	# wipe out chrooted /var/run ????????? (move to ae_root_mount?)
+	if [ "${AE_VCS[VAR_RUN_EXLUDE]}" == "y" ]; then
+		einfo "  Cleaning ${AE_DIR[CHROOT]}/var/run from host's *.pid."
+		rm -rfv "${AE_DIR[CHROOT]}/var/run" &> /dev/null
+		mkdir -pv "${AE_DIR[CHROOT]}/var/run/dbus" &> /dev/null
+		eend 0
+	fi
+
+	# D-BUS start in chroot
+	if [ "${AE_VCS[CHROOT_START_DBUS]}" == "y" ]; then
+		einfo "  Starting chrooted D-BUS messagebus ..."
+		#chroot "$ROOT_CHROOT" /usr/bin/dbus-uuidgen --ensure
+		chroot "${AE_DIR[CHROOT]}" start-stop-daemon -S -p /var/run/dbus.pid -x /usr/bin/dbus-daemon -- --system
+		eend 0
+	fi
+
+	# touch autoMountedAUFS sign
+	touch "${AE_SIGN[VCSAM]}"
+fi
+
+
+# mounting /proc, /sys, if configured to do
+mnt_special ${AE_VCS[CHROOT_MOUNT_PROCFS]} 'proc' 'proc' # (check for mounted inside)
+mnt_special ${AE_VCS[CHROOT_MOUNT_SYSFS]} 'sys' 'sysfs'
+
+#       When  bash  is  started  non-interactively,  to  run  a  shell script, for example, it looks for the variable
+#       BASH_ENV in the environment, expands its value if it appears there, and uses the expanded value as  the  name
+#       of a file to read and execute.  Bash behaves as if the following command were executed:
+#              if [ -n "$BASH_ENV" ]; then . "$BASH_ENV"; fi
+#       but the value of the PATH variable is not used to search for the file name.
+
+# DO CHROOT
+# todo: remove --rcfile ?
+chr_cmd="AE_STATE_SKIP=1 chroot \"${AE_DIR[CHROOT]}\" /bin/bash "
+##chr_cmd="AE_STATE_SKIP=1 AE_CHROOT_PS1=\"\[\033[01;33m\]$PNAME\" \
+##  chroot \"${AE_DIR[CHROOT]}\" /bin/bash --rcfile /etc/async.emerge.chroot.bashrc"
+#TempBashRC=$(mktemp --tmpdir="${AE_DIR[GATEWAY]}")
+TempBashRC="${AE_DIR[GATEWAY]}.$PNAME.vcs.lock.$$"
+#echo $TempBashRC
+if [ "$1" ]; then
+	touch "$TempBashRC"
+	einfo "Starting Virtually Chrooted System with: '$*' ..."
+	chr_cmd+="-c \"$*\""
+else	
+	cat "${AE_SIGN[BASHRC]}" > "$TempBashRC"
+	echo "PS1=\"\[\033[01;33m\]$PNAME \$PS1\";cd" >> "$TempBashRC"
+	einfo "Welcome to Virtually Chrooted System !"
+	chr_cmd+="--rcfile \"$TempBashRC\""
+fi
+eend 0
+
+#echo "$chr_cmd"
+eval $chr_cmd
+#[ "$1" ] || 
+rm -v "$TempBashRC" &> /dev/null
+
+
+einfo "Unchrooting from ${AE_DIR[CHROOT]}:"
+
+# unmount AUFS
+# looking for a active VCS env.
+for i in ${AE_DIR[GATEWAY]}.*.vcs.lock.*; do
+ 	if [ -e "$i" ]; then
+		k=${i/*\/./}
+ 		[[ $(ps -p ${i/*./} -o comm=) == ${k/.vcs*/} ]] && break || rm -v $i &> /dev/null
+ 	fi
+ 	i=''
+done
+
+# unmount AUFS if no one found above
+#echo "-$i-"
+if [[ ! "$i" ]]; then
+	if [ -e "${AE_SIGN[VCSAM]}" ]; then
+		# D-BUS stop in chroot
+		if [ "${AE_VCS[CHROOT_START_DBUS]}" == "y" ]; then
+			einfo "  Stopping chrooted D-BUS messagebus ..."
+			chroot "${AE_DIR[CHROOT]}" start-stop-daemon -K -p /var/run/dbus.pid
+			eend 0
+		fi
+	fi
+
+	# unmointig special fs
+	unmnt_special ${AE_VCS[CHROOT_MOUNT_PROCFS]} 'proc'
+	unmnt_special ${AE_VCS[CHROOT_MOUNT_SYSFS]} 'sys'
+
+	if [ -e "${AE_SIGN[VCSAM]}" ]; then
+		einfo "  Autounmounting AUFS,"
+		_ae_root_umount
+		einfo "Unchrooting from ${AE_DIR[CHROOT]} (continued)"
+		rm -v "${AE_SIGN[VCSAM]}" &> /dev/null
+	fi
+fi
+
+eend 0
+exit 0

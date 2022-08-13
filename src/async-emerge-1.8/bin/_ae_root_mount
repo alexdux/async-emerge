@@ -1,0 +1,223 @@
+#!/bin/bash
+
+# _ae_root_mount - AUFS mounter for 'aync emerge'
+# GPL ver. 2
+#	*some code was taken from 'auroot' by Junjiro R. Okajima from 'aufs2' distribution
+# version: 1.1
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version 2.0
+#	(OverlayFS support added.) Delayed - overlayfs is useless at this stage.
+# 2015, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version 2.1
+#   some mount|unmount cmd changed due to recent kernel changes
+# 2016, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+# 	- mount AUFS/OverlayFS merged tree from / and /var of the box
+# 	- symlinks recreated with AUFS/OverlayFS logic
+#	- separated disk partition supported via pre-rbinded root master dirs
+#	- config-excluded dirs not mounts and recreates empty
+
+# get config
+. /etc/async.emerge.conf
+
+einfo "Mounting AUFS root to ${AE_DIR[ROOT]}:"
+
+if ! [ "$(grep aufs /proc/filesystems)" ]; then
+	eerror "  AUFS is not supported by the kernel! Please add AUFS support to kernel. Stop."
+	eend 2
+	exit 2
+fi
+
+# check if aufs-root is already mounted
+if [ "$(mount | grep ${AE_DIR[ROOT]} | grep aufs)" ]; then
+	ewarn "  AUFS-root is already mounted! Skipping mounting /+/var."
+	eend 0
+	exit 0
+fi
+
+# (re)create AE gw dir, logs dirs should exist (ebuild creates it)
+mkdir -p "${AE_DIR[GATEWAY]}" 2>/dev/null
+
+# clean mtab
+if [ -e "${AE_DIR[DELTA]}/etc/mtab" ]; then
+	rm "${AE_DIR[DELTA]}/etc/mtab" &> /dev/null
+	einfo "  ${AE_DIR[DELTA]}/etc/mtab unlinked."
+	eend 0
+fi
+
+# bind+mount a set of dirs 
+# mnt_list: list of dirs, exclusion list, type-fs mark
+mnt_list() {
+	# ... nested AUFS mounting is not supported (temp) curently with AUFS
+	# local mnts=$(mount | grep -e '^/dev/' -e '^aufs' -i | cut -f3 -d' ' | tr '\n' ' ')
+	#
+	local mnts=$(mount | grep '^/dev/' | cut -f3 -d' ' | tr '\n' ' ')
+	# also bind ?
+	#echo "mounts: $mnts"
+	for i in $1; do 
+		bind="${AE_DIR[BIND]}$i"; delta="${AE_DIR[DELTA]}$i"; chroot="${AE_DIR[CHROOT]}$i"
+		# skip non-dirs, config-excluded dirs, symlinks
+		if [[ -d "$i" && ! -L "$i" && "$2" != *"$i"* ]]; then 
+			# bind the dir (separate disk partition support + excluding)
+			(mkdir -vp "$bind" "$delta" "$chroot" && \
+			mount -vB "$i" "$bind" && \
+			  # mount -vR "$i" "$bind" && \
+				# ff
+				# mount --make-rslave "$bind" && \
+			# 2.1+ (not supported any more): mount -vo remount,ro "$bind" && \
+			# mount with AUFS
+			mount -vt aufs -o async,trunc_xino,br="$delta"=rw:"$bind"=ro $3 "$chroot" ) &> /dev/null
+			if (($?)); then
+				eerror "  Error binding or mounting $i!" 
+				eend 1
+				ewarn "Cleanup:"
+				_ae_root_umount
+				exit 1
+			else
+				# a bug. make transparent for second+ level rbind submounts
+				#echo "check '$i'"
+				if [[ "$mnts" == *"$i"* ]]; then
+					for k in $mnts; do
+						if [[ "$k" == "$i"'/'* ]]; then
+							#echo "  found '$k'"
+							bind="${AE_DIR[BIND]}$k"; delta="${AE_DIR[DELTA]}$k"; chroot="${AE_DIR[CHROOT]}$k"
+							#echo "mount -vt aufs -o br=\"$delta\"=rw:\"$bind\"=ro $3 \"$chroot\" 2>/dev/null >&2"
+							(mkdir -vp "$bind" "$delta" "$chroot" && \
+							mount -vB "$k" "$bind" && \
+							# 2.1+: mount -vo remount,ro "$bind" && \
+							mount -vt aufs -o async,trunc_xino,br="$delta"=rw:"$bind"=ro $3 "$chroot" ) &> /dev/null
+							#
+							if (($?)); then
+								eerror "  Error binding or mounting (rbind) $k!" 
+								eend 1
+								ewarn "Cleanup:"
+								_ae_root_umount
+								exit 1
+							fi
+							((mounted++))
+						fi
+					done
+				fi
+			fi
+			((mounted++))
+		fi 
+	done
+}
+
+# redo symlinks in dir
+# redo_sln: src dir, dest dir level
+redo_sln() { 
+	for i in $1; do 
+		# skip non-symlinks, existed fs objects and non-dirs
+		if [[ -L "$i" && ! -e "${AE_DIR[CHROOT]}$i" && -d "$(readlink -f $i)" ]]; then 
+			# recreate symlinks relative to ${AE_DIR[CHROOT]}
+			ln -vsn "$2$(readlink -f $i)" "${AE_DIR[CHROOT]}$i" &> /dev/null
+			if (($?)); then
+				ewarn "  Can't create symlink for $i." 
+				eend 1
+			else
+				((symlinked++))
+			fi
+		fi 
+	done
+}
+
+# redo not-copied dirs
+# redo_dirs: a set of dirs
+redo_dirs() { 
+	for i in $1; do 
+		mkdir -v "${AE_DIR[CHROOT]}$i" &> /dev/null
+		(($?)) || ((redirs++))
+	done
+}
+
+# bind transparent (non-merged)
+bnd_trans() {
+	for i in $1; do
+		# check if it exists at this box
+		if [ -d "$i" ]; then
+			mkdir -vp "${AE_DIR[CHROOT]}$i" &> /dev/null
+			mount -vR "$i" "${AE_DIR[CHROOT]}$i" &> /dev/null
+			if (($?)); then
+				eerror "  Can't bind transparent (non-merged) $i!" 
+				eend 1
+				ewarn "Cleanup:"
+				_ae_root_umount
+				exit 3
+			fi
+			((nonmerged++))
+		else
+			ewarn "  $i doesn't exists!"
+			eend 1
+		fi
+	done
+}
+
+# stat
+mounted=0
+symlinked=0
+redirs=0
+nonmerged=0
+
+# list the root+var of the box
+if true; then
+	mnt_list '/*' "${AE_DIR[ROOT_EXCLUDE]} /proc /sys /var" 'VCS'
+	mnt_list '/var/*' "${AE_DIR[VAR_EXCLUDE]} ${AE_DIR[ROOT]}" 'VCS'
+else
+	# test
+	
+	# scan mountpoints
+	for i in $(mount | grep '^/dev' | cut -f3 -d' ') "/var"; do
+		#echo "$i"
+		einfo "  Mounting $i ..."
+		eend 0
+	done
+
+	exit 1
+fi
+
+# recreating symlinks
+redo_sln '/*' './'
+redo_sln '/var/*' '../'
+
+# creating not copied dirs
+redo_dirs "${AE_DIR[ROOT_EXCLUDE]} /proc /sys /var ${AE_DIR[VAR_EXCLUDE]} ${AE_DIR[ROOT]} ${AE_DIR[GATEWAY]}"
+
+# bind transparent (non-merged) dirs
+bnd_trans "${AE_DIR[TRANSPARENT]}"
+
+# rebind '/dev/*' from system 'mount' (aufs feature)
+#bnd_trans "`mount | grep '^/dev/' | cut -d' ' -f3 | grep -v '^/$'`"
+
+# create temp swap file
+if [[ "${AE_TMPFS[SIZE]}" && "${AE_TMPFS[PC]}" ]]; then # create 
+	# cacl swap size in Mb
+	swapSize=${AE_TMPFS[SIZE]}
+	if [[ "$swapSize" == *G* ]]; then
+		swapSize=${swapSize/G/}
+		let "swapSize=(($swapSize*1024*${AE_TMPFS[PC]}/100))"
+	elif [[ "$swapSize" == *M* ]]; then
+		swapSize=${swapSize/M/}
+		let "swapSize=(($swapSize*${AE_TMPFS[PC]}/100))"
+	fi
+	einfo "  Temporary adding ${swapSize} Mb extra swap file to the system:"
+	# add extra swap
+	# to-do: possible to add fallocate (fallocate system call is supported by the btrfs, ext4, ocfs2, and xfs)
+	einfo "    creating a file ..."
+	dd if=/dev/zero of="${AE_TMPFS[SWAP_FILE]}" bs=1048576 count=$swapSize &>/dev/null && \
+	einfo "    formating the file to swap ..." && \
+	mkswap "${AE_TMPFS[SWAP_FILE]}" >/dev/null && \
+	einfo "    adding the swap to the system ..." && \
+	swapon "${AE_TMPFS[SWAP_FILE]}" && \
+	eend 0 || eend 1
+fi
+	
+# out Readme.txt ?
+
+# out stat
+einfo "  Binded and mounted $mounted dirs, +$redirs created, +$nonmerged binded as transparent (non-merged) \
+and created $symlinked symlinks."
+eend 0
+
+exit 0

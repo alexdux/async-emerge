@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# _ae_root_umount - AUFS unmounter for 'async emerge'
+# GPL ver. 2
+# version: 1.1
+# 2011, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version 2.0
+#	(OverlayFS support added.) Delayed - overlayfs is useless at this stage.
+# 2015, Alex Dubenetsky: alexdu@forums.gentoo.org
+# version 2.1
+#   some mount|unmount cmd changed due to recent kernel changes
+# 2016, Alex Dubenetsky: alexdu@forums.gentoo.org
+
+# Features:
+#	- kickoff blockers
+# 	- unmount all AUFS/OverlayFS, transparent, binded and lost @ ${AE_DIR[ROOT]}
+
+# get config
+. /etc/async.emerge.conf
+
+
+einfo "Unmounting AUFS /+/var from ${AE_DIR[ROOT]}:"
+
+# unmounting all blockers (dbus --autolaunch, for example)
+if [ "${AE_VCS[UNMOUNT_KILL_BLOCKERS]}" == "y" ]; then
+	# def cmd for request blocker(s) in chrooted dirs
+	#cmd="lsof 2>/dev/null | grep ${AE_DIR[CHROOT]} | cut -c11-16 | uniq"
+	cmd="lsof -Fp +d ${AE_DIR[CHROOT]} 2>/dev/null | uniq"
+	s=$(eval $cmd)
+	#echo "blockers pids: $s"
+	# check if there is a blocker...
+	if [ "$s" ]; then
+		einfo "  Killing fs-blocking processes that were left after chrooted activity:"
+		# loop to try to kill
+		max_tries=${AE_VCS[UNMOUNT_KILL_BLOCKERS_MT]}
+		for ((i=1; $i <= $max_tries+2; i++)); do
+			# exit if no more blockers left
+			[ "$s" ] || break
+			# loop to get info about each blocker
+			to_kill_pid="" 
+			to_kill_name=""
+			for t in $s; do
+				to_kill_pid+=" ${t:1}"
+				to_kill_name+=' '$(ps -p ${t:1} -o comm=)
+			done
+			
+			# start send -INT then -TERM in last third and -KILL in last two tries
+			signal='-INT'
+			(($i > 2*$max_tries/3)) && signal='-TERM'
+			(($i > $max_tries)) && signal='-KILL'
+
+			einfo "    try $i of $(($max_tries+2)) to signaling $signal to:"$to_kill_name
+			
+			# send signal
+			kill $signal $to_kill_pid &> /dev/null &
+			# waiting for shutdown (in seconds)
+			sleep ${AE_VCS[UNMOUNT_KILL_BLOCKERS_TO]}
+			
+			# find blockers again
+			s=$(eval $cmd)
+		done
+		
+		# check if there is no more blockers in lsof
+		if [ "$s" ]; then
+			eerror "  Can't kill some blockers: unmounting chrooted dirs is impossible. Stop."
+			eend 1
+		else
+			einfo "  All blockers were killed."
+			einfo "Unmounting AUFS /+/var from ${AE_DIR[ROOT]} (continued):"
+		fi
+	fi
+fi
+
+# umount all for path $1 and type $2, let counter to $3
+umnt_path_type(){
+	local count=0
+	for i in $(mount | grep "$1" | egrep "$2" | cut -f3 -d' ' | sort -r); do
+		umount -lv "$i" &> /dev/null
+		((count++))
+	done
+	[ "$3" ] && let "(($3+=$count))"
+	return $count
+}
+
+
+# remove temp swap file
+if [[ "${AE_TMPFS[SIZE]}" && "${AE_TMPFS[PC]}" ]]; then # create 
+	einfo "  Unlinking temporary extra swap file ..."
+	swapoff "${AE_TMPFS[SWAP_FILE]}" && \
+	rm -v "${AE_TMPFS[SWAP_FILE]}" >/dev/null && \
+	eend 0 || eend 1
+fi
+
+# unmount everything
+umnt_path_type "${AE_DIR[CHROOT]}" '(proc|sysfs|tmpfs)' 'lost' # unmount special
+umnt_path_type "${AE_DIR[CHROOT]}" 'rw,bind' 'nonmerged' # unmount transparent
+umnt_path_type "${AE_DIR[ROOT]}" 'aufs' 'unmounted' # unmount AUFS below ${AE_DIR[ROOT]}
+umnt_path_type "${AE_DIR[ROOT]}" '(bind|rw)' 'unbinded' # unmount binded below ${AE_DIR[ROOT]}
+
+
+# out status
+if [ "$(mount | grep ${AE_DIR[ROOT]})" ]; then
+	if (($unbinded+$nonmerged)); then
+		eerror "  Unmounted and unbinded $unbinded dirs, +$nonmerged as transparent (non-merged) and $lost specials."
+	fi
+	eerror "  Can't unmount all AUFS mountpoints!"
+	eend 2
+	exit 1
+fi
+
+if (($unbinded+$nonmerged)); then
+	einfo "  Unmounted and unbinded $unbinded dirs, +$nonmerged as transparent (non-merged) and $lost specials."
+else
+	ewarn "  Not found any AUFS for unmounting."
+fi
+eend 0
+exit 0
+
